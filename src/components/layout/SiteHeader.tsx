@@ -28,6 +28,27 @@ export function SiteHeader() {
                 </Link>
               </li>
             ))}
+            <li>
+              {/* Search sits apart from the section links — it's an action, not a destination. */}
+              <Link
+                href="/search"
+                className="flex items-center gap-2 rounded-full border border-line px-4 py-2 text-muted transition hover:border-accent hover:text-accent"
+              >
+                <svg
+                  aria-hidden
+                  viewBox="0 0 20 20"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                  className="size-4"
+                >
+                  <circle cx="9" cy="9" r="6" />
+                  <path d="m13.5 13.5 3.5 3.5" strokeLinecap="round" />
+                </svg>
+                {/* Icon-only on narrow screens — the header nav is already tight there. */}
+                <span className="sr-only sm:not-sr-only">Search</span>
+              </Link>
+            </li>
           </ul>
         </nav>
       </div>

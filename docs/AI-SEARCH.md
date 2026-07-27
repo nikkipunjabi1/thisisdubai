@@ -58,6 +58,43 @@ type (CONTENT-MODEL.md), shareable.
 Until one of those is real, **Graph semantic search + app-side geo + Claude** is the right,
 simpler, cheaper, lower-latency stack.
 
+## What shipped (S3.2 — the retrieval layer, measured against real content)
+
+`/search` (`src/app/search/page.tsx` + `src/lib/search.ts`) is the Graph retrieval half of the
+pipeline above, live today without Claude in the loop. It is what the AI Search feature will call.
+
+**Semantic ranking genuinely works** — verified by comparing `_ranking: RELEVANCE` vs `SEMANTIC`
+on queries with **zero lexical overlap** with the target content:
+
+| Query | `RELEVANCE` (BM25) | `SEMANTIC` |
+|-------|--------------------|-----------|
+| "skyscraper" | 0 results | **Burj Khalifa** ("tallest building") |
+| "fish tank" | 0 results | **The Dubai Mall** ("aquarium") |
+
+Three findings that shaped the implementation:
+
+1. **Strip stop words before querying.** `_fulltext` is BM25-scored and stop words dominate:
+   *"swimming in the sea"* ranked a historical district top (7.5) on `in`/`the` alone, while the
+   beaches it should surface scored ~0.09. Removing stop words fixes it → Jumeirah Beach + Palm
+   Jumeirah. BM25 magnitudes also dwarf the semantic contribution, which is why `_semanticWeight`
+   looks inert on raw natural-language queries.
+2. **Query concrete types, not `_Content`.** The `_Content` interface also matches non-routable
+   shared blocks — a `TagTerm` scored **115** on "traditional culture and heritage" and would have
+   been the top (unclickable) result. Per-type queries also allow projecting price/event dates.
+3. **Scores are not comparable across types**, so results are **grouped by type**, not merged into
+   one list. The same query scored an `Area` 13.7 and a `PointOfInterest` 1.5 — Graph normalizes
+   BM25 per index. A blended ranking would be fiction.
+
+**Relevance floor.** Vector search always returns nearest neighbours, so weak queries trail a tail
+of near-zero matches. We drop results below **10% of their group's top score** — relative, not
+absolute, because measured top scores span 0.185 → 1538 and any absolute floor high enough to
+suppress noise also deletes good results ("swimming sea" scores its beaches at 0.092/0.078).
+
+**Known limitation:** the floor trims tails, it does not detect nonsense. Most gibberish
+("asdfgh", "quantum blockchain accounting") returns zero results naturally, but a near-miss token
+like "zzzzqqq" returns a flat low-score spread that no relative floor separates. Re-tune once
+there is substantially more content.
+
 ## Implementation notes (Phase 4)
 - Server-only Next.js route handlers under `app/api/ai/*`; `ANTHROPIC_API_KEY` server-scope only.
 - Use **structured outputs** (tool/JSON schema) so card + follow-up payloads are always valid.

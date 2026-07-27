@@ -31,7 +31,7 @@ Blog when we hit any of:
 | 3 | Content modeling for Visual Builder: pages vs experiences vs components | New/learning | 2 |
 | 4 | Server-rendered SEO + JSON-LD for every Optimizely SaaS page (Next.js) | New/learning | 2 |
 | 5 | **Shareable stakeholder previews for Optimizely SaaS + Next.js** (preview-before-publish) | New (headline) | 3 |
-| 6 | Semantic search with Optimizely Graph — a practical guide | New (headline) | 3 |
+| 6 | **Semantic search with Optimizely Graph — a practical guide** — the four-line switch (`_ranking: SEMANTIC`), proving it's really semantic with a `RELEVANCE` control, and 3 undocumented gotchas (stop words drown the semantic signal + make `_semanticWeight` look broken; `_Content` surfaces non-routable taxonomy blocks; scores aren't comparable across types) + why a relevance floor must be relative, not absolute. _(draft: blog/06-semantic-search-optimizely-graph.md)_ | New (headline) | 3 |
 | 7 | EN + AR semantic search & localization on Optimizely SaaS | New/learning | 3 |
 | 8 | Core Web Vitals + on-demand revalidation with Graph webhooks (Vercel free) | Result | 3 |
 | 9 | Building an AI Trip Planner on Optimizely Graph + Claude | New (headline) | 4 |
