@@ -151,5 +151,22 @@ COMPONENT-STANDARDS.md, SEO.md, PREVIEW-WORKFLOW.md, QUALITY.md._
   **empty `properties: {}`**: the SDK auto-selects `_assetMetadata`/`_imageMetadata`, so the query stays
   valid even if the CMS asset type carries extra fields.
 
+- **Stop words sabotage semantic search.** `_fulltext` is BM25-scored *before* the semantic blend,
+  and BM25 magnitudes dwarf semantic ones. "swimming in the sea" ranked a historical district top
+  (score 7.5) purely on `in`/`the`, burying the beaches at ~0.09 — and this is also why
+  `_semanticWeight` appears to do nothing on raw natural-language queries. **Strip stop words
+  before querying**; semantic ranking then works as advertised ("skyscraper" → the tallest tower,
+  "fish tank" → the mall with the aquarium, both with zero lexical overlap).
+- **Don't run site search against the `_Content` interface.** It matches *everything*, including
+  non-routable shared blocks — a taxonomy `TagTerm` scored 115 and out-ranked every real page, and
+  it has no URL to link to. Query the concrete types (and you get their type-specific fields too).
+- **Graph relevance scores are not comparable across types** — BM25 is normalized per index, so the
+  same query scored an `Area` 13.7 and a `PointOfInterest` 1.5. Group multi-type results by type
+  rather than merging them into one "ranked" list.
+- **Vector search always returns nearest neighbours**, so weak queries come back with a long tail of
+  near-zero matches. Apply a **relative** relevance floor (a fraction of the top score), not an
+  absolute one — observed top scores spanned 0.185 → 1538, so any fixed cutoff is either useless or
+  deletes good results.
+
 > These gotchas are prime blog material (BLOG-PLAN.md #2/#3) — they're exactly what the community
 > searches for.

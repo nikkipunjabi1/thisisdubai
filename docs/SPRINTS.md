@@ -81,7 +81,13 @@ multi-page site. 🔴 → split into these sprints:
 
 ## 🚦 Phase 3 — Optimizely superpowers  _(ask before starting)_
 - [ ] **S3.1 — Stakeholder preview-link module** (the headline feature) 🔴
-- [ ] **S3.2 — Semantic search** (autocomplete, synonyms, boosting, facets) 🔴
+- [~] **S3.2 — Semantic search** (autocomplete, synonyms, boosting, facets) 🔴
+  ✅ **Core shipped:** `/search` — server-rendered, URL-driven (`?q=`), one federated Graph query
+  across POI/Event/Area with `_ranking: SEMANTIC`, results grouped by type, `noindex`, breadcrumbs,
+  header entry point. Verified semantic (not keyword) matching: "skyscraper" → Burj Khalifa,
+  "fish tank" → The Dubai Mall. See `src/lib/search.ts` + AI-SEARCH.md §"What shipped".
+  ⏭ **Still to do:** autocomplete, synonyms dictionary, boosting/date-decay, facets on results,
+  and pagination of results.
 - [ ] **S3.3 — AR semantic search + localization showcase** 🟡
 - [ ] **S3.4 — Performance + accessibility pass** (CWV, images, a11y) 🟡
 - [ ] (optional) **S3.5 — Multisite** 🟡
