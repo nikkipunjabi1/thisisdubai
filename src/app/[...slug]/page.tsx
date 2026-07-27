@@ -9,9 +9,15 @@ import { getSiteSettings, buildContentMetadata, type PageSeo } from '@/lib/seo';
 import { getBreadcrumbs } from '@/lib/breadcrumbs';
 import { Breadcrumbs } from '@/components/ui/Breadcrumbs';
 import { seedListingState } from '@/lib/listing-context';
+import { cachedGraphRead } from '@/lib/cache';
 
-// Fetch a path's content once per request; generateMetadata + the page share it.
-const getByPath = cache((path: string) => getClient().getContentByPath(path));
+// Fetch a path's content once per request (React `cache`), and reuse it across
+// requests (`cachedGraphRead`). This is the single most expensive call on the page:
+// the SDK's getContentByPath makes TWO Graph round trips — a content-type metadata
+// lookup, then the content query — and Graph answers in ~0.5-1s each.
+const getByPath = cache(
+  cachedGraphRead((path: string) => getClient().getContentByPath(path), ['content-by-path']),
+);
 
 // Config / data / organizational content that must NEVER be served as a public
 // page (no URL, not indexable) — the Site Settings singleton, Tag taxonomy terms,
@@ -26,6 +32,15 @@ const isNonRoutable = (types: string[] = []) => types.some((t) => NON_ROUTABLE_T
  * See: https://nextjs.org/docs/app/api-reference/file-conventions/route-segment-config#dynamicparams
  */
 export const dynamicParams = true;
+
+/**
+ * This route reads `searchParams` (the listing engine's ?page/?sort/?tag state), which
+ * makes it inherently request-time. Saying so explicitly stops Next from attempting to
+ * prerender it — without this, every content page 500s in a production build with
+ * `DYNAMIC_SERVER_USAGE`. Rendering stays fast because the Graph reads underneath are
+ * cached across requests (src/lib/cache.ts), not because the page is static.
+ */
+export const dynamic = 'force-dynamic';
 
 function removeSlashes(str: string) {
   const str2 = str.startsWith('/') ? str.slice(1) : str;
@@ -129,17 +144,16 @@ export default async function Page({ params, searchParams }: Props) {
   }
   seedListingState({ page, path: `/${slug.join('/')}`, query });
 
-  const content = await getByPath(`/${slug.join('/')}/`);
+  const path = `/${slug.join('/')}/`;
+  // Breadcrumbs don't depend on the content fetch, so run both together — awaiting
+  // them in sequence added a full Graph round trip (~0.5s) to every page.
+  const [content, crumbs] = await Promise.all([getByPath(path), getBreadcrumbs(path)]);
 
   const node = content[0] as { _metadata?: { types?: string[] } } | undefined;
   // 404 for missing paths AND for config/data types that must not be public pages.
   if (!node || isNonRoutable(node._metadata?.types)) {
     notFound();
   }
-
-  // Tree-derived breadcrumbs render above every listing/detail page (canonical,
-  // automatic — no per-component wiring).
-  const crumbs = await getBreadcrumbs(`/${slug.join('/')}/`);
 
   return (
     <>

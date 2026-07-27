@@ -1,6 +1,7 @@
 import { cache } from 'react';
 import type { Metadata } from 'next';
 import { getClient } from '@optimizely/cms-sdk';
+import { cachedGraphRead, CACHE_TAGS } from './cache';
 
 /**
  * Global SEO/branding settings, sourced from the CMS `SiteSettings` singleton.
@@ -27,39 +28,51 @@ const DEFAULTS: SiteSettings = {
  * (each site resolves ITS OWN settings; when the frontend becomes host-aware, "/"
  * already resolves per host). Cached per request.
  */
-const getStartPageKey = cache(async (): Promise<string | null> => {
-  try {
-    const content = await getClient().getContentByPath('/');
-    const node = content[0] as { _metadata?: { key?: string } } | undefined;
-    return node?._metadata?.key ?? null;
-  } catch {
-    return null;
-  }
-});
+const getStartPageKey = cache(
+  cachedGraphRead(
+    async (): Promise<string | null> => {
+      try {
+        const content = await getClient().getContentByPath('/');
+        const node = content[0] as { _metadata?: { key?: string } } | undefined;
+        return node?._metadata?.key ?? null;
+      } catch {
+        return null;
+      }
+    },
+    ['start-page-key'],
+    [CACHE_TAGS.content],
+  ),
+);
 
-export const getSiteSettings = cache(async (): Promise<SiteSettings> => {
-  try {
-    const startKey = await getStartPageKey();
-    // Scope Site Settings to this site's Start Page SUBTREE (best practice). We match
-    // on `_metadata.path` (the ancestor chain) rather than the direct `container`, so
-    // it resolves whether Site Settings sits directly under the start page or inside a
-    // "Settings" folder. Falls back to an unscoped singleton lookup if "/" can't resolve.
-    const data = (await getClient().request(
-      startKey
-        ? `query($c: String!) { SiteConfiguration(where: { _metadata: { path: { eq: $c } } }, limit: 1) { items { siteName titleTagline titleSeparator } } }`
-        : `query { SiteConfiguration(limit: 1) { items { siteName titleTagline titleSeparator } } }`,
-      startKey ? { c: startKey } : {},
-    )) as { SiteConfiguration?: { items?: Array<Partial<SiteSettings>> } };
-    const s = data?.SiteConfiguration?.items?.[0] ?? {};
-    return {
-      siteName: s.siteName || DEFAULTS.siteName,
-      titleTagline: s.titleTagline || DEFAULTS.titleTagline,
-      titleSeparator: s.titleSeparator || DEFAULTS.titleSeparator,
-    };
-  } catch {
-    return DEFAULTS;
-  }
-});
+export const getSiteSettings = cache(
+  cachedGraphRead(
+    async (): Promise<SiteSettings> => {
+      try {
+        const startKey = await getStartPageKey();
+        // Scope Site Settings to this site's Start Page SUBTREE (best practice). We match
+        // on `_metadata.path` (the ancestor chain) rather than the direct `container`, so
+        // it resolves whether Site Settings sits directly under the start page or inside a
+        // "Settings" folder. Falls back to an unscoped singleton lookup if "/" can't resolve.
+        const data = (await getClient().request(
+          startKey
+            ? `query($c: String!) { SiteConfiguration(where: { _metadata: { path: { eq: $c } } }, limit: 1) { items { siteName titleTagline titleSeparator } } }`
+            : `query { SiteConfiguration(limit: 1) { items { siteName titleTagline titleSeparator } } }`,
+          startKey ? { c: startKey } : {},
+        )) as { SiteConfiguration?: { items?: Array<Partial<SiteSettings>> } };
+        const s = data?.SiteConfiguration?.items?.[0] ?? {};
+        return {
+          siteName: s.siteName || DEFAULTS.siteName,
+          titleTagline: s.titleTagline || DEFAULTS.titleTagline,
+          titleSeparator: s.titleSeparator || DEFAULTS.titleSeparator,
+        };
+      } catch {
+        return DEFAULTS;
+      }
+    },
+    ['site-settings'],
+    [CACHE_TAGS.settings, CACHE_TAGS.content],
+  ),
+);
 
 /** Next.js title template — the page title fills `%s`, e.g. "Homepage | Unofficial Travel & Tourism Guide | This is Dubai". */
 export function buildTitleTemplate(s: SiteSettings): string {
