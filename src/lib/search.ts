@@ -1,6 +1,7 @@
 import { cache } from 'react';
 import { getClient } from '@optimizely/cms-sdk';
 import type { SectionCardItem } from './sections';
+import { cachedGraphRead } from './cache';
 
 /**
  * Semantic search over the CMS, powered by Optimizely Graph's vector ranking
@@ -161,7 +162,7 @@ function dropWeakMatches(nodes: ResultNode[]): ResultNode[] {
  * Cached per request so metadata + page share one call.
  */
 export const search = cache(
-  async (rawQuery: string, limit: number = DEFAULT_LIMIT): Promise<SearchResults> => {
+  cachedGraphRead(async (rawQuery: string, limit: number = DEFAULT_LIMIT): Promise<SearchResults> => {
     const query = rawQuery.trim();
     const normalizedQuery = normalizeQuery(query);
     const empty: SearchResults = { query, normalizedQuery, groups: [], total: 0 };
@@ -201,5 +202,5 @@ export const search = cache(
     } catch {
       return empty;
     }
-  },
+  }, ['semantic-search']),
 );

@@ -168,5 +168,24 @@ COMPONENT-STANDARDS.md, SEO.md, PREVIEW-WORKFLOW.md, QUALITY.md._
   absolute one — observed top scores spanned 0.185 → 1538, so any fixed cutoff is either useless or
   deletes good results.
 
+- **Graph is ~0.5–1s per call — budget round trips, not bytes.** Measured TTFB for a trivial
+  `PointOfInterest(limit:1){name}` was 0.44–1.05s, with DNS+TCP+TLS at only ~50ms — so it's service
+  time, not network. Worse, **`getContentByPath` costs TWO round trips** (a content-type metadata
+  lookup, then the content query). A page doing content + settings + breadcrumbs + a listing easily
+  makes ~9 calls; sequential, that's a multi-second page. Two fixes, both needed:
+  **(a)** `Promise.all` anything independent (breadcrumbs don't depend on the content fetch; a tag
+  vocabulary doesn't depend on the children query); **(b)** cache Graph reads **across** requests
+  with `unstable_cache` — React's `cache()` only dedupes *within* one request, so it does nothing
+  for the next navigation. Published content changes rarely, so a short revalidate window plus
+  tag-based invalidation from the publish webhook is the right trade. See `src/lib/cache.ts`.
+- **`searchParams` + `generateStaticParams` = every page 500s in production.** A route that reads
+  `searchParams` is request-time by nature, but with `generateStaticParams` present Next still tries
+  to prerender it and the bailout surfaces as `DYNAMIC_SERVER_USAGE` — an Internal Server Error on
+  **every** content page, while `next build` reports success and `next dev` works fine. Declare
+  `export const dynamic = 'force-dynamic'` on such routes. Get performance back from **data**
+  caching, not route caching.
+- **Always check status codes when benchmarking, not just timings.** A 500 returns fast and looks
+  like a healthy number in a timing column; we briefly "measured" a broken page as a 3.2s baseline.
+
 > These gotchas are prime blog material (BLOG-PLAN.md #2/#3) — they're exactly what the community
 > searches for.

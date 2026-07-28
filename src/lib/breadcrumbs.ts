@@ -1,5 +1,6 @@
 import { cache } from 'react';
 import { getClient } from '@optimizely/cms-sdk';
+import { cachedGraphRead } from './cache';
 
 /** One breadcrumb. `url` is null for the current (last) page, which is not linked. */
 export type Crumb = { name: string; url: string | null };
@@ -17,7 +18,8 @@ const NON_ROUTABLE = new Set(['SiteSettings', 'Tag', 'Folder', '_Folder']);
  * Falls back to the URL segment (title-cased) if an ancestor can't be resolved, so a
  * trail always renders.
  */
-export const getBreadcrumbs = cache(async (currentUrl: string): Promise<Crumb[]> => {
+export const getBreadcrumbs = cache(
+  cachedGraphRead(async (currentUrl: string): Promise<Crumb[]> => {
   const clean = currentUrl.replace(/^\/|\/$/g, '');
   const segments = clean ? clean.split('/') : [];
   if (segments.length === 0) return [{ name: 'Home', url: null }];
@@ -55,4 +57,5 @@ export const getBreadcrumbs = cache(async (currentUrl: string): Promise<Crumb[]>
     crumbs.push({ name: meta?.displayName || titleCase(segments[idx]), url: isLast ? null : u });
   });
   return crumbs;
-});
+  }, ['breadcrumbs']),
+);

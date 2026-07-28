@@ -76,11 +76,17 @@ export default async function SectionListing({ content, displaySettings }: Props
   const sort: SortKey = isSortKey(state.query.sort) ? state.query.sort : 'name';
   const filters: Filters = { tag: state.query.tag, price: state.query.price };
 
-  const { items, total, childType } = sourceKey
-    ? await getSectionChildren(sourceKey, { skip: (page - 1) * pageSize, limit: pageSize, sort, filters })
-    : { items: [], total: 0, childType: null };
-  // Tag options only needed when the section supports a tag facet.
-  const tags = childType === 'PointOfInterest' || childType === 'Event' ? await getTags() : [];
+  // Fetch the children and the tag vocabulary CONCURRENTLY. `getTags` doesn't depend
+  // on the children result, so awaiting it afterwards cost an extra Graph round trip
+  // (~0.5s) on every listing render. Tags are only *rendered* for sections whose child
+  // type has a tag facet, but fetching them is cached and cheap.
+  const [{ items, total, childType }, allTags] = await Promise.all([
+    sourceKey
+      ? getSectionChildren(sourceKey, { skip: (page - 1) * pageSize, limit: pageSize, sort, filters })
+      : Promise.resolve({ items: [], total: 0, childType: null }),
+    getTags(),
+  ]);
+  const tags = childType === 'PointOfInterest' || childType === 'Event' ? allTags : [];
 
   return (
     <SectionShell

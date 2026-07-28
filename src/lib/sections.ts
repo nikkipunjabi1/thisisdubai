@@ -1,5 +1,6 @@
 import { cache } from 'react';
 import { getClient } from '@optimizely/cms-sdk';
+import { cachedGraphRead } from './cache';
 
 /**
  * Generic "children of a section page" queries for the listing pattern. Each
@@ -74,33 +75,37 @@ export type SectionChildrenPage = { items: SectionCardItem[]; total: number; chi
 export type TagOption = { name: string; slug: string; key: string };
 
 /** All taxonomy terms (name/slug/key), for the tag facet UI + slug→key resolution. */
-export const getTags = cache(async (): Promise<TagOption[]> => {
-  try {
-    const data = (await getClient().request(
-      `query { TagTerm(orderBy: { name: ASC }, limit: 100) { items { name slug _metadata { key } } } }`,
-      {},
-    )) as { TagTerm?: { items?: Array<{ name?: string; slug?: string; _metadata?: { key?: string } }> } };
-    return (data?.TagTerm?.items ?? [])
-      .filter((t) => t.slug && t._metadata?.key)
-      .map((t) => ({ name: t.name ?? t.slug!, slug: t.slug!, key: t._metadata!.key! }));
-  } catch {
-    return [];
-  }
-});
+export const getTags = cache(
+  cachedGraphRead(async (): Promise<TagOption[]> => {
+    try {
+      const data = (await getClient().request(
+        `query { TagTerm(orderBy: { name: ASC }, limit: 100) { items { name slug _metadata { key } } } }`,
+        {},
+      )) as { TagTerm?: { items?: Array<{ name?: string; slug?: string; _metadata?: { key?: string } }> } };
+      return (data?.TagTerm?.items ?? [])
+        .filter((t) => t.slug && t._metadata?.key)
+        .map((t) => ({ name: t.name ?? t.slug!, slug: t.slug!, key: t._metadata!.key! }));
+    } catch {
+      return [];
+    }
+  }, ['tags']),
+);
 
 /** Detect the concrete child type of a section by peeking at one child. */
-const detectChildType = cache(async (containerKey: string): Promise<ChildType | null> => {
-  try {
-    const data = (await getClient().request(
-      `query($c: String!) { _Page(where: { _metadata: { container: { eq: $c } } }, limit: 1) { items { _metadata { types } } } }`,
-      { c: containerKey },
-    )) as { _Page?: { items?: Array<{ _metadata?: { types?: string[] } }> } };
-    const types = data?._Page?.items?.[0]?._metadata?.types ?? [];
-    return (['PointOfInterest', 'Area', 'Event'] as ChildType[]).find((t) => types.includes(t)) ?? null;
-  } catch {
-    return null;
-  }
-});
+export const detectChildType = cache(
+  cachedGraphRead(async (containerKey: string): Promise<ChildType | null> => {
+    try {
+      const data = (await getClient().request(
+        `query($c: String!) { _Page(where: { _metadata: { container: { eq: $c } } }, limit: 1) { items { _metadata { types } } } }`,
+        { c: containerKey },
+      )) as { _Page?: { items?: Array<{ _metadata?: { types?: string[] } }> } };
+      const types = data?._Page?.items?.[0]?._metadata?.types ?? [];
+      return (['PointOfInterest', 'Area', 'Event'] as ChildType[]).find((t) => types.includes(t)) ?? null;
+    } catch {
+      return null;
+    }
+  }, ['section-child-type']),
+);
 
 /**
  * Type-aware, server-paginated + FILTERED children query for the SectionListing
@@ -109,7 +114,7 @@ const detectChildType = cache(async (containerKey: string): Promise<ChildType | 
  * filters (`tags.key`, `priceBand`) that the `_Page` interface can't express.
  * Server-side sort + skip/limit + total. Guarded → empty page.
  */
-export async function getSectionChildren(
+export const getSectionChildren = cachedGraphRead(async function getSectionChildren(
   containerKey: string,
   {
     skip = 0,
@@ -162,4 +167,4 @@ export async function getSectionChildren(
   } catch {
     return { items: [], total: 0, childType };
   }
-}
+}, ['section-children']);
