@@ -13,15 +13,33 @@ export type SectionCardItem = {
   summary: string | null;
   path: string;
   meta: string | null; // small contextual line (e.g. an event date range)
+  /**
+   * CDN URL of the item's lead image, if authored. Optional so callers that don't
+   * (yet) project imagery — e.g. the search results query — still type-check and
+   * simply fall back to the monogram card.
+   */
+  imageUrl?: string | null;
 };
+
+/** An authored image reference, resolved by Graph to a CMP/DAM CDN URL. */
+type ImageRef = { url?: { default?: string | null } | null } | null;
 
 type Node = {
   name?: string | null;
   summary?: string | null;
   startDate?: string | null;
   endDate?: string | null;
+  images?: ImageRef[] | null;
+  heroImage?: ImageRef;
   _metadata?: { url?: { default?: string | null } | null } | null;
 };
+
+/**
+ * The lead image for a card. POI/Event author a list (`images` — first one wins);
+ * Area authors a single `heroImage`. Handles either shape so one card serves all.
+ */
+const leadImage = (node: Node): string | null =>
+  node.images?.find((i) => i?.url?.default)?.url?.default ?? node.heroImage?.url?.default ?? null;
 
 function toCard(node: Node, meta: string | null = null): SectionCardItem {
   return {
@@ -29,6 +47,7 @@ function toCard(node: Node, meta: string | null = null): SectionCardItem {
     summary: node.summary ?? null,
     path: node._metadata?.url?.default ?? '#',
     meta,
+    imageUrl: leadImage(node),
   };
 }
 
@@ -57,10 +76,12 @@ export const isSortKey = (v: string | undefined): v is SortKey => v === 'name' |
 
 /** The concrete child type of a section (drives type-specific filters + fields). */
 export type ChildType = 'PointOfInterest' | 'Area' | 'Event';
+// Note the image field differs by type: POI/Event author a list (`images`), Area a
+// single `heroImage`. Both resolve to a CMP CDN URL via `url { default }`.
 const TYPE_FIELDS: Record<ChildType, string> = {
-  PointOfInterest: 'name summary priceBand',
-  Area: 'name summary',
-  Event: 'name summary startDate endDate',
+  PointOfInterest: 'name summary priceBand images { url { default } }',
+  Area: 'name summary heroImage { url { default } }',
+  Event: 'name summary startDate endDate images { url { default } }',
 };
 /** Which facets each child type supports (drives the FilterControls UI). */
 export const TYPE_FACETS: Record<ChildType, Array<'tag' | 'price'>> = {

@@ -10,12 +10,61 @@ once an image is chosen). Referenced by README.md and docs/BRAINSTORM.md §"Asse
 > descriptively. Prefer images without prominent identifiable faces (no model release here).
 > Binary files are **not** committed to this repo — they live in CMP/the CMS DAM.
 
-## Why this is a manual step
+## What is and isn't automatable
 
-The Optimizely **Content Management API cannot upload binaries** — its media endpoint
-(`/content/{key}/versions/{version}/media`) is **GET only**, and creating an image content item
-requires an `initialVersion.media.key` that must already exist. So assets are uploaded through
-CMP / the CMS UI by a human, and the code then references them. See docs/OPTIMIZELY-BEST-PRACTICES.md.
+Two different operations, with different answers — this distinction is the whole story:
+
+| Operation | Automatable? | Why |
+|-----------|:---:|-----|
+| **Upload** a binary into CMP/the DAM | ❌ **No** | The CMA's media endpoint (`/content/{key}/versions/{version}/media`) is **GET only** (`put?: never; post?: never` in its OpenAPI contract), and creating an image item needs an `initialVersion.media.key` that must already exist. |
+| **Attach** an existing DAM asset to a content item | ✅ **Yes** | It's just a property write, which the CMA does fine. |
+
+Attaching is a plain string URI, verified against live content:
+
+```jsonc
+// PointOfInterest / Event — a list
+"images":    { "value": ["cms://content/DamImageSource/<CMP_ASSET_KEY>"] }
+// Area — a single reference
+"heroImage": { "value": "cms://content/DamImageSource/<CMP_ASSET_KEY>" }
+```
+
+So the sustainable division of labour is: **a human uploads to CMP, a script attaches.**
+
+## ✅ Approach for bulk content: auto-attach from CMP (confirmed viable)
+
+Agreed approach for the planned scale-up (**~100 POIs, ~20 Events, neighbourhoods, ~100+ Articles**).
+Attaching 240+ images by hand in the CMS UI is not sensible; this replaces that with a matching script.
+
+**Pipeline**
+
+1. **Upload to CMP** in a sensible folder structure (per type, e.g. `POIs/`, `Events/`,
+   `Neighbourhoods/`), with **filenames that carry the slug** — `burj-khalifa-2.jpg`. The filename is
+   the join key, so this naming is the one thing the automation depends on.
+2. **Enumerate CMP assets** via the CMP API → `{ id, filename, folder }`.
+3. **Match** asset → content item, best-match wins:
+   1. exact slug match on the filename stem (ignoring a `-1`/`-2` numeric suffix),
+   2. else normalised-token overlap against the item's name,
+   3. else fall back to any asset in the type's folder.
+   _If several assets match, take any — a playground project tolerates an imperfect pick._
+4. **Write** `cms://content/DamImageSource/{assetId}` into the right field for that type
+   (`images` list vs `heroImage` single — see the table above), then publish the version.
+5. **Report** a table of item → chosen asset → confidence, plus anything unmatched, so a wrong
+   pick is easy to spot and re-run.
+
+**Requirements before this can run**
+- CMP API base URL + credentials (the CMS CLI client id/secret is **not** valid for CMP, and is
+  separately **not** valid for Graph — verified 401 — so assume CMP needs its own credentials).
+- Confirmation that the CMP asset `id` is the same key used in `cms://content/DamImageSource/<key>`.
+  Strong evidence it is: Graph returns `06d864888a4311f19febba8dad112d3d` for Burj Khalifa's image
+  and serves it from `images2.cmp.optimizely.com/assets/burj-khalifa-2.jpg/…`.
+
+**Guardrails to build in** — an idempotent re-run (skip items that already have an image unless
+`--force`), a `--dry-run` that prints the match table without writing, `--type` to scope a run, and
+429 retry-with-backoff (the CMA rate-limits; `scripts/seed.mjs` already has this).
+
+**Intended home:** `scripts/attach-assets.mjs`, reusing `seed.mjs`'s OAuth + `api()` helpers.
+
+## Doing it by hand (small batches)
 
 ## Workflow
 
