@@ -16,6 +16,7 @@
     "opti-push": "optimizely-cms-cli config push optimizely.config.mjs",
     "seed": "node --env-file=.env scripts/seed.mjs",
     "asset-manifest": "node scripts/asset-manifest.mjs",
+    "cmp-folders": "node --env-file=.env scripts/cmp-folders.mjs",
     "migrate:experiences": "node --env-file=.env scripts/migrate-experiences.mjs"
   },
   "dependencies": {
