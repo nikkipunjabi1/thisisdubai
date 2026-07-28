@@ -12,10 +12,34 @@ import { PointOfInterestContentType } from './PointOfInterest';
 /**
  * Article — editorial guide / news story.
  *
- * Note the field names differ from the other listable types: `title`/`excerpt`
- * rather than `name`/`summary`, because that is what reads correctly for
- * editorial. The listing query aliases them (see `src/lib/sections.ts`
- * `TYPE_FIELDS`) so one card component still serves every section.
+ * MIGRATION IN PROGRESS (docs/CONTENT-ARCHITECTURE.md §10): the Articles section is
+ * planned for thousands of items. Optimizely won't render `_folder`s in the Pages
+ * tree, so page-articles can't be bucketed by year/month there — and thousands of flat
+ * pages under one node degrade the editor. So Article is moving from a **page** to a
+ * **shared block** (`_component`, `ArticlePost`): blocks live in the Shared Blocks
+ * (Assets) panel, which DOES support folders (Articles → year → month) and scales. A
+ * block has no CMS URL, so the Next.js app owns routing — `/articles/<year>/<month>/<slug>`
+ * resolves the block by its `slug`, and `<year>/<month>` come from `publishDate`
+ * (folders are editorial only, never affect the URL).
+ *
+ * Both types are registered during the cut-over: the legacy `_page` `Article` keeps its
+ * 10 instances renderable until they're deleted; the new `ArticlePost` block is seeded
+ * alongside. The frontend flips to `ArticlePost` in the follow-up (listing + detail route),
+ * after which the legacy type + instances are removed.
+ *
+ * Field names differ from the other listable types: `title`/`excerpt` rather than
+ * `name`/`summary` (reads correctly for editorial); the listing aliases them
+ * (`src/lib/sections.ts` `TYPE_FIELDS`) so one card component serves every section.
+ */
+// The editorial fields (shared conceptually by both types below; inlined in each so
+// TypeScript keeps the property literals narrow). Taxonomy is `Tag` shared blocks —
+// articles share the same facets as everything else. `relatedPlaces` is a reference
+// (a link), not `content` (which would embed the POI inline).
+
+/**
+ * LEGACY — the original routable page, kept registered (unchanged, matching the live
+ * schema exactly so `config push` stays a no-op for it) only so its 10 instances render
+ * until deleted. Retired in the follow-up once those instances are removed.
  */
 export const ArticleContentType = contentType({
   key: 'Article',
@@ -29,25 +53,33 @@ export const ArticleContentType = contentType({
     heroImage: { type: 'contentReference', allowedTypes: ['_image'], displayName: 'Hero image', group: 'content', sortOrder: 4 },
     author: { type: 'string', displayName: 'Author', group: 'content', sortOrder: 5 },
     publishDate: { type: 'dateTime', displayName: 'Publish date', group: 'content', sortOrder: 6 },
-    // Taxonomy is `Tag` (shared blocks), NOT the dormant legacy `Category` type this
-    // field originally pointed at — see docs/CONTENT-ARCHITECTURE.md §3. Using Tag
-    // means articles share the same facets as everything else on the site.
-    tags: {
-      type: 'array',
-      displayName: 'Tags',
-      description: 'Taxonomy terms — power filtering/facets + AI search.',
-      group: 'content',
-      sortOrder: 7,
-      items: { type: 'contentReference', allowedTypes: [TagContentType] },
-    },
-    // contentReference (a link), not `content` (which would embed the POI inline).
-    relatedPlaces: {
-      type: 'array',
-      displayName: 'Related places',
-      group: 'content',
-      sortOrder: 8,
-      items: { type: 'contentReference', allowedTypes: [PointOfInterestContentType] },
-    },
+    tags: { type: 'array', displayName: 'Tags', description: 'Taxonomy terms — power filtering/facets + AI search.', group: 'content', sortOrder: 7, items: { type: 'contentReference', allowedTypes: [TagContentType] } },
+    relatedPlaces: { type: 'array', displayName: 'Related places', group: 'content', sortOrder: 8, items: { type: 'contentReference', allowedTypes: [PointOfInterestContentType] } },
+  },
+});
+
+/**
+ * The go-forward Article — a shared block. `slug` (queryable) drives app routing since
+ * blocks have no CMS URL. `compositionBehaviors` exposes it as a Graph root type (so the
+ * listing + detail route can query `ArticlePost`) and makes it creatable as a shared
+ * block — same as `TagTerm`.
+ */
+export const ArticlePostContentType = contentType({
+  key: 'ArticlePost',
+  displayName: 'Article',
+  baseType: '_component',
+  compositionBehaviors: ['elementEnabled'],
+  extends: SeoMetadataContract,
+  properties: {
+    slug: { type: 'string', displayName: 'Slug (URL)', description: 'URL segment, e.g. dubai-on-a-budget. Unique.', group: 'content', sortOrder: 0, isRequired: true, indexingType: 'queryable' },
+    title: { type: 'string', displayName: 'Title', group: 'content', sortOrder: 1, isRequired: true, indexingType: 'searchable' },
+    excerpt: { type: 'string', displayName: 'Excerpt', group: 'content', sortOrder: 2, indexingType: 'searchable' },
+    body: { type: 'richText', displayName: 'Body', group: 'content', sortOrder: 3 },
+    heroImage: { type: 'contentReference', allowedTypes: ['_image'], displayName: 'Hero image', group: 'content', sortOrder: 4 },
+    author: { type: 'string', displayName: 'Author', group: 'content', sortOrder: 5 },
+    publishDate: { type: 'dateTime', displayName: 'Publish date', group: 'content', sortOrder: 6, indexingType: 'queryable' },
+    tags: { type: 'array', displayName: 'Tags', description: 'Taxonomy terms — power filtering/facets + AI search.', group: 'content', sortOrder: 7, items: { type: 'contentReference', allowedTypes: [TagContentType] } },
+    relatedPlaces: { type: 'array', displayName: 'Related places', group: 'content', sortOrder: 8, items: { type: 'contentReference', allowedTypes: [PointOfInterestContentType] } },
   },
 });
 

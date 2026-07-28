@@ -26,9 +26,9 @@ export const areaKey = (slug) => keyFor(`area:${slug}`);
 export const poiKey = (slug) => keyFor(`poi:${slug}`);
 export const eventKey = (slug) => keyFor(`event:${slug}`);
 export const tagKey = (slug) => keyFor(`tagblock:${slug}`);
-export const articleKey = (slug) => keyFor(`article:${slug}`);
-// Organisational folders (article year buckets) — see docs/CONTENT-ARCHITECTURE.md §10.
-export const folderKey = (id) => keyFor(`folder:${id}`);
+export const articleKey = (slug) => keyFor(`article:${slug}`); // LEGACY `_page` Article instances
+// Article shared blocks (ArticlePost `_component`) — see docs/CONTENT-ARCHITECTURE.md §10.
+export const articleBlockKey = (slug) => keyFor(`articleblock:${slug}`);
 
 /** Single content reference → an Area. */
 export const REF = (slug) => ({ value: `cms://content/${areaKey(slug)}` });
@@ -91,6 +91,7 @@ export function article(slug, displayName, { title, excerpt, body, author, publi
     slug,
     displayName,
     props: {
+      slug: S(slug), // drives the app URL /articles/<year>/<month>/<slug> (blocks have no CMS URL)
       title: S(title ?? displayName),
       excerpt: S(excerpt),
       body: RT(body),

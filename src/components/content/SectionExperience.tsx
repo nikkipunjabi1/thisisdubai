@@ -8,7 +8,6 @@ import { SeoMetadataContract } from './SeoMetadata';
 import { PointOfInterestContentType } from './PointOfInterest';
 import { AreaContentType } from './Area';
 import { EventContentType } from './Event';
-import { ArticleContentType } from './Article';
 
 /**
  * Section experiences — the Visual Builder version of the listing/section pages.
@@ -63,9 +62,10 @@ export const ArticlesContentType = contentType({
   displayName: 'Articles (Section)',
   baseType: '_experience',
   extends: SeoMetadataContract,
-  // Articles are FLAT children (no `_folder` buckets — the SaaS CMS Pages tree never
-  // renders folders, which hid bucketed articles). See docs/CONTENT-ARCHITECTURE.md §10.
-  mayContainTypes: [ArticleContentType],
+  // Articles live as shared BLOCKS (`ArticlePost`) in the Assets panel, not as page
+  // children — so this experience contains no page types. It's purely the listing
+  // page; the SectionListing block surfaces the article blocks (docs §10).
+  mayContainTypes: [],
   properties: internalTitle,
 });
 

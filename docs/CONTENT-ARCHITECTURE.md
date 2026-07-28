@@ -7,11 +7,12 @@ LISTING-PATTERN.md (listings), SEO.md._
 
 > **We always follow Optimizely CMS best practices and keep content organized.** Pages live in a
 > routing tree that mirrors the site URLs; shared blocks are grouped into named folders in the
-> assets area ("Tag - Taxonomy", "Site Configurations"). Crucially, **folders live on the
-> assets/blocks side, never in the Pages tree** — the Pages panel is a routing view that doesn't
-> render folders, so a large page section stays flat and is navigated by search + tag facets (§10).
-> Every structural change is made through that lens — a tidy, predictable tree a content author
-> (not a developer) can navigate. See OPTIMIZELY-BEST-PRACTICES.md §2 for the modelling rules.
+> assets area ("Tag - Taxonomy", "Site Configurations", "Articles"). Crucially, **folders live on
+> the assets/blocks side, never in the Pages tree** — the Pages panel is a routing view that doesn't
+> render folders. So a large, uniform collection (Articles, planned for 1000+) is modelled as
+> **shared blocks foldered by year/month** in the assets panel, with the app deriving their URLs —
+> not as thousands of flat pages (§10). Every structural change is made through that lens — a tidy,
+> predictable tree a content author (not a developer) can navigate. See OPTIMIZELY-BEST-PRACTICES.md §2.
 
 ## 1. Goals (authoring-first)
 - **Group by kind** — an author adding a place goes to *Places to Visit*; adding a tag goes to
@@ -35,15 +36,16 @@ Root
    │   └─ Event…                                                    → /events/<slug>
    ├─ Neighbourhoods        Neighbourhoods (Experience/VB canvas)  → /neighbourhoods
    │   └─ Area… (Downtown, Marina, Old Dubai)                       → /neighbourhoods/<slug>
-   └─ Articles              Articles       (Experience/VB canvas)  → /articles
-       └─ Article…          (flat — NOT folder-bucketed, §10)      → /articles/<slug>/
+   └─ Articles              Articles       (Experience/VB canvas)  → /articles  (listing only)
 
 SHARED BLOCKS — "For This Application" (app assets folder, /SysSiteAssets/), NOT in the page tree.
 Grouped into named folders (best practice — never flat):
    ├─ Site Configurations   [folder]
    │   └─ Site Settings      SiteConfiguration (_component singleton)  brand / SEO / crawl
-   └─ Tag - Taxonomy        [folder]
-       └─ Tag… (Landmarks, Beaches, Festivals, Luxury…)  TagTerm (_component)  facets + AI search
+   ├─ Tag - Taxonomy        [folder]
+   │   └─ Tag… (Landmarks, Beaches, Festivals, Luxury…)  TagTerm (_component)  facets + AI search
+   └─ Articles              [folder] ▸ <year> ▸ <month>
+       └─ Article…          ArticlePost (_component)  → app route /articles/<year>/<month>/<slug>
 ```
 Global config + taxonomy are **shared blocks** (`_component`) in the application's shared-assets
 folder, so editors manage them from the Shared Blocks panel — no page tree, no non-routable pages,
@@ -65,10 +67,10 @@ folder holds them, and the settings singleton is fetched scoped to the Start Pag
   composition zones, `mayContainTypes` their item type. See LISTING-PATTERN.md.
 - **Taxonomy & Settings live *per site*** (as shared blocks under each site's application) so each
   site owns its own tags, brand and SEO — clean multisite isolation.
-- **Shared-block folders** (`Site Configurations`, `Tag - Taxonomy`) are `SysContentFolder`s created
-  once in the Shared Blocks UI; the seed only parents blocks into them (see `scripts/seed.mjs`
-  `TAG_TAXONOMY`). **Articles are flat** under the Articles experience — no `_folder` buckets in the
-  Pages tree, which the SaaS CMS won't render (§10).
+- **Shared-block folders** (`Site Configurations`, `Tag - Taxonomy`, `Articles`) are
+  `SysContentFolder`s — the CMA can create them (`scripts/seed.mjs` `ensureSharedFolder`) or they
+  can be made once in the Shared Blocks UI. The `Articles` folder nests **`<year>` ▸ `<month>`**
+  for the article blocks (§10). Folders live in the Assets panel, never the Pages tree.
 
 ## 3. Taxonomy — `Tag` (shared block `TagTerm`, in the "Tag - Taxonomy" folder)
 - Type **`TagTerm`** (base **`_component`**), grouped under the **"Tag - Taxonomy"** folder in the
@@ -100,9 +102,11 @@ folder holds them, and the settings singleton is fetched scoped to the Start Pag
   `/places-to-visit/<slug>`, appears in the listing + facets automatically.
 - **Add a tag:** Shared Blocks → *For This Application* → **Tag - Taxonomy** → New → *Tag (Taxonomy term)*;
   set `dimension`, publish. Immediately available as a facet — no page, no access grant.
-- **Add an article:** Pages tree → **Articles** → **＋ Create** (or ⋯ → New) → *Article*; fill
-  title/body/heroImage, pick `tags`, publish → live at `/articles/<slug>/`. Articles are flat (no year
-  folders — §10); categorization is the `tags` reference, and the section is navigated by search + facets.
+- **Add an article:** Shared Blocks → *For This Application* → **Articles** → the `<year>`/`<month>`
+  folder → **Create Shared Block → *Article*** (`ArticlePost`); set `slug` + `publishDate`, fill
+  title/body/heroImage, pick `tags`, publish → live at `/articles/<year>/<month>/<slug>`, appears in
+  the listing automatically. Articles are **blocks, not pages** (§10) — that is why they're here, not
+  in the Pages tree.
 - **Edit global branding/SEO:** Shared Blocks → *For This Application* → **Site Configurations** →
   *Site Settings*. One publish rebrands every page title.
 - **Add a new section (e.g. Hotels):** new section experience + card + config entry (LISTING-PATTERN §8);
@@ -227,51 +231,55 @@ Without this, re-running the seed silently wipes every attached image.
 
 ---
 
-## 10. Scaling a section — why we do NOT bucket with folders (SaaS CMS)
+## 10. Scaling a large section — articles are shared blocks, not pages
 
-Optimizely's classic guidance is to keep **no more than ~100 immediate children** per
-container, and the classic remedy is organisational **folders** (year/month for editorial).
-On the SaaS CMS that remedy is a **trap for pages**, and we hit it:
+Optimizely's classic guidance is ~100 immediate children per container, with **folders**
+(year/month) as the remedy. Getting this right on the SaaS CMS took two attempts; the
+reasoning is worth keeping because it dictates the model.
 
-> ⚠️ **A `_folder` is invisible in the SaaS CMS Pages tree.** The left **Pages** panel is a
-> **routing** view — it renders only routable content (`_experience` / `_page`). A `_folder` is
-> non-routable, so it never appears there, **and everything nested under it disappears with it**.
-> We bucketed the 10 articles into a year `Folder`; the result was an *Articles* node with no
-> expandable children and no way for an author to reach or create an article from the tree.
-> Folders are an **assets-side** concept — they render fine in the **Shared Blocks / Media**
-> panel (that is exactly why `Tag - Taxonomy` and `Site Configurations` work), but they do **not**
-> belong in the page hierarchy.
+**What doesn't work — folders in the Pages tree.** The left **Pages** panel is a *routing*
+view: it renders only routable content (`_experience` / `_page`). A `_folder` is not routable,
+so it never appears there — **and any page nested under it disappears with it** (an *Articles*
+node with no expandable children, no way to reach or create an article). Folders are an
+**assets-side** concept: they render in the **Shared Blocks / Media** panel (which is exactly
+why `Tag - Taxonomy` and `Site Configurations` work), and Optimizely confirms *"folders… organize
+media files"* and shared blocks, and *"renaming or moving folders does not cause broken content
+links"* (they never affect routing). **Rule: never put a `_folder` in the Pages tree.**
 
-**The rule:** never place a `_folder` in the routing (Pages) tree. If content is a page, it stays
-a direct child of a routable parent.
+**What doesn't scale — thousands of flat pages.** Dropping the folders and leaving articles as
+flat pages under the Articles experience is authorable, but it walks straight into the ~100/node
+limit at the planned scale (1000+), degrading the editor tree.
 
-### What we do instead — flat articles
+### The model — Article as a shared block (`ArticlePost`)
+
+Both constraints resolve the same way: an article is **content, not a page**. Modelled as a
+shared block (`_component`, key `ArticlePost`) it lives in the **Shared Blocks (Assets) panel**,
+where folders *are* supported and scale — organised **Articles → `<year>` → `<month>`**:
 
 ```
-Home (/)
-└─ Articles            [Articles experience]   /articles
-   ├─ Article                                  /articles/<slug>/
-   ├─ Article                                  /articles/<slug>/
-   └─ …
+Pages tree:    Home ▸ Articles              [Articles experience]   → /articles   (the listing page)
+Shared Blocks: For This Application ▸ Articles ▸ 2026 ▸ 06 ▸ "Dubai on a budget"  (ArticlePost block)
+Public URL:    /articles/2026/06/dubai-on-a-budget
 ```
 
-Articles are **direct children of the Articles experience** — visible in the Pages tree, created
-in one step (*Articles → ⁺ Create → Article*). Categorization is the `tags` reference (topical);
-structural bucketing is intentionally dropped. This is the SaaS-native shape: the Pages panel is
-**search-first** (the tree has a search box), so a large flat section is navigated by search + tag
-facets, not by drilling folders. `scripts/flatten-articles.mjs` performed the one-time migration
-(re-parent → Articles, then delete the empty year folders); `seed.mjs` now seeds articles flat.
+- **Blocks have no CMS URL** (*"You cannot access blocks directly through a unique URL"*), so the
+  **Next.js app owns routing**: a detail route resolves the block by its **`slug`** (a `queryable`
+  field), and the **`/<year>/<month>/`** segments are derived from **`publishDate`** — *not* from
+  the folder. Folders are purely editorial; moving a block between them never changes its URL.
+- **Listing**: the `SectionListing` on the Articles page queries the `ArticlePost` type (sort /
+  paginate / tag-facet), and builds each card's href from `slug` + `publishDate`.
+- **Authoring**: Shared Blocks → *For This Application* → *Articles* → the year/month folder →
+  **Create Shared Block → Article**. Set `slug` + `publishDate`; it appears in the listing and at
+  its URL automatically. `scripts/seed.mjs` seeds the blocks + folders (`ensureSharedFolder`).
 
-**If year archives are ever wanted** (for `/articles/2026/` URLs or an SEO archive page), add a
-**routable year _page_** that lists that year — never a `_folder`. A real page shows in the tree,
-serves a URL, and doubles as a landing page. That is the only correct way to reintroduce a
-`/articles/<year>/` segment here.
+> **Status:** the block type + instances + folder structure are in place (this section). The
+> frontend cut-over — listing → `ArticlePost`, the `/articles/<year>/<month>/<slug>` detail route,
+> and removal of the legacy `_page` `Article` + its instances — is the follow-up.
 
-### The querying consequence (still true, and why the listing engine is robust)
+### Listing-engine note (`_metadata.path`)
 
-The listing engine matches children by **`_metadata.path`** (the ancestor chain), not by direct
-`container`. That was originally needed for bucketed sections, and it keeps the engine correct
-whether a section is flat or (via routable sub-pages) nested:
+For the *page-based* sections (Places/Neighbourhoods/Events) the listing matches children by
+**`_metadata.path`** (ancestor chain), not direct `container`:
 
 | Query | Flat | (if ever nested) |
 |---|---|---|

@@ -24,7 +24,7 @@
 //   --type=poi|event|area|tag|article   seed only one collection (repeatable)
 //   --dry-run                   print what would be written, touch nothing
 
-import { keyFor, areaKey, poiKey, eventKey, tagKey, articleKey } from './data/_helpers.mjs';
+import { keyFor, areaKey, poiKey, eventKey, tagKey, articleBlockKey } from './data/_helpers.mjs';
 import { areas } from './data/areas.mjs';
 import { tags } from './data/tags.mjs';
 import { pois } from './data/pois/index.mjs';
@@ -47,17 +47,18 @@ if (!CLIENT_ID || !CLIENT_SECRET) {
 }
 
 // Shared blocks live in the application shared-assets folder ("For This Application",
-// /SysSiteAssets/, key 8ce609ddb1984b04a99c5764a540d313) and are grouped into named
-// sub-folders — Optimizely CMS best practice, never dump blocks flat. Those folders are
-// `SysContentFolder`s created once in the Shared Blocks UI ("For This Application" → New
-// folder); the seed only PARENTS content into them. Override per-environment via env.
+// /SysSiteAssets/) and are grouped into named sub-folders — Optimizely CMS best practice,
+// never dump blocks flat. Shared-block folders are `SysContentFolder`s; the CMA can create
+// them (see ensureSharedFolder) or they can be made once in the Shared Blocks UI. Override
+// per-environment via env.
+const SITE_ASSETS = process.env.SEED_SITE_ASSETS || '8ce609ddb1984b04a99c5764a540d313'; // "For This Application"
 const TAG_TAXONOMY = process.env.SEED_TAG_TAXONOMY || '1064637c853e49519f4d5ebf29d227df'; // "Tag - Taxonomy"
+const ARTICLES_FOLDER = process.env.SEED_ARTICLES_FOLDER || '7c829c4df9e4af6481bca15d4c45aefa'; // "Articles" (shared-block folder)
 // Section pages are Visual Builder EXPERIENCES (created by scripts/migrate-experiences.mjs).
 // Their child items are parented to these keys → URLs stay /<section>/<slug>.
 const PLACES_KEY = keyFor('places-to-visit-exp');
 const NEIGHBOURHOODS_KEY = keyFor('neighbourhoods-exp');
 const EVENTS_KEY = keyFor('events-exp');
-const ARTICLES_KEY = keyFor('articles-exp');
 
 async function getToken() {
   const res = await fetch(`${GATEWAY}/oauth/token`, {
@@ -90,6 +91,31 @@ async function api(token, method, path, body, extraHeaders = {}, attempt = 1) {
     json = text;
   }
   return { status: res.status, json };
+}
+
+/**
+ * Ensure a shared-block folder (`SysContentFolder`) exists in the Assets panel and return
+ * its key. Unlike page-tree `_folder`s, these DO render in the Shared Blocks panel — the
+ * supported way to organise blocks at scale (Articles → year → month). Non-localized and
+ * created already-published, so no locale + no publish step. Idempotent (409 = exists).
+ */
+async function ensureSharedFolder(token, { key, displayName, container }) {
+  if (DRY_RUN) {
+    console.log(`· Shared folder      "${displayName}" — would ensure`);
+    return key;
+  }
+  const r = await api(token, 'POST', '/content', {
+    key,
+    contentType: 'SysContentFolder',
+    container,
+    initialVersion: { displayName },
+  });
+  if (r.status === 201) console.log(`✔ Shared folder      "${displayName}" — created`);
+  else if (r.status !== 409) {
+    failures += 1;
+    console.log(`✖ Shared folder      "${displayName}" — ${r.status}: ${JSON.stringify(r.json).slice(0, 200)}`);
+  }
+  return key;
 }
 
 async function publishLatest(token, key) {
@@ -241,13 +267,29 @@ async function main() {
   }
 
   if (wanted('article')) {
-    // Articles are FLAT — direct children of the Articles experience, never bucketed
-    // into `_folder`s. The SaaS CMS Pages panel is a routing tree that never renders
-    // `_folder`, so a bucketed article is invisible + unauthorable there. Scale via the
-    // Pages search + tag facets; if year archives are ever wanted, add routable year
-    // PAGES (never folders). See docs/CONTENT-ARCHITECTURE.md §10.
+    // Articles are SHARED BLOCKS (`ArticlePost` `_component`) in the Shared Blocks (Assets)
+    // panel, foldered Articles → <year> → <month>. Folders there DO render (unlike the Pages
+    // tree) and scale to thousands. The folder is editorial only — the URL
+    // (/articles/<year>/<month>/<slug>) is derived by the app from `publishDate` + `slug`.
+    // See docs/CONTENT-ARCHITECTURE.md §10.
+    const ym = (a) => {
+      const d = String(a.props.publishDate?.value ?? '');
+      return { y: d.slice(0, 4) || 'undated', m: d.slice(5, 7) || '00' };
+    };
+    const yearKey = (y) => keyFor(`articlefolder:${y}`);
+    const monthKey = (y, m) => keyFor(`articlefolder:${y}:${m}`);
+
+    await ensureSharedFolder(token, { key: ARTICLES_FOLDER, displayName: 'Articles', container: SITE_ASSETS });
+    for (const y of new Set(articles.map((a) => ym(a).y))) {
+      await ensureSharedFolder(token, { key: yearKey(y), displayName: y, container: ARTICLES_FOLDER });
+    }
+    for (const s of new Set(articles.map((a) => { const { y, m } = ym(a); return `${y}/${m}`; }))) {
+      const [y, m] = s.split('/');
+      await ensureSharedFolder(token, { key: monthKey(y, m), displayName: m, container: yearKey(y) });
+    }
     for (const a of articles) {
-      await upsert(token, { slug: a.slug, key: articleKey(a.slug), contentType: 'Article', container: ARTICLES_KEY, routable: true, displayName: a.displayName, properties: a.props, reparent: true });
+      const { y, m } = ym(a);
+      await upsert(token, { slug: a.slug, key: articleBlockKey(a.slug), contentType: 'ArticlePost', container: monthKey(y, m), routable: false, displayName: a.displayName, properties: a.props, reparent: true });
     }
   }
 

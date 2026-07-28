@@ -39,7 +39,7 @@ import Area, { AreaContentType } from '@/components/content/Area';
 import { CategoryContentType } from '@/components/content/Category';
 import { TagContentType } from '@/components/content/Tag';
 import EventDetail, { EventContentType } from '@/components/content/Event';
-import ArticleDetail, { ArticleContentType } from '@/components/content/Article';
+import ArticleDetail, { ArticleContentType, ArticlePostContentType } from '@/components/content/Article';
 
 import type { Metadata } from 'next';
 import { getSiteSettings, buildTitleTemplate, buildTitleDefault } from '@/lib/seo';
@@ -72,6 +72,7 @@ initContentTypeRegistry([
   AreaContentType,
   EventContentType,
   ArticleContentType,
+  ArticlePostContentType,
   TagContentType,
   CategoryContentType,
   ImageMediaContentType,
@@ -94,6 +95,7 @@ initReactComponentRegistry({
     Area,
     Event: EventDetail,
     Article: ArticleDetail,
+    ArticlePost: ArticleDetail,
     ImageMedia,
   },
 });
