@@ -18,12 +18,21 @@ once an image is chosen). Referenced by README.md and docs/BRAINSTORM.md §"Asse
 
 ## What is and isn't automatable
 
-Two different operations, with different answers — this distinction is the whole story:
+Three operations, with different answers:
 
 | Operation | Automatable? | Why |
 |-----------|:---:|-----|
-| **Upload** a binary into CMP/the DAM | ❌ **No** | The CMA's media endpoint (`/content/{key}/versions/{version}/media`) is **GET only** (`put?: never; post?: never` in its OpenAPI contract), and creating an image item needs an `initialVersion.media.key` that must already exist. |
+| **Create folders** in CMP | ✅ **Yes** | `POST /v3/folders { name, parent_folder_id }` → 201. Implemented: `npm run cmp-folders -- --apply`. |
+| **Upload** a binary into CMP/the DAM | ⚠️ **Yes via CMP** (not via the CMA) | Three steps: `GET /v3/upload-url` returns a presigned Google Cloud Storage URL plus a `key`; POST the binary there; then `POST /v3/assets { key, title, folder_id }` registers it. **The CMA cannot** — its media endpoint (`/content/{key}/versions/{version}/media`) is GET-only (`put?: never; post?: never` in its OpenAPI contract). The earlier "impossible" verdict in this file was drawn from the CMA alone and was wrong about CMP. |
 | **Attach** an existing DAM asset to a content item | ✅ **Yes** | It's just a property write, which the CMA does fine. |
+
+> **So why aren't images uploaded automatically?** The blocker is not the API — it's the
+> **source**. Picking 144 correctly-licensed, genuinely relevant photographs needs either an
+> Unsplash/Pexels **API key** (both are free but must be registered by a human) or a person
+> choosing them. Scraping either site is not an option: it breaks their terms and both sit
+> behind bot detection. Add `UNSPLASH_ACCESS_KEY` or `PEXELS_API_KEY` to `.env` and the
+> sourcing step becomes scriptable — the search terms are already derivable from each item's
+> name and tags.
 
 Attaching is a plain string URI, verified against live content:
 
