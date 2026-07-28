@@ -1,53 +1,54 @@
-// Seed script — creates + publishes starter content in Optimizely SaaS CMS via
-// the Content Management API (CMA). Run: `npm run seed` (loads .env).
+// Seed script — creates + publishes content in Optimizely SaaS CMS via the
+// Content Management API (CMA). Run: `npm run seed` (loads .env).
 //
 // Auth: OAuth client-credentials (OPTIMIZELY_CMS_CLIENT_ID/SECRET) against the
 // SaaS gateway. Flow per item: POST /v1/content (draft) -> publish the version.
-// Idempotent: deterministic keys (md5 of slug); an item that already exists
-// (409) is skipped, or (for re-parented items) PATCHed to its new container.
+// Idempotent: deterministic keys (md5 of "<type>:<slug>"); an item that already
+// exists (409) is PATCHed to its container and given a fresh published version.
 //
 // Content tree (CMS-managed URLs):
 //   Home (/)
-//   └─ Places to Visit (/places-to-visit)        [PlacesToVisitPage]
-//      └─ <PointOfInterest>  (/places-to-visit/<slug>)
-// Areas/Categories/Events currently sit under the root; they get their own
-// dedicated section pages when those listings are built.
+//   ├─ Places to Visit (/places-to-visit)   [PlacesToVisit experience]
+//   │   └─ <PointOfInterest>                (/places-to-visit/<slug>)
+//   ├─ Neighbourhoods (/neighbourhoods)     [Neighbourhoods experience]
+//   │   └─ <Area>                           (/neighbourhoods/<slug>)
+//   └─ Events (/events)                     [Events experience]
+//       └─ <Event>                          (/events/<slug>)
+// Tags are shared blocks (_component) in the application shared-assets folder.
 //
-// v1 seeds SCALAR + URL fields only; relationships (area, categories), images
-// and rich text come in v2 once the reference write-shapes are confirmed.
+// The seed DATA lives in scripts/data/ — see that directory for the content itself.
+// Property write-shapes (including the non-obvious rich text one) are in
+// scripts/data/_helpers.mjs.
+//
+// Flags:
+//   --type=poi|event|area|tag   seed only one collection (repeatable)
+//   --dry-run                   print what would be written, touch nothing
 
-import { createHash } from 'node:crypto';
+import { keyFor, areaKey, poiKey, eventKey, tagKey } from './data/_helpers.mjs';
+import { areas } from './data/areas.mjs';
+import { tags } from './data/tags.mjs';
+import { pois } from './data/pois/index.mjs';
+import { events } from './data/events.mjs';
 
 const GATEWAY = (process.env.OPTIMIZELY_CMS_API_URL || 'https://api.cms.optimizely.com').replace(/\/$/, '');
 const CLIENT_ID = process.env.OPTIMIZELY_CMS_CLIENT_ID;
 const CLIENT_SECRET = process.env.OPTIMIZELY_CMS_CLIENT_SECRET;
 const LOCALE = process.env.SEED_LOCALE || 'en';
 
+const args = process.argv.slice(2);
+const DRY_RUN = args.includes('--dry-run');
+const ONLY = args.filter((a) => a.startsWith('--type=')).map((a) => a.slice(7));
+const wanted = (kind) => ONLY.length === 0 || ONLY.includes(kind);
+
 if (!CLIENT_ID || !CLIENT_SECRET) {
   console.error('✖ Missing OPTIMIZELY_CMS_CLIENT_ID / OPTIMIZELY_CMS_CLIENT_SECRET in the environment.');
   process.exit(1);
 }
 
-const keyFor = (slug) => createHash('md5').update(slug).digest('hex');
-const S = (value) => ({ value }); // scalar / array / url property (url written as a plain string)
-// Namespaced keys for the child items. The original md5(<slug>) keys are now
-// TRASHED (an earlier migration cascade-deleted them) and a trashed key cannot be
-// re-created, so the recreated items use "<type>:<slug>" keys — same trick as tags.
-const areaKey = (slug) => keyFor(`area:${slug}`);
-const poiKey = (slug) => keyFor(`poi:${slug}`);
-const eventKey = (slug) => keyFor(`event:${slug}`);
-// Content references are written as "cms://content/<key>" strings. REF targets Areas
-// (the only cross-references authored in the seed, from a POI to its Area).
-const REF = (slug) => ({ value: `cms://content/${areaKey(slug)}` });
-// Tags are shared blocks (_component) keyed "tagblock:<slug>" — a fresh namespace
-// (the retired `_page` Tag instances used "tag:<slug>", now trashed).
-const tagKey = (slug) => keyFor(`tagblock:${slug}`);
-const TAGREFS = (slugs) => ({ value: slugs.map((s) => `cms://content/${tagKey(s)}`) });
 // Application shared-assets folder ("For This Application") — home for shared blocks.
 const SITE_ASSETS = process.env.SEED_SITE_ASSETS || '8ce609ddb1984b04a99c5764a540d313';
-// Section pages are now Visual Builder EXPERIENCES (created by
-// scripts/migrate-experiences.mjs). Their child items (POIs, Areas, Events) are
-// parented to these experience keys → URLs stay /<section>/<slug>.
+// Section pages are Visual Builder EXPERIENCES (created by scripts/migrate-experiences.mjs).
+// Their child items are parented to these keys → URLs stay /<section>/<slug>.
 const PLACES_KEY = keyFor('places-to-visit-exp');
 const NEIGHBOURHOODS_KEY = keyFor('neighbourhoods-exp');
 const EVENTS_KEY = keyFor('events-exp');
@@ -85,7 +86,7 @@ async function api(token, method, path, body, extraHeaders = {}, attempt = 1) {
   return { status: res.status, json };
 }
 
-async function publishLatest(token, key, label) {
+async function publishLatest(token, key) {
   const versions = await api(token, 'GET', `/content/${key}/versions`);
   const version = versions.json?.items?.[0]?.version;
   if (!version) return `⚠ no version to publish`;
@@ -96,9 +97,17 @@ async function publishLatest(token, key, label) {
     : `publish ${pub.status}: ${JSON.stringify(pub.json).slice(0, 160)}`;
 }
 
+let failures = 0;
+
 async function upsert(token, { slug, key: providedKey, contentType, container, routable, displayName, properties, reparent }) {
   const key = providedKey || keyFor(slug);
   const version = { locale: LOCALE, displayName, ...(routable ? { routeSegment: slug } : {}), properties };
+
+  if (DRY_RUN) {
+    console.log(`· ${contentType.padEnd(18)} "${displayName}" — would write ${Object.keys(properties).join(', ')}`);
+    return;
+  }
+
   const create = await api(token, 'POST', '/content', { key, contentType, container, initialVersion: version });
 
   if (create.status === 201) {
@@ -108,12 +117,23 @@ async function upsert(token, { slug, key: providedKey, contentType, container, r
   }
   if (create.status === 409) {
     // Already exists → make it current: (optionally) re-parent, then write a fresh
-    // version with the full properties (adds new fields like references) and publish.
+    // version and publish.
     if (reparent && container) {
       await api(token, 'PATCH', `/content/${key}`, { container }, { 'Content-Type': 'application/merge-patch+json' });
     }
-    const nv = await api(token, 'POST', `/content/${key}/versions`, version);
+    // READ-MERGE-WRITE, not overwrite. A new version replaces the WHOLE property
+    // bag, so writing only the seed's properties would silently blank anything the
+    // seed doesn't know about — in particular the DAM images attached by
+    // scripts/attach-assets.mjs (`images`, `heroImage`, `ogImage`). Seed values win
+    // on the fields the seed owns; everything else is carried forward untouched.
+    const current = await api(token, 'GET', `/content/${key}/versions`);
+    const existing = current.json?.items?.[0]?.properties ?? {};
+    const nv = await api(token, 'POST', `/content/${key}/versions`, {
+      ...version,
+      properties: { ...existing, ...properties },
+    });
     if (nv.status !== 201 && nv.status !== 200) {
+      failures += 1;
       console.log(`✖ ${contentType.padEnd(18)} "${displayName}" — new version ${nv.status}: ${JSON.stringify(nv.json).slice(0, 300)}`);
       return;
     }
@@ -121,68 +141,91 @@ async function upsert(token, { slug, key: providedKey, contentType, container, r
     console.log(`↻ ${contentType.padEnd(18)} "${displayName}" — updated + ${state}`);
     return;
   }
+  failures += 1;
   console.log(`✖ ${contentType.padEnd(18)} "${displayName}" — create ${create.status}: ${JSON.stringify(create.json).slice(0, 400)}`);
 }
 
-// ---------------------------------------------------------------------------
-// Seed data (royalty-free/factual; real place names used descriptively).
-// ---------------------------------------------------------------------------
+/**
+ * Fail fast on data problems the CMA would only report one item at a time:
+ * duplicate slugs (a silent overwrite, since the key is derived from the slug) and
+ * `area` references pointing at a neighbourhood that isn't in the seed.
+ */
+function validate() {
+  const problems = [];
+  const areaSlugs = new Set(areas.map((a) => a.slug));
 
-// Section pages are Visual Builder EXPERIENCES created by
-// scripts/migrate-experiences.mjs (with a seeded canvas: Section Heading + Section
-// Listing). This seed only fills their child items below; the items nest under each
-// experience → /<section>/<slug>.
+  for (const [label, list] of [['area', areas], ['tag', tags], ['poi', pois], ['event', events]]) {
+    const seen = new Set();
+    for (const item of list) {
+      if (seen.has(item.slug)) problems.push(`duplicate ${label} slug: ${item.slug}`);
+      seen.add(item.slug);
+    }
+  }
 
-const areas = [
-  { slug: 'downtown-dubai', displayName: 'Downtown Dubai', props: { name: S('Downtown Dubai'), summary: S('The glittering heart of the city — Burj Khalifa, The Dubai Fountain and the Dubai Mall.'), latitude: S(25.1972), longitude: S(55.2744) } },
-  { slug: 'dubai-marina', displayName: 'Dubai Marina', props: { name: S('Dubai Marina'), summary: S('A waterfront district of skyscrapers, promenades and yacht-lined canals.'), latitude: S(25.0805), longitude: S(55.1403) } },
-  { slug: 'old-dubai', displayName: 'Old Dubai', props: { name: S('Old Dubai'), summary: S('Deira and Bur Dubai — historic souks, the Creek and traditional abra crossings.'), latitude: S(25.2697), longitude: S(55.3094) } },
-];
+  // An `area` property holds "cms://content/<md5(area:<slug>)>" — map keys back to slugs.
+  const keyToSlug = new Map(areas.map((a) => [areaKey(a.slug), a.slug]));
+  for (const list of [pois, events]) {
+    for (const item of list) {
+      const ref = item.props.area?.value;
+      if (!ref) continue;
+      const refKey = String(ref).replace('cms://content/', '');
+      if (!keyToSlug.has(refKey)) problems.push(`${item.slug}: area reference not in seed (${refKey})`);
+    }
+  }
+  if (areaSlugs.size !== areas.length) problems.push('area slugs are not unique');
 
-const tags = [
-  { slug: 'landmarks', displayName: 'Landmarks', props: { name: S('Landmarks'), slug: S('landmarks'), dimension: S('theme'), description: S('Iconic sights and must-see attractions.'), synonyms: S(['icon', 'attraction', 'must-see']), featured: S(true), icon: S('🏙️') } },
-  { slug: 'fine-dining', displayName: 'Fine Dining', props: { name: S('Fine Dining'), slug: S('fine-dining'), dimension: S('cuisine'), description: S('High-end and award-winning restaurants.'), synonyms: S(['Michelin', 'haute cuisine', 'gourmet', 'starred']), featured: S(true), icon: S('🍽️') } },
-  { slug: 'beaches', displayName: 'Beaches', props: { name: S('Beaches'), slug: S('beaches'), dimension: S('theme'), description: S('Sun, sand and the Arabian Gulf.'), synonyms: S(['waterfront', 'sea', 'coast']), featured: S(true), icon: S('🏖️') } },
-  { slug: 'culture-heritage', displayName: 'Culture & Heritage', props: { name: S('Culture & Heritage'), slug: S('culture-heritage'), dimension: S('interest'), description: S('History, museums and Emirati tradition.'), synonyms: S(['history', 'museum', 'tradition', 'heritage']), icon: S('🕌') } },
-  { slug: 'family', displayName: 'Family', props: { name: S('Family'), slug: S('family'), dimension: S('audience'), description: S('Great for kids and families.'), synonyms: S(['kids', 'children', 'family-friendly']), icon: S('👨‍👩‍👧') } },
-  { slug: 'luxury', displayName: 'Luxury', props: { name: S('Luxury'), slug: S('luxury'), dimension: S('theme'), description: S('Premium, five-star and exclusive experiences.'), synonyms: S(['premium', 'five-star', 'exclusive', 'VIP']), featured: S(true), icon: S('✨') } },
-  { slug: 'festivals', displayName: 'Festivals', props: { name: S('Festivals'), slug: S('festivals'), dimension: S('eventType'), description: S('City-wide festivals and seasonal celebrations.'), synonyms: S(['festival', 'celebration', 'seasonal']), featured: S(true), icon: S('🎉') } },
-];
+  // Same check for tag references — a typo'd tag slug would otherwise fail one
+  // item at a time, 100 items into the run.
+  const tagKeyToSlug = new Map(tags.map((t) => [tagKey(t.slug), t.slug]));
+  for (const list of [pois, events]) {
+    for (const item of list) {
+      for (const ref of item.props.tags?.value ?? []) {
+        const refKey = String(ref).replace('cms://content/', '');
+        if (!tagKeyToSlug.has(refKey)) problems.push(`${item.slug}: unknown tag reference (${refKey})`);
+      }
+    }
+  }
 
-const pois = [
-  { slug: 'burj-khalifa', displayName: 'Burj Khalifa', props: { name: S('Burj Khalifa'), summary: S('The world’s tallest building, soaring 828m above Downtown Dubai.'), latitude: S(25.197197), longitude: S(55.274376), priceBand: S('$$$'), accolades: S(['Tallest building in the world']), openingHours: S('Daily 09:00–23:00'), area: REF('downtown-dubai'), tags: TAGREFS(['landmarks', 'luxury']) } },
-  { slug: 'the-dubai-fountain', displayName: 'The Dubai Fountain', props: { name: S('The Dubai Fountain'), summary: S('A choreographed water, light and music spectacle on the Burj Lake.'), latitude: S(25.1955), longitude: S(55.2764), priceBand: S('free'), accolades: S(['One of the world’s largest choreographed fountains']), openingHours: S('Shows every 30 min, 18:00–23:00'), area: REF('downtown-dubai'), tags: TAGREFS(['landmarks', 'family']) } },
-  { slug: 'dubai-mall', displayName: 'The Dubai Mall', props: { name: S('The Dubai Mall'), summary: S('One of the world’s largest malls — retail, aquarium, ice rink and more.'), latitude: S(25.1972), longitude: S(55.2796), priceBand: S('free'), openingHours: S('Daily 10:00–24:00'), area: REF('downtown-dubai'), tags: TAGREFS(['landmarks', 'family']) } },
-  { slug: 'burj-al-arab', displayName: 'Burj Al Arab', props: { name: S('Burj Al Arab'), summary: S('The sail-shaped icon of Jumeirah, among the world’s most luxurious hotels.'), latitude: S(25.1412), longitude: S(55.1853), priceBand: S('$$$$'), accolades: S(['Iconic sail-shaped landmark']), area: REF('dubai-marina'), tags: TAGREFS(['luxury', 'landmarks']) } },
-  { slug: 'palm-jumeirah', displayName: 'Palm Jumeirah', props: { name: S('Palm Jumeirah'), summary: S('The palm-shaped archipelago of beaches, resorts and the Atlantis.'), latitude: S(25.1124), longitude: S(55.139), priceBand: S('free'), area: REF('dubai-marina'), tags: TAGREFS(['beaches', 'luxury']) } },
-  { slug: 'dubai-marina-walk', displayName: 'Dubai Marina Walk', props: { name: S('Dubai Marina Walk'), summary: S('A 7km waterfront promenade of cafés, dining and yacht views.'), latitude: S(25.0805), longitude: S(55.1403), priceBand: S('free'), openingHours: S('Open 24 hours'), area: REF('dubai-marina'), tags: TAGREFS(['beaches', 'family']) } },
-  { slug: 'museum-of-the-future', displayName: 'Museum of the Future', props: { name: S('Museum of the Future'), summary: S('An award-winning museum of innovation inside a striking calligraphy-clad torus.'), latitude: S(25.2197), longitude: S(55.2820), priceBand: S('$$$'), accolades: S(['Award-winning architecture']), openingHours: S('Daily 10:00–19:30'), area: REF('downtown-dubai'), tags: TAGREFS(['landmarks', 'culture-heritage']) } },
-  { slug: 'al-fahidi-neighbourhood', displayName: 'Al Fahidi Historical Neighbourhood', props: { name: S('Al Fahidi Historical Neighbourhood'), summary: S('Wind-tower houses and galleries in one of Dubai’s oldest districts.'), latitude: S(25.2637), longitude: S(55.2996), priceBand: S('free'), openingHours: S('Open 24 hours'), area: REF('old-dubai'), tags: TAGREFS(['culture-heritage']) } },
-  { slug: 'gold-souk', displayName: 'Gold Souk', props: { name: S('Gold Souk'), summary: S('Deira’s legendary market glittering with gold, jewellery and trade.'), latitude: S(25.2716), longitude: S(55.2971), priceBand: S('free'), openingHours: S('Sat–Thu 10:00–22:00'), area: REF('old-dubai'), tags: TAGREFS(['culture-heritage', 'family']) } },
-  { slug: 'jumeirah-beach', displayName: 'Jumeirah Beach', props: { name: S('Jumeirah Beach'), summary: S('A long stretch of white sand with skyline and Burj Al Arab views.'), latitude: S(25.2048), longitude: S(55.2708), priceBand: S('free'), openingHours: S('Open 24 hours'), area: REF('dubai-marina'), tags: TAGREFS(['beaches', 'family']) } },
-];
-
-const events = [
-  { slug: 'dubai-shopping-festival', displayName: 'Dubai Shopping Festival', props: { name: S('Dubai Shopping Festival'), summary: S('The city’s flagship retail, entertainment and fireworks festival.'), startDate: S('2026-12-15T00:00:00Z'), endDate: S('2027-01-29T00:00:00Z'), ticketUrl: S('https://www.dubai.com/'), tags: TAGREFS(['festivals']) } },
-  { slug: 'dubai-food-festival', displayName: 'Dubai Food Festival', props: { name: S('Dubai Food Festival'), summary: S('A city-wide celebration of Dubai’s diverse culinary scene.'), startDate: S('2027-02-20T00:00:00Z'), endDate: S('2027-03-08T00:00:00Z'), tags: TAGREFS(['festivals']) } },
-  { slug: 'dubai-world-cup', displayName: 'Dubai World Cup', props: { name: S('Dubai World Cup'), summary: S('The world’s richest horse-racing day at Meydan Racecourse.'), startDate: S('2027-03-27T00:00:00Z') } },
-];
+  if (problems.length) {
+    console.error(`✖ Seed data invalid:\n  ${problems.join('\n  ')}`);
+    process.exit(1);
+  }
+}
 
 async function main() {
-  console.log(`Seeding → ${GATEWAY} (locale ${LOCALE})\n`);
-  const token = await getToken();
+  validate();
+  console.log(
+    `Seeding → ${GATEWAY} (locale ${LOCALE})${DRY_RUN ? ' — DRY RUN' : ''}\n` +
+      `${areas.length} neighbourhoods · ${tags.length} tags · ${pois.length} places · ${events.length} events\n`,
+  );
+  const token = DRY_RUN ? null : await getToken();
 
-  // Section pages are Visual Builder experiences (scripts/migrate-experiences.mjs).
-  // Tags + Site Settings are shared blocks in the app assets folder. This seed fills
-  // the section child items + the tag blocks that power the facets.
-  for (const a of areas) await upsert(token, { slug: a.slug, key: areaKey(a.slug), contentType: 'Area', container: NEIGHBOURHOODS_KEY, routable: true, displayName: a.displayName, properties: a.props, reparent: true });
+  // Neighbourhoods first: POIs and Events hold references to them, and a reference
+  // to a key that does not exist yet is rejected.
+  if (wanted('area')) {
+    for (const a of areas) {
+      await upsert(token, { slug: a.slug, key: areaKey(a.slug), contentType: 'Area', container: NEIGHBOURHOODS_KEY, routable: true, displayName: a.displayName, properties: a.props, reparent: true });
+    }
+  }
   // Tags → shared blocks (_component) in the app assets folder (non-routable).
-  for (const t of tags) await upsert(token, { slug: t.slug, key: tagKey(t.slug), contentType: 'TagTerm', container: SITE_ASSETS, routable: false, displayName: t.displayName, properties: t.props, reparent: true });
-  // POIs live under Places to Visit → /places-to-visit/<slug>.
-  for (const p of pois) await upsert(token, { slug: p.slug, key: poiKey(p.slug), contentType: 'PointOfInterest', container: PLACES_KEY, routable: true, displayName: p.displayName, properties: p.props, reparent: true });
-  for (const e of events) await upsert(token, { slug: e.slug, key: eventKey(e.slug), contentType: 'Event', container: EVENTS_KEY, routable: true, displayName: e.displayName, properties: e.props, reparent: true });
+  if (wanted('tag')) {
+    for (const t of tags) {
+      await upsert(token, { slug: t.slug, key: tagKey(t.slug), contentType: 'TagTerm', container: SITE_ASSETS, routable: false, displayName: t.displayName, properties: t.props, reparent: true });
+    }
+  }
+  if (wanted('poi')) {
+    for (const p of pois) {
+      await upsert(token, { slug: p.slug, key: poiKey(p.slug), contentType: 'PointOfInterest', container: PLACES_KEY, routable: true, displayName: p.displayName, properties: p.props, reparent: true });
+    }
+  }
+  if (wanted('event')) {
+    for (const e of events) {
+      await upsert(token, { slug: e.slug, key: eventKey(e.slug), contentType: 'Event', container: EVENTS_KEY, routable: true, displayName: e.displayName, properties: e.props, reparent: true });
+    }
+  }
 
-  console.log('\nDone.');
+  console.log(`\nDone.${failures ? ` ${failures} item(s) failed.` : ''}`);
+  if (failures) process.exit(1);
 }
 
 main().catch((err) => {

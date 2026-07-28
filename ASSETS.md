@@ -10,6 +10,12 @@ once an image is chosen). Referenced by README.md and docs/BRAINSTORM.md §"Asse
 > descriptively. Prefer images without prominent identifiable faces (no model release here).
 > Binary files are **not** committed to this repo — they live in CMP/the CMS DAM.
 
+> 📋 **The per-item sourcing list now lives in [docs/ASSET-MANIFEST.md](docs/ASSET-MANIFEST.md)**,
+> which is **generated from `scripts/data/`** (`npm run asset-manifest`) so it can never drift
+> from the content. It currently lists **144 CMP folders**. The hand-written tables further down
+> this file cover only the original 16 items and are kept for their art-direction notes.
+> This file remains the authority on **legal hygiene and attribution**.
+
 ## What is and isn't automatable
 
 Two different operations, with different answers — this distinction is the whole story:

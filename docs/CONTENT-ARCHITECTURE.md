@@ -121,3 +121,75 @@ Root
 - **Localization** (EN→AR later) is a language variation *within* a site, orthogonal to multisite.
 - We build **only This is Dubai now**, but in this layout, so nothing needs re-parenting when more
   destinations arrive.
+
+---
+
+## 9. Writing content via the CMA
+
+Everything below was pinned down empirically against the live API (the error messages are
+quoted because they are the fastest way back to the answer). Reference implementation:
+`scripts/data/_helpers.mjs` and `scripts/seed.mjs`.
+
+### Property write-shapes
+
+Every property value is wrapped in `{ value: … }`:
+
+```jsonc
+"name":       { "value": "Burj Khalifa" },                       // string
+"latitude":   { "value": 25.197197 },                            // float
+"accolades":  { "value": ["Tallest building in the world"] },    // array of string
+"area":       { "value": "cms://content/<KEY>" },                // single reference
+"tags":       { "value": ["cms://content/<KEY>", "…"] },         // list of references
+"images":     { "value": ["cms://content/DamImageSource/<ID>"] },// list of DAM images
+"body":       { "value": { "html": "<p>…</p><h2>…</h2>" } }      // richText — see below
+```
+
+### Rich text takes `{ html }`, not a string and not a node tree
+
+This one is not guessable. A bare HTML string is rejected, and so is a pre-built Slate-style
+node tree:
+
+```
+400 InvalidModel — "Could not read value as 'RichText'. Expected object with an 'html' property."
+```
+
+The correct shape is `{ value: { html: "<p>…</p>" } }`. The CMS **parses the markup server-side**
+into its own node tree, and Graph then returns both representations:
+
+```graphql
+body { html }   # the HTML you wrote back
+body { json }   # { type: "richText", children: [ { type: "paragraph", … } ] }
+```
+
+Render the `json` half with the SDK's `<RichText>` (wrapped by `@/components/ui/Prose`), never
+the `html` half via `dangerouslySetInnerHTML`.
+
+### A new version REPLACES the whole property bag
+
+`POST /content/{key}/versions` is not a patch. Any property you omit is blanked on the new
+version. This bites hard when two writers touch the same items — the seed owns the text fields,
+`attach-assets.mjs` owns the image fields — so **both do read-merge-write**:
+
+```js
+const current  = await api('GET', `/content/${key}/versions`);
+const existing = current.json?.items?.[0]?.properties ?? {};
+await api('POST', `/content/${key}/versions`, {
+  locale, displayName, routeSegment,          // routeSegment MUST be re-sent or the URL changes
+  properties: { ...existing, ...mine },       // mine wins; everything else carries forward
+});
+```
+
+Without this, re-running the seed silently wipes every attached image.
+
+### Other gotchas
+
+- `GET /content/{key}` returns **metadata only** — no properties. Properties live on the
+  version: `GET /content/{key}/versions` → `items[0].properties`.
+- `displayName` is required on every version write; `routeSegment` must be re-sent or the item's
+  URL changes.
+- **An unset content reference is not null.** Graph returns `{ "key": null, "url": { "default": null } }`
+  — a truthy object. Always test `key` (or `url.default`) when checking whether a reference field
+  is empty.
+- The CMA rate-limits bursts with 429; back off and retry (both scripts self-throttle).
+- A **trashed key can never be re-created**, which is why content keys are namespaced
+  `md5("<type>:<slug>")` rather than `md5(slug)`.

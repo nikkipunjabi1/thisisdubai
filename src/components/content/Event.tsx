@@ -3,6 +3,7 @@ import { getPreviewUtils } from '@optimizely/cms-sdk/react/server';
 import { SectionShell } from '@/components/ui/SectionShell';
 import { JsonLd } from '@/components/ui/JsonLd';
 import { DetailHero } from '@/components/media/DetailHero';
+import { Prose } from '@/components/ui/Prose';
 import { SeoMetadataContract } from './SeoMetadata';
 import { AreaContentType } from './Area';
 import { TagContentType } from './Tag';
@@ -63,6 +64,10 @@ export default function Event({ content }: { content: ContentProps<typeof EventC
             </p>
           ) : null}
         </header>
+        <div className="mt-12" {...pa('body')}>
+          <Prose content={content.body?.json} />
+        </div>
+
         {ticket ? (
           <div className="mt-10 border-t border-line pt-8">
             <a

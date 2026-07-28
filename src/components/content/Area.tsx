@@ -3,6 +3,7 @@ import { getPreviewUtils } from '@optimizely/cms-sdk/react/server';
 import { SectionShell } from '@/components/ui/SectionShell';
 import { JsonLd } from '@/components/ui/JsonLd';
 import { DetailHero } from '@/components/media/DetailHero';
+import { Prose } from '@/components/ui/Prose';
 import { SeoMetadataContract } from './SeoMetadata';
 
 /**
@@ -98,6 +99,10 @@ export default function Area({ content }: { content: ContentProps<typeof AreaCon
             </p>
           ) : null}
         </header>
+        <div className="mt-12" {...pa('description')}>
+          <Prose content={content.description?.json} />
+        </div>
+
         {mapUrl ? (
           <dl className="mt-10 border-t border-line pt-8">
             <dt className="eyebrow">Location</dt>
