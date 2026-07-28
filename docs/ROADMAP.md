@@ -1,4 +1,4 @@
-# Roadmap — Visit Vela
+# Roadmap — This is Dubai
 
 _Phased plan. Each phase ends with a working, deployable state and (usually) a blog post._
 
@@ -8,7 +8,7 @@ _Phased plan. Each phase ends with a working, deployable state and (usually) a b
 - [ ] Content model drafted (CONTENT-MODEL.md)
 - [ ] Design system direction drafted (DESIGN-SYSTEM.md)
 - [ ] Repo created on GitHub + Vercel project linked
-- **Blog:** _"Why I'm building Visit Vela on Optimizely SaaS — a public learning project."_
+- **Blog:** _"Why I'm building This is Dubai on Optimizely SaaS — a public learning project."_
 
 ## Phase 1 — Baseline running
 - [ ] Fork `cms-saas-vercel-demo`, get it running locally against your dev CMS
@@ -30,6 +30,19 @@ _Phased plan. Each phase ends with a working, deployable state and (usually) a b
 - [ ] **SEO on every page** (server-rendered): title/meta/canonical/OG + JSON-LD, sitemap, OG
       images (see SEO.md) — build shared `buildMetadata` + `buildJsonLd` helpers
 - **Blog:** _"Content modeling for Visual Builder: pages vs experiences vs components"_
+
+## Phase 2.5 — Content at scale
+- [x] ~250-item corpus: **101 Places to Visit**, **19 Neighbourhoods**, **20 Events**, 24 Tags —
+      all with authored rich-text bodies (originally written; see the sourcing rule in SPRINTS.md)
+- [ ] **Articles** section stood up end-to-end + 100 long-form articles
+- [ ] **Things to Do** section — the visitdubai.com `/things-to-do` equivalent, mapped to the
+      existing `Tour` type (activities and experiences, as distinct from `PointOfInterest`
+      landmarks) + ~30 tours
+- [ ] Imagery: 144 CMP folders (`docs/ASSET-MANIFEST.md`) → `npm run attach-assets -- --apply`
+- [ ] Content quality pass: facet coverage, cross-links, re-verify search relevance at scale
+- **Why:** relevance tuning, facets and pagination are untestable on 16 items — and every
+  Phase-3/4 feature (semantic search, AI retrieval, the MCP server) reads from this corpus.
+- See **SPRINTS.md §Phase 2.5** for the sprint breakdown.
 
 ## Phase 3 — Optimizely superpowers
 - [ ] **Stakeholder preview links** — durable, shareable, login-free preview-before-publish

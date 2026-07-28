@@ -1,6 +1,6 @@
 # Blog & Community Plan — toward Optimizely MVP
 
-_Goal: consistent, genuinely useful community content that documents building Visit Vela.
+_Goal: consistent, genuinely useful community content that documents building This is Dubai.
 I (Claude) will nudge you to blog at the trigger points below — especially anything **new**, a
 **challenge solved**, or a **reusable module** created._
 

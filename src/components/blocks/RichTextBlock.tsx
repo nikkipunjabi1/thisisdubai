@@ -1,6 +1,6 @@
 import { contentType, type ContentProps } from '@optimizely/cms-sdk';
 import { getPreviewUtils } from '@optimizely/cms-sdk/react/server';
-import { RichText } from '@optimizely/cms-sdk/react/richText';
+import { Prose } from '@/components/ui/Prose';
 import {
   SectionShell,
   type SectionTheme,
@@ -36,11 +36,9 @@ export default function RichTextBlock({ content, displaySettings }: Props) {
       width="contained"
       spacing={(displaySettings?.spacing as SectionSpacing) ?? 'normal'}
     >
-      <div
-        className="mx-auto max-w-[68ch] text-lg leading-relaxed [&_a]:text-accent [&_a]:underline [&_h2]:font-display [&_h2]:text-3xl [&_h2]:mt-10 [&_h3]:font-display [&_h3]:text-2xl [&_h3]:mt-8 [&_p]:mt-5"
-        {...pa('body')}
-      >
-        <RichText content={content.body?.json} />
+      <div {...pa('body')}>
+        {/* Shared with the detail pages so editorial copy looks identical everywhere. */}
+        <Prose content={content.body?.json} className="mx-auto" />
       </div>
     </SectionShell>
   );

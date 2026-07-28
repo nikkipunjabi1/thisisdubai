@@ -1,10 +1,10 @@
-# Brainstorm — Visit Vela
+# Brainstorm — This is Dubai
 
 _Last updated: 2026-07-21_
 
 ## 1. The vision
 
-Build **Visit Vela**, an original destination-marketing site for a fictional coastal-desert
+Build **This is Dubai**, an original destination-marketing site for a fictional coastal-desert
 emirate, on the Optimizely SaaS stack. It plays the same role visitdubai.com plays for Dubai:
 inspire visitors, help them discover things to do, and plan a trip — but everything (brand,
 copy, imagery, data) is original so it can be shared publicly.
@@ -61,7 +61,7 @@ README. (If exact official assets are ever wanted, keep that to a **private, unp
 ### Tier 2 — Optimizely showcase (Phase 3)
 - **Semantic search** with autocomplete + synonyms (Graph)
 - **Visual Builder** experiences fully editable on-page
-- **Multisite** (e.g., Visit Vela + a second micro-site) on one SaaS instance
+- **Multisite** (e.g., This is Dubai + a second micro-site) on one SaaS instance
 - **Localization** (English + one more locale, e.g., Arabic RTL — great multisite story)
 - **Personalization / experimentation** hooks (Optimizely's core differentiator)
 

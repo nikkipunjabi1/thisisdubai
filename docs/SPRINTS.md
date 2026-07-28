@@ -79,6 +79,35 @@ multi-page site. 🔴 → split into these sprints:
 - [ ] **S2.9 — Blog #3 + #4 outlines** (content modeling; SEO/JSON-LD) 🟢
 - 🏁 Phase-2 done = full site renders from CMS, styled, SEO on every page.
 
+## 🚦 Phase 2.5 — Content at scale  _(in progress)_
+_Rationale: search relevance, facets and pagination can't be judged on 16 items. Everything
+downstream (semantic search tuning, AI retrieval, the MCP server) needs a realistic corpus._
+
+> **Sourcing rule.** Content here is **originally authored**. visitdubai.com and similar
+> destination sites are the official tourism authority's copy and imagery — off-limits per
+> ASSETS.md, and their sites block automated access anyway (403 + `robots.txt`). Place names,
+> coordinates, opening hours and price bands are *facts* and are used descriptively.
+
+- [x] **SC1 — Depth in the live sections** ✅
+  101 Places to Visit · 19 Neighbourhoods · 20 Events · 24 Tags, all with authored rich-text
+  bodies. Body renderers added to POI/Event/Area detail pages (`<Prose>`); seed refactored to
+  `scripts/data/`; `npm run asset-manifest` generates the CMP upload manifest.
+- [ ] **SC2 — Articles section end-to-end** 🔴
+  `Article` type already exists in the CMS but is unregistered in `layout.tsx`. Needs: registry
+  entry, an `Articles` `_experience` section + migration, a card, nav entry, listing wiring —
+  then 100 long-form articles (~800+ words each) with categories and `relatedPlaces`.
+- [ ] **SC3 — "Things to Do" section** 🔴
+  Maps to the existing (unregistered) **`Tour`** type — activities and experiences, as distinct
+  from `PointOfInterest` landmarks: desert safaris, dhow cruises, skydiving, walking tours.
+  Same standing-up work as SC2 (registry + experience + card + nav), then ~30 tours with
+  `durationHours`, `priceFrom`, `highlights` and `stops` linking back to POIs.
+- [ ] **SC4 — Content quality pass** 🟡
+  Tag/facet coverage across the full corpus, `relatedPlaces` cross-links, and a re-verification
+  of semantic search + the relevance floor at ~250 items rather than 16.
+- [ ] **SC5 — Imagery** 🟡 _(runs in parallel; blocked on uploads)_
+  144 CMP folders per `docs/ASSET-MANIFEST.md` → `npm run attach-assets -- --apply`.
+- 🏁 Phase-2.5 done = ~250 published items, every image field filled, facets meaningful.
+
 ## 🚦 Phase 3 — Optimizely superpowers  _(ask before starting)_
 - [ ] **S3.1 — Stakeholder preview-link module** (the headline feature) 🔴
 - [~] **S3.2 — Semantic search** (autocomplete, synonyms, boosting, facets) 🔴

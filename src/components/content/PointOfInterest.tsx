@@ -2,6 +2,7 @@ import { contentType, damAssets, type ContentProps } from '@optimizely/cms-sdk';
 import { getPreviewUtils } from '@optimizely/cms-sdk/react/server';
 import { SectionShell } from '@/components/ui/SectionShell';
 import { JsonLd } from '@/components/ui/JsonLd';
+import { Prose } from '@/components/ui/Prose';
 import { DetailHero } from '@/components/media/DetailHero';
 import { priceLabel } from '@/lib/pois';
 import { SeoMetadataContract } from './SeoMetadata';
@@ -195,6 +196,10 @@ export default function PointOfInterest({
             </div>
           ) : null}
         </dl>
+
+        <div className="mt-12" {...pa('body')}>
+          <Prose content={content.body?.json} />
+        </div>
       </article>
     </SectionShell>
   );
