@@ -20,6 +20,7 @@
 import { areas } from './data/areas.mjs';
 import { pois } from './data/pois/index.mjs';
 import { events } from './data/events.mjs';
+import { articles } from './data/articles/index.mjs';
 
 const BASE = (process.env.CMP_API_URL || 'https://api.cmp.optimizely.com').replace(/\/$/, '');
 const TOKEN_URL = 'https://accounts.cmp.optimizely.com/o/oauth2/v1/token';
@@ -33,10 +34,11 @@ if (!process.env.CMP_CLIENT_ID || !process.env.CMP_CLIENT_SECRET) {
 
 /** The tree we want, as [section, ...leaf names]. A section of '' means directly under root. */
 const WANTED = [
-  ['', ['Homepage', 'Places to Visit', 'Neighbourhoods', 'Events']],
+  ['', ['Homepage', 'Places to Visit', 'Neighbourhoods', 'Events', 'Articles']],
   ['Places To Visit', pois.map((p) => p.displayName)],
   ['Neighbourhoods', areas.map((a) => a.displayName)],
   ['Events', events.map((e) => e.displayName)],
+  ['Articles', articles.map((a) => a.displayName)],
 ];
 
 let token;
