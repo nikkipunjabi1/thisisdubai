@@ -34,7 +34,7 @@ components that query/reference that data. Every routable type carries `SeoMetad
 |------|---------|-----------|
 | `PointOfInterest` (Places to Visit) | A place to visit / thing to do (POI) | name, slug, summary, body, images, `area` (ref), `categories` (tags), geo (lat/lng), priceBand, openingHours, SEO → `TouristAttraction` |
 | `Event` | A dated event | name, slug, summary, body, images, startDate, endDate, venue/`area` ref, `categories`, ticketUrl, SEO → `Event` |
-| `Article` | Editorial guide / news | title, slug, excerpt, body (rich text), heroImage, author, publishDate, `categories`, related refs, SEO → `Article`/`NewsArticle` |
+| `ArticlePost` | Editorial guide / news — a **shared block** (`_component`), NOT a page: it scales to thousands, foldered by year/month in the Shared Blocks panel, and the app routes it at `/articles/<year>/<month>/<slug>` (resolved by `slug`; folders don't affect the URL). See CONTENT-ARCHITECTURE.md §10. | slug, title, excerpt, body (rich text), heroImage, author, publishDate, `tags` (Tag refs), `relatedPlaces` (POI refs), SEO → `Article` |
 | `Tour` | A curated experience / package | name, slug, summary, body, images, duration, priceFrom, highlights, stops (`PointOfInterest[]`), `categories`, bookingUrl, SEO → `TouristTrip` |
 | `Hotel` | A place to stay | name, slug, summary, body, images, `area` ref, starRating, priceBand, amenities, geo, bookingUrl, SEO → `Hotel`/`LodgingBusiness` |
 | `Area` | Neighborhood/region | name, slug, description, heroImage, geo, SEO → `Place` |
