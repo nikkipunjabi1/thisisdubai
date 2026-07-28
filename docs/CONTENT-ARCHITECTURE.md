@@ -193,3 +193,77 @@ Without this, re-running the seed silently wipes every attached image.
 - The CMA rate-limits bursts with 429; back off and retry (both scripts self-throttle).
 - A **trashed key can never be re-created**, which is why content keys are namespaced
   `md5("<type>:<slug>")` rather than `md5(slug)`.
+
+---
+
+## 10. Scaling a section past ~100 items — folder bucketing
+
+Optimizely's long-standing guidance is to keep **no more than ~100 immediate children**
+under a single container. Past that the *editor* tree is what degrades first — expanding a
+node with thousands of children is slow in edit mode — rather than delivery, which is
+paginated and indifferent. The standard remedy is organisational folders: **year/month for
+editorial, category for products**.
+
+Articles are planned to reach 1000+, so they are bucketed. Places to Visit (101) sits at the
+line and is left flat for now; it can adopt the same mechanism (bucketed by Area) without any
+code change, because the listing engine is already folder-transparent.
+
+### The structure
+
+```
+Home (/)
+└─ Articles            [Articles experience]   /articles
+   ├─ Folder "2026"                            → contributes /2026/
+   │   ├─ Article                              /articles/2026/<slug>/
+   │   └─ …
+   └─ Folder "2027"
+```
+
+Buckets are **year-of-publishDate**. A publish year never changes, so an article's URL is
+stable — unlike a category bucket, which would move the URL whenever the article is
+recategorised. Taxonomy is handled by `Tag` instead, which is free to change.
+
+### Verified behaviour (do not assume any of this)
+
+- **A folder DOES contribute a URL segment.** It is *not* URL-transparent. A folder is
+  created with an auto-derived `routeSegment` (from its display name), and descendants
+  inherit it: an Article under folder "2026" resolves to `/articles/2026/<slug>/`. This is
+  the standard editorial URL shape, so it is a feature here — but it must be a deliberate
+  choice, not a surprise.
+- **The folder itself is not a page.** `[...slug]` lists folder types in
+  `NON_ROUTABLE_TYPES`, so `/articles/2026` returns 404. Confirmed.
+- **`_folder` is non-localized.** Sending `locale` on a version write is rejected: *"A locale
+  should not be provided when creating content of a non-localized content type."*
+- **Folders are created already published and cannot be published again** — a publish attempt
+  returns *"Unable to transition the status…"*. So the seed creates them and skips publish.
+- **`mayContainTypes` is enforced in both directions.** The parent must allow the folder
+  (`Articles.mayContainTypes` includes `Folder`) *and* the folder must allow the child
+  (`Folder.mayContainTypes` includes `Article` and `_self`). Missing either yields
+  *"Content type 'X' is not allowed to be created under parent of content type 'Y'"*.
+
+### The querying consequence
+
+Bucketing breaks any query that matches on the **direct parent**. Measured on the live data
+immediately after the 10 articles moved into their year folder:
+
+| Query | Result |
+|---|---|
+| `_metadata: { container: { eq: articlesKey } }` | **0** |
+| `_metadata: { path: { eq: articlesKey } }` | **10** |
+
+`_metadata.path` is the ancestor chain, so `src/lib/sections.ts` matches on `path`
+throughout. One query then serves flat *and* bucketed sections.
+
+> ⚠️ **`path` includes SELF.** `_Page(where: { path: { eq: sectionKey } }, limit: 1)` returns
+> the *section experience itself*, not a child — which made `detectChildType` detect nothing
+> and silently emptied **every** listing on the site. It now fetches several items and takes
+> the first whose `types` name a known child type. If you touch that query, re-check all four
+> section listings, not just the one you changed.
+
+### Cache gotcha
+
+`unstable_cache` keys did not change when the query did, so the old (correct-looking) results
+survived the edit and the listings stayed wrong after the fix. Clearing `.next/cache` requires
+the dev server to be **stopped** — deleting it under a running server is not enough. This is
+the second time this has bitten on this project; assume any listing-query change needs a
+stop → clear → start cycle before you trust what you see.

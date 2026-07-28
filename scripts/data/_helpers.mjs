@@ -27,6 +27,8 @@ export const poiKey = (slug) => keyFor(`poi:${slug}`);
 export const eventKey = (slug) => keyFor(`event:${slug}`);
 export const tagKey = (slug) => keyFor(`tagblock:${slug}`);
 export const articleKey = (slug) => keyFor(`article:${slug}`);
+// Organisational folders (article year buckets) — see docs/CONTENT-ARCHITECTURE.md §10.
+export const folderKey = (id) => keyFor(`folder:${id}`);
 
 /** Single content reference → an Area. */
 export const REF = (slug) => ({ value: `cms://content/${areaKey(slug)}` });

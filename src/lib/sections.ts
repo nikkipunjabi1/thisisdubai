@@ -118,16 +118,32 @@ export const getTags = cache(
   }, ['tags']),
 );
 
-/** Detect the concrete child type of a section by peeking at one child. */
+/**
+ * Detect the concrete child type of a section by peeking at one descendant.
+ *
+ * Matches on `_metadata.path` (the ancestor chain) rather than `container` (the
+ * direct parent), so it still works when items are bucketed into folders — see
+ * docs/CONTENT-ARCHITECTURE.md §10. Verified: `container` finds only direct
+ * children, `path` finds everything beneath the section.
+ */
 export const detectChildType = cache(
   cachedGraphRead(async (containerKey: string): Promise<ChildType | null> => {
     try {
+      // NOTE: `_metadata.path` is the ancestor chain INCLUDING SELF, so this query
+      // always returns the section experience itself among the results. We therefore
+      // fetch a handful and take the first item whose types name a known child type —
+      // taking `limit: 1` here silently returns the section and detects nothing,
+      // which empties every listing.
       const data = (await getClient().request(
-        `query($c: String!) { _Page(where: { _metadata: { container: { eq: $c } } }, limit: 1) { items { _metadata { types } } } }`,
+        `query($c: String!) { _Page(where: { _metadata: { path: { eq: $c } } }, limit: 5) { items { _metadata { types } } } }`,
         { c: containerKey },
       )) as { _Page?: { items?: Array<{ _metadata?: { types?: string[] } }> } };
-      const types = data?._Page?.items?.[0]?._metadata?.types ?? [];
-      return (['PointOfInterest', 'Area', 'Event', 'Article'] as ChildType[]).find((t) => types.includes(t)) ?? null;
+      const known: ChildType[] = ['PointOfInterest', 'Area', 'Event', 'Article'];
+      for (const item of data?._Page?.items ?? []) {
+        const hit = known.find((t) => (item._metadata?.types ?? []).includes(t));
+        if (hit) return hit;
+      }
+      return null;
     } catch {
       return null;
     }
@@ -135,10 +151,11 @@ export const detectChildType = cache(
 );
 
 /**
- * Type-aware, server-paginated + FILTERED children query for the SectionListing
+ * Type-aware, server-paginated + FILTERED descendants query for the SectionListing
  * block — the listing engine for every section. It auto-detects the child type
- * (POI/Area/Event) so it can query the concrete type and apply type-specific facet
- * filters (`tags.key`, `priceBand`) that the `_Page` interface can't express.
+ * (POI/Area/Event/Article) so it can query the concrete type and apply type-specific
+ * facet filters (`tags.key`, `priceBand`) that the `_Page` interface can't express.
+ * Matches DESCENDANTS via `_metadata.path`, so folder bucketing is transparent.
  * Server-side sort + skip/limit + total. Guarded → empty page.
  */
 export const getSectionChildren = cachedGraphRead(async function getSectionChildren(
@@ -157,7 +174,9 @@ export const getSectionChildren = cachedGraphRead(async function getSectionChild
     const orderBy = ORDER_BY[sort] ?? ORDER_BY.name; // controlled value — safe to inline
     const facets = TYPE_FACETS[childType];
 
-    const wheres = ['_metadata: { container: { eq: $c } }'];
+    // Ancestor match, not direct-parent match: articles live in year folders under
+    // their section, and this keeps one query working for flat AND bucketed sections.
+    const wheres = ['_metadata: { path: { eq: $c } }'];
     const decls = ['$c: String!', '$skip: Int!', '$limit: Int!'];
     const vars: Record<string, unknown> = { c: containerKey, skip, limit };
 

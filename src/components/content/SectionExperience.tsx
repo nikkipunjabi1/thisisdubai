@@ -9,6 +9,7 @@ import { PointOfInterestContentType } from './PointOfInterest';
 import { AreaContentType } from './Area';
 import { EventContentType } from './Event';
 import { ArticleContentType } from './Article';
+import { FolderContentType } from './Folder';
 
 /**
  * Section experiences — the Visual Builder version of the listing/section pages.
@@ -63,7 +64,9 @@ export const ArticlesContentType = contentType({
   displayName: 'Articles (Section)',
   baseType: '_experience',
   extends: SeoMetadataContract,
-  mayContainTypes: [ArticleContentType],
+  // Articles are bucketed into year folders — see docs/CONTENT-ARCHITECTURE.md §10.
+  // Folders are organisational only — never routable, never rendered.
+  mayContainTypes: [ArticleContentType, FolderContentType],
   properties: internalTitle,
 });
 

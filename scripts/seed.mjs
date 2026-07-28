@@ -30,6 +30,7 @@ import { tags } from './data/tags.mjs';
 import { pois } from './data/pois/index.mjs';
 import { events } from './data/events.mjs';
 import { articles } from './data/articles/index.mjs';
+import { folderKey } from './data/_helpers.mjs';
 
 const GATEWAY = (process.env.OPTIMIZELY_CMS_API_URL || 'https://api.cms.optimizely.com').replace(/\/$/, '');
 const CLIENT_ID = process.env.OPTIMIZELY_CMS_CLIENT_ID;
@@ -88,6 +89,38 @@ async function api(token, method, path, body, extraHeaders = {}, attempt = 1) {
   return { status: res.status, json };
 }
 
+/**
+ * Create (if missing) an organisational folder and return its key.
+ *
+ * Folders differ from every other write here:
+ *  - `_folder` is NON-LOCALIZED — sending `locale` is rejected outright
+ *    ("A locale should not be provided when creating content of a non-localized
+ *    content type").
+ *  - They are created already `published` and CANNOT be published again
+ *    ("Unable to transition the status..."), so no publish step.
+ *  - `routeSegment` IS honoured and DOES appear in descendant URLs — a folder is
+ *    not URL-transparent. That is deliberate here: bucketing by year gives
+ *    /articles/<year>/<slug>/, the standard editorial URL shape.
+ */
+async function ensureFolder(token, { key, displayName, routeSegment, container }) {
+  if (DRY_RUN) {
+    console.log(`· Folder             "${displayName}" — would ensure (/${routeSegment}/)`);
+    return key;
+  }
+  const r = await api(token, 'POST', '/content', {
+    key,
+    contentType: 'Folder',
+    container,
+    initialVersion: { displayName, routeSegment },
+  });
+  if (r.status === 201) console.log(`✔ Folder             "${displayName}" — created`);
+  else if (r.status !== 409) {
+    failures += 1;
+    console.log(`✖ Folder             "${displayName}" — ${r.status}: ${JSON.stringify(r.json).slice(0, 240)}`);
+  }
+  return key;
+}
+
 async function publishLatest(token, key) {
   const versions = await api(token, 'GET', `/content/${key}/versions`);
   const version = versions.json?.items?.[0]?.version;
@@ -100,6 +133,9 @@ async function publishLatest(token, key) {
 }
 
 let failures = 0;
+
+/** An article's bucket = its publish year (stable for the life of the article). */
+const yearOf = (a) => String(a.props.publishDate?.value ?? '').slice(0, 4) || 'undated';
 
 async function upsert(token, { slug, key: providedKey, contentType, container, routable, displayName, properties, reparent }) {
   const key = providedKey || keyFor(slug);
@@ -236,8 +272,20 @@ async function main() {
   }
 
   if (wanted('article')) {
+    // Bucket articles into YEAR folders. Optimizely's guidance is ~100 children per
+    // container before the editor tree degrades, and this section is planned to reach
+    // 1000+. Derived from publishDate, which never changes for a given article — so an
+    // article's URL is stable, unlike a category-based bucket.
+    // See docs/CONTENT-ARCHITECTURE.md §10.
+    const years = [...new Set(articles.map((a) => yearOf(a)))].sort();
+    const folderFor = new Map();
+    for (const y of years) {
+      const key = folderKey(`articles:${y}`);
+      await ensureFolder(token, { key, displayName: y, routeSegment: y, container: ARTICLES_KEY });
+      folderFor.set(y, key);
+    }
     for (const a of articles) {
-      await upsert(token, { slug: a.slug, key: articleKey(a.slug), contentType: 'Article', container: ARTICLES_KEY, routable: true, displayName: a.displayName, properties: a.props, reparent: true });
+      await upsert(token, { slug: a.slug, key: articleKey(a.slug), contentType: 'Article', container: folderFor.get(yearOf(a)), routable: true, displayName: a.displayName, properties: a.props, reparent: true });
     }
   }
 
