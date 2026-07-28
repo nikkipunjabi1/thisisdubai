@@ -1,4 +1,5 @@
 import { getClient } from '@optimizely/cms-sdk';
+import { cachedGraphRead } from './cache';
 
 /**
  * Data access for PointOfInterest content via Optimizely Graph (published-only,
@@ -74,3 +75,47 @@ export async function getAllPois(): Promise<PoiCard[]> {
     return [];
   }
 }
+
+/**
+ * Resolve a set of content keys to link-ready {name, path} pairs.
+ *
+ * Needed because a `contentReference` property resolves to `{ url, item, key }`
+ * only — the SDK does NOT project the target's own fields (`item` is populated
+ * for assets, not for pages). So an Article that references POIs has their URLs
+ * but not their names, and a second query is the way to get labels.
+ *
+ * Guarded → empty list, and cached across requests like every other Graph read.
+ */
+export type RelatedPlace = { name: string; path: string };
+
+export const getPlacesByKeys = cachedGraphRead(async function getPlacesByKeys(
+  keys: string[],
+): Promise<RelatedPlace[]> {
+  if (!keys.length) return [];
+  try {
+    const data = (await getClient().request(
+      `query($keys: [String!]!) {
+         PointOfInterest(where: { _metadata: { key: { in: $keys } } }, limit: 100) {
+           items { name _metadata { key displayName url { default } } }
+         }
+       }`,
+      { keys },
+    )) as {
+      PointOfInterest?: {
+        items?: Array<{ name?: string; _metadata?: { key?: string; displayName?: string; url?: { default?: string } } }>;
+      };
+    };
+    const byKey = new Map(
+      (data?.PointOfInterest?.items ?? [])
+        .filter((i) => i._metadata?.key && i._metadata?.url?.default)
+        .map((i) => [
+          i._metadata!.key!,
+          { name: i.name ?? i._metadata!.displayName ?? 'View place', path: i._metadata!.url!.default! },
+        ]),
+    );
+    // Preserve the authored order rather than Graph's.
+    return keys.map((k) => byKey.get(k)).filter((v): v is RelatedPlace => Boolean(v));
+  } catch {
+    return [];
+  }
+}, ['places-by-keys']);

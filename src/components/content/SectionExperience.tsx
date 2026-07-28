@@ -57,6 +57,18 @@ export const EventsContentType = contentType({
   properties: internalTitle,
 });
 
+export const ArticlesContentType = contentType({
+  key: 'Articles',
+  displayName: 'Articles (Section)',
+  baseType: '_experience',
+  extends: SeoMetadataContract,
+  // Articles live as shared BLOCKS (`ArticlePost`) in the Assets panel, not as page
+  // children — so this experience contains no page types. It's purely the listing
+  // page; the SectionListing block surfaces the article blocks (docs §10).
+  mayContainTypes: [],
+  properties: internalTitle,
+});
+
 function ComponentWrapper({ children, node }: ComponentContainerProps) {
   const { pa } = getPreviewUtils(node);
   return <div {...pa(node)}>{children}</div>;

@@ -1,6 +1,7 @@
 import { cache } from 'react';
 import { getClient } from '@optimizely/cms-sdk';
 import { cachedGraphRead } from './cache';
+import { articleHref } from './articles';
 
 /**
  * Generic "children of a section page" queries for the listing pattern. Each
@@ -27,8 +28,10 @@ type ImageRef = { url?: { default?: string | null } | null } | null;
 type Node = {
   name?: string | null;
   summary?: string | null;
+  slug?: string | null;
   startDate?: string | null;
   endDate?: string | null;
+  publishDate?: string | null;
   images?: ImageRef[] | null;
   heroImage?: ImageRef;
   _metadata?: { url?: { default?: string | null } | null } | null;
@@ -75,18 +78,23 @@ const ORDER_BY: Record<SortKey, string> = {
 export const isSortKey = (v: string | undefined): v is SortKey => v === 'name' || v === '-name' || v === 'newest';
 
 /** The concrete child type of a section (drives type-specific filters + fields). */
-export type ChildType = 'PointOfInterest' | 'Area' | 'Event';
-// Note the image field differs by type: POI/Event author a list (`images`), Area a
-// single `heroImage`. Both resolve to a CMP CDN URL via `url { default }`.
+export type ChildType = 'PointOfInterest' | 'Area' | 'Event' | 'ArticlePost';
+// Note the image field differs by type: POI/Event author a list (`images`), Area and
+// ArticlePost a single `heroImage`. Both resolve to a CMP CDN URL via `url { default }`.
+// ArticlePost is a shared BLOCK (no CMS URL) with editorial field names (`title`/`excerpt`,
+// ALIASED to name/summary) — plus `slug`/`publishDate`, from which the card's href is
+// synthesized (articleHref). One card component still serves every section.
 const TYPE_FIELDS: Record<ChildType, string> = {
   PointOfInterest: 'name summary priceBand images { url { default } }',
   Area: 'name summary heroImage { url { default } }',
   Event: 'name summary startDate endDate images { url { default } }',
+  ArticlePost: 'name: title summary: excerpt publishDate slug heroImage { url { default } }',
 };
 /** Which facets each child type supports (drives the FilterControls UI). */
 export const TYPE_FACETS: Record<ChildType, Array<'tag' | 'price'>> = {
   PointOfInterest: ['price', 'tag'],
   Event: ['tag'],
+  ArticlePost: ['tag'],
   Area: [],
 };
 
@@ -112,16 +120,40 @@ export const getTags = cache(
   }, ['tags']),
 );
 
-/** Detect the concrete child type of a section by peeking at one child. */
+/**
+ * Detect the concrete child type of a section by peeking at one descendant.
+ *
+ * Matches on `_metadata.path` (the ancestor chain) rather than `container` (the
+ * direct parent), so it still works when items are bucketed into folders — see
+ * docs/CONTENT-ARCHITECTURE.md §10. Verified: `container` finds only direct
+ * children, `path` finds everything beneath the section.
+ */
 export const detectChildType = cache(
   cachedGraphRead(async (containerKey: string): Promise<ChildType | null> => {
     try {
+      // NOTE: `_metadata.path` is the ancestor chain INCLUDING SELF, so this query
+      // always returns the section experience itself among the results. We therefore
+      // fetch a handful and take the first item whose types name a known child type —
+      // taking `limit: 1` here silently returns the section and detects nothing,
+      // which empties every listing.
       const data = (await getClient().request(
-        `query($c: String!) { _Page(where: { _metadata: { container: { eq: $c } } }, limit: 1) { items { _metadata { types } } } }`,
+        `query($c: String!) { _Page(where: { _metadata: { path: { eq: $c } } }, limit: 5) { items { _metadata { types } } } }`,
         { c: containerKey },
       )) as { _Page?: { items?: Array<{ _metadata?: { types?: string[] } }> } };
-      const types = data?._Page?.items?.[0]?._metadata?.types ?? [];
-      return (['PointOfInterest', 'Area', 'Event'] as ChildType[]).find((t) => types.includes(t)) ?? null;
+      const known: ChildType[] = ['PointOfInterest', 'Area', 'Event'];
+      for (const item of data?._Page?.items ?? []) {
+        const hit = known.find((t) => (item._metadata?.types ?? []).includes(t));
+        if (hit) return hit;
+      }
+      // Block-backed sections (Articles): the experience parents no pages — its items are
+      // `ArticlePost` shared blocks (in the Assets panel, not the tree). Detect by the
+      // source's OWN type. See docs/CONTENT-ARCHITECTURE.md §10.
+      const src = (await getClient().request(
+        `query($c: String!) { _Content(where: { _metadata: { key: { eq: $c } } }, limit: 1) { items { _metadata { types } } } }`,
+        { c: containerKey },
+      )) as { _Content?: { items?: Array<{ _metadata?: { types?: string[] } }> } };
+      if ((src?._Content?.items?.[0]?._metadata?.types ?? []).includes('Articles')) return 'ArticlePost';
+      return null;
     } catch {
       return null;
     }
@@ -129,10 +161,11 @@ export const detectChildType = cache(
 );
 
 /**
- * Type-aware, server-paginated + FILTERED children query for the SectionListing
+ * Type-aware, server-paginated + FILTERED descendants query for the SectionListing
  * block — the listing engine for every section. It auto-detects the child type
- * (POI/Area/Event) so it can query the concrete type and apply type-specific facet
- * filters (`tags.key`, `priceBand`) that the `_Page` interface can't express.
+ * (POI/Area/Event/Article) so it can query the concrete type and apply type-specific
+ * facet filters (`tags.key`, `priceBand`) that the `_Page` interface can't express.
+ * Matches DESCENDANTS via `_metadata.path`, so folder bucketing is transparent.
  * Server-side sort + skip/limit + total. Guarded → empty page.
  */
 export const getSectionChildren = cachedGraphRead(async function getSectionChildren(
@@ -151,9 +184,17 @@ export const getSectionChildren = cachedGraphRead(async function getSectionChild
     const orderBy = ORDER_BY[sort] ?? ORDER_BY.name; // controlled value — safe to inline
     const facets = TYPE_FACETS[childType];
 
-    const wheres = ['_metadata: { container: { eq: $c } }'];
-    const decls = ['$c: String!', '$skip: Int!', '$limit: Int!'];
-    const vars: Record<string, unknown> = { c: containerKey, skip, limit };
+    // Page-based sections match DESCENDANTS by `_metadata.path` (ancestor chain). Article
+    // BLOCKS aren't under the section in the content tree (they live in the Assets panel),
+    // so for `ArticlePost` we query the type directly — no path filter. See §10.
+    const wheres: string[] = [];
+    const decls = ['$skip: Int!', '$limit: Int!'];
+    const vars: Record<string, unknown> = { skip, limit };
+    if (childType !== 'ArticlePost') {
+      wheres.push('_metadata: { path: { eq: $c } }');
+      decls.push('$c: String!');
+      vars.c = containerKey;
+    }
 
     if (filters.tag && facets.includes('tag')) {
       const tagKey = (await getTags()).find((t) => t.slug === filters.tag)?.key;
@@ -169,9 +210,10 @@ export const getSectionChildren = cachedGraphRead(async function getSectionChild
       vars.price = filters.price;
     }
 
+    const whereClause = wheres.length ? `where: { ${wheres.join(', ')} }, ` : '';
     const data = (await getClient().request(
       `query(${decls.join(', ')}) {
-        ${childType}(where: { ${wheres.join(', ')} }, orderBy: ${orderBy}, skip: $skip, limit: $limit) {
+        ${childType}(${whereClause}orderBy: ${orderBy}, skip: $skip, limit: $limit) {
           total
           items { _metadata { displayName url { default } types } ${TYPE_FIELDS[childType]} }
         }
@@ -181,8 +223,16 @@ export const getSectionChildren = cachedGraphRead(async function getSectionChild
 
     const result = data?.[childType];
     const items = (result?.items ?? []).map((n) => {
-      const meta = childType === 'Event' ? eventMeta(n) : priceMeta(n.priceBand);
-      return toCard({ ...n, name: n.name ?? n._metadata?.displayName ?? 'Untitled' }, meta);
+      const meta =
+        childType === 'Event'
+          ? eventMeta(n)
+          : childType === 'ArticlePost'
+            ? fmtDate(n.publishDate)
+            : priceMeta(n.priceBand);
+      const card = toCard({ ...n, name: n.name ?? n._metadata?.displayName ?? 'Untitled' }, meta);
+      // Blocks have no CMS URL — build the article href from slug + publishDate.
+      if (childType === 'ArticlePost') card.path = articleHref(n.slug ?? '', n.publishDate);
+      return card;
     });
     return { items, total: result?.total ?? items.length, childType };
   } catch {

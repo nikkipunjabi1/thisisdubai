@@ -18,6 +18,7 @@ import { tags } from './data/tags.mjs';
 import { tagKey } from './data/_helpers.mjs';
 import { pois } from './data/pois/index.mjs';
 import { events } from './data/events.mjs';
+import { articles } from './data/articles/index.mjs';
 
 const ROOT = process.env.CMP_ROOT_FOLDER || 'This is Dubai';
 
@@ -30,6 +31,7 @@ const GROUPS = [
   { section: 'Places To Visit', field: 'Images (list) + Social share image', items: pois, kind: 'PointOfInterest' },
   { section: 'Neighbourhoods', field: 'Hero image + Social share image', items: areas, kind: 'Area' },
   { section: 'Events', field: 'Images (list) + Social share image', items: events, kind: 'Event' },
+  { section: 'Articles', field: 'Hero image + Social share image', items: articles, kind: 'Article' },
 ];
 
 // Landing pages and the home page aren't in the seed data (they're Visual Builder
@@ -40,6 +42,7 @@ const LANDING = [
   { section: '', name: 'Places to Visit', note: 'Section landing page — social share image' },
   { section: '', name: 'Neighbourhoods', note: 'Section landing page — social share image' },
   { section: '', name: 'Events', note: 'Section landing page — social share image' },
+  { section: '', name: 'Articles', note: 'Section landing page — social share image' },
 ];
 
 const folderFor = (section, name) => `/${ROOT}${section ? `/${section}` : ''}/${name}`;

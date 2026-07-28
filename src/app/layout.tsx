@@ -28,6 +28,7 @@ import SectionExperience, {
   PlacesToVisitContentType,
   NeighbourhoodsContentType,
   EventsContentType,
+  ArticlesContentType,
 } from '@/components/content/SectionExperience';
 import PointOfInterest, { PointOfInterestContentType } from '@/components/content/PointOfInterest';
 import ImageMedia, { ImageMediaContentType } from '@/components/media/ImageMedia';
@@ -38,6 +39,7 @@ import Area, { AreaContentType } from '@/components/content/Area';
 import { CategoryContentType } from '@/components/content/Category';
 import { TagContentType } from '@/components/content/Tag';
 import EventDetail, { EventContentType } from '@/components/content/Event';
+import ArticleDetail, { ArticleContentType, ArticlePostContentType } from '@/components/content/Article';
 
 import type { Metadata } from 'next';
 import { getSiteSettings, buildTitleTemplate, buildTitleDefault } from '@/lib/seo';
@@ -65,9 +67,12 @@ initContentTypeRegistry([
   PlacesToVisitContentType,
   NeighbourhoodsContentType,
   EventsContentType,
+  ArticlesContentType,
   PointOfInterestContentType,
   AreaContentType,
   EventContentType,
+  ArticleContentType,
+  ArticlePostContentType,
   TagContentType,
   CategoryContentType,
   ImageMediaContentType,
@@ -85,9 +90,12 @@ initReactComponentRegistry({
     PlacesToVisit: SectionExperience,
     Neighbourhoods: SectionExperience,
     Events: SectionExperience,
+    Articles: SectionExperience,
     PointOfInterest,
     Area,
     Event: EventDetail,
+    Article: ArticleDetail,
+    ArticlePost: ArticleDetail,
     ImageMedia,
   },
 });

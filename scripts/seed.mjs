@@ -21,14 +21,15 @@
 // scripts/data/_helpers.mjs.
 //
 // Flags:
-//   --type=poi|event|area|tag   seed only one collection (repeatable)
+//   --type=poi|event|area|tag|article   seed only one collection (repeatable)
 //   --dry-run                   print what would be written, touch nothing
 
-import { keyFor, areaKey, poiKey, eventKey, tagKey } from './data/_helpers.mjs';
+import { keyFor, areaKey, poiKey, eventKey, tagKey, articleBlockKey } from './data/_helpers.mjs';
 import { areas } from './data/areas.mjs';
 import { tags } from './data/tags.mjs';
 import { pois } from './data/pois/index.mjs';
 import { events } from './data/events.mjs';
+import { articles } from './data/articles/index.mjs';
 
 const GATEWAY = (process.env.OPTIMIZELY_CMS_API_URL || 'https://api.cms.optimizely.com').replace(/\/$/, '');
 const CLIENT_ID = process.env.OPTIMIZELY_CMS_CLIENT_ID;
@@ -45,8 +46,14 @@ if (!CLIENT_ID || !CLIENT_SECRET) {
   process.exit(1);
 }
 
-// Application shared-assets folder ("For This Application") — home for shared blocks.
-const SITE_ASSETS = process.env.SEED_SITE_ASSETS || '8ce609ddb1984b04a99c5764a540d313';
+// Shared blocks live in the application shared-assets folder ("For This Application",
+// /SysSiteAssets/) and are grouped into named sub-folders — Optimizely CMS best practice,
+// never dump blocks flat. Shared-block folders are `SysContentFolder`s; the CMA can create
+// them (see ensureSharedFolder) or they can be made once in the Shared Blocks UI. Override
+// per-environment via env.
+const SITE_ASSETS = process.env.SEED_SITE_ASSETS || '8ce609ddb1984b04a99c5764a540d313'; // "For This Application"
+const TAG_TAXONOMY = process.env.SEED_TAG_TAXONOMY || '1064637c853e49519f4d5ebf29d227df'; // "Tag - Taxonomy"
+const ARTICLES_FOLDER = process.env.SEED_ARTICLES_FOLDER || '7c829c4df9e4af6481bca15d4c45aefa'; // "Articles" (shared-block folder)
 // Section pages are Visual Builder EXPERIENCES (created by scripts/migrate-experiences.mjs).
 // Their child items are parented to these keys → URLs stay /<section>/<slug>.
 const PLACES_KEY = keyFor('places-to-visit-exp');
@@ -84,6 +91,31 @@ async function api(token, method, path, body, extraHeaders = {}, attempt = 1) {
     json = text;
   }
   return { status: res.status, json };
+}
+
+/**
+ * Ensure a shared-block folder (`SysContentFolder`) exists in the Assets panel and return
+ * its key. Unlike page-tree `_folder`s, these DO render in the Shared Blocks panel — the
+ * supported way to organise blocks at scale (Articles → year → month). Non-localized and
+ * created already-published, so no locale + no publish step. Idempotent (409 = exists).
+ */
+async function ensureSharedFolder(token, { key, displayName, container }) {
+  if (DRY_RUN) {
+    console.log(`· Shared folder      "${displayName}" — would ensure`);
+    return key;
+  }
+  const r = await api(token, 'POST', '/content', {
+    key,
+    contentType: 'SysContentFolder',
+    container,
+    initialVersion: { displayName },
+  });
+  if (r.status === 201) console.log(`✔ Shared folder      "${displayName}" — created`);
+  else if (r.status !== 409) {
+    failures += 1;
+    console.log(`✖ Shared folder      "${displayName}" — ${r.status}: ${JSON.stringify(r.json).slice(0, 200)}`);
+  }
+  return key;
 }
 
 async function publishLatest(token, key) {
@@ -154,7 +186,7 @@ function validate() {
   const problems = [];
   const areaSlugs = new Set(areas.map((a) => a.slug));
 
-  for (const [label, list] of [['area', areas], ['tag', tags], ['poi', pois], ['event', events]]) {
+  for (const [label, list] of [['area', areas], ['tag', tags], ['poi', pois], ['event', events], ['article', articles]]) {
     const seen = new Set();
     for (const item of list) {
       if (seen.has(item.slug)) problems.push(`duplicate ${label} slug: ${item.slug}`);
@@ -177,12 +209,21 @@ function validate() {
   // Same check for tag references — a typo'd tag slug would otherwise fail one
   // item at a time, 100 items into the run.
   const tagKeyToSlug = new Map(tags.map((t) => [tagKey(t.slug), t.slug]));
-  for (const list of [pois, events]) {
+  for (const list of [pois, events, articles]) {
     for (const item of list) {
       for (const ref of item.props.tags?.value ?? []) {
         const refKey = String(ref).replace('cms://content/', '');
         if (!tagKeyToSlug.has(refKey)) problems.push(`${item.slug}: unknown tag reference (${refKey})`);
       }
+    }
+  }
+
+  // Articles cross-link to POIs; a typo'd slug would fail one item at a time.
+  const poiKeyToSlug = new Map(pois.map((p) => [poiKey(p.slug), p.slug]));
+  for (const a of articles) {
+    for (const ref of a.props.relatedPlaces?.value ?? []) {
+      const refKey = String(ref).replace('cms://content/', '');
+      if (!poiKeyToSlug.has(refKey)) problems.push(`${a.slug}: relatedPlaces points at a POI not in the seed (${refKey})`);
     }
   }
 
@@ -196,7 +237,7 @@ async function main() {
   validate();
   console.log(
     `Seeding → ${GATEWAY} (locale ${LOCALE})${DRY_RUN ? ' — DRY RUN' : ''}\n` +
-      `${areas.length} neighbourhoods · ${tags.length} tags · ${pois.length} places · ${events.length} events\n`,
+      `${areas.length} neighbourhoods · ${tags.length} tags · ${pois.length} places · ${events.length} events · ${articles.length} articles\n`,
   );
   const token = DRY_RUN ? null : await getToken();
 
@@ -207,10 +248,11 @@ async function main() {
       await upsert(token, { slug: a.slug, key: areaKey(a.slug), contentType: 'Area', container: NEIGHBOURHOODS_KEY, routable: true, displayName: a.displayName, properties: a.props, reparent: true });
     }
   }
-  // Tags → shared blocks (_component) in the app assets folder (non-routable).
+  // Tags → shared blocks (_component) grouped under the "Tag - Taxonomy" folder
+  // (non-routable). `reparent: true` keeps them tucked in the folder on re-runs.
   if (wanted('tag')) {
     for (const t of tags) {
-      await upsert(token, { slug: t.slug, key: tagKey(t.slug), contentType: 'TagTerm', container: SITE_ASSETS, routable: false, displayName: t.displayName, properties: t.props, reparent: true });
+      await upsert(token, { slug: t.slug, key: tagKey(t.slug), contentType: 'TagTerm', container: TAG_TAXONOMY, routable: false, displayName: t.displayName, properties: t.props, reparent: true });
     }
   }
   if (wanted('poi')) {
@@ -221,6 +263,33 @@ async function main() {
   if (wanted('event')) {
     for (const e of events) {
       await upsert(token, { slug: e.slug, key: eventKey(e.slug), contentType: 'Event', container: EVENTS_KEY, routable: true, displayName: e.displayName, properties: e.props, reparent: true });
+    }
+  }
+
+  if (wanted('article')) {
+    // Articles are SHARED BLOCKS (`ArticlePost` `_component`) in the Shared Blocks (Assets)
+    // panel, foldered Articles → <year> → <month>. Folders there DO render (unlike the Pages
+    // tree) and scale to thousands. The folder is editorial only — the URL
+    // (/articles/<year>/<month>/<slug>) is derived by the app from `publishDate` + `slug`.
+    // See docs/CONTENT-ARCHITECTURE.md §10.
+    const ym = (a) => {
+      const d = String(a.props.publishDate?.value ?? '');
+      return { y: d.slice(0, 4) || 'undated', m: d.slice(5, 7) || '00' };
+    };
+    const yearKey = (y) => keyFor(`articlefolder:${y}`);
+    const monthKey = (y, m) => keyFor(`articlefolder:${y}:${m}`);
+
+    await ensureSharedFolder(token, { key: ARTICLES_FOLDER, displayName: 'Articles', container: SITE_ASSETS });
+    for (const y of new Set(articles.map((a) => ym(a).y))) {
+      await ensureSharedFolder(token, { key: yearKey(y), displayName: y, container: ARTICLES_FOLDER });
+    }
+    for (const s of new Set(articles.map((a) => { const { y, m } = ym(a); return `${y}/${m}`; }))) {
+      const [y, m] = s.split('/');
+      await ensureSharedFolder(token, { key: monthKey(y, m), displayName: m, container: yearKey(y) });
+    }
+    for (const a of articles) {
+      const { y, m } = ym(a);
+      await upsert(token, { slug: a.slug, key: articleBlockKey(a.slug), contentType: 'ArticlePost', container: monthKey(y, m), routable: false, displayName: a.displayName, properties: a.props, reparent: true });
     }
   }
 

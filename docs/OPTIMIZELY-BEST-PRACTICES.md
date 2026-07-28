@@ -14,6 +14,13 @@ COMPONENT-STANDARDS.md, SEO.md, PREVIEW-WORKFLOW.md, QUALITY.md._
   is used (root layout + any standalone route like `robots.ts`).
 
 ## 2. Content modeling
+- **Organize content properly — never flat.** We always follow Optimizely's content-organization
+  guidance: pages live in a tree that mirrors the site URLs; **shared blocks are grouped into named
+  folders** ("Tag - Taxonomy", "Site Configurations"), not dumped under "For This Application"; and any
+  container heading past **~100 children** is bucketed into folders (year for editorial, category for
+  products). This keeps the editor tree legible and gives every content kind one obvious home. Moving a
+  block between folders never changes its `key`, so references/facets survive re-organisation. See
+  CONTENT-ARCHITECTURE.md (§2 tree, §3 taxonomy, §10 bucketing).
 - **Model deliberately, up front** — re-modeling after content exists triggers *breaking* pushes.
 - Base types: `_page` (routable), `_experience` (Visual Builder canvas), `_component` (blocks +
   data records), `_folder`, `_image`/`_media`/`_video`.

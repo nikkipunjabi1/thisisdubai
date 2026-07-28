@@ -19,12 +19,12 @@ const getByPath = cache(
   cachedGraphRead((path: string) => getClient().getContentByPath(path), ['content-by-path']),
 );
 
-// Config / data / organizational content that must NEVER be served as a public
-// page (no URL, not indexable) — the Site Settings singleton, Tag taxonomy terms,
-// and organizational folders (Taxonomy, Settings). They live in the tree for
-// authoring but the router treats their paths as 404. `_Folder` is the folder base
-// type, so any folder is caught. See docs/CONTENT-ARCHITECTURE.md §4.
-const NON_ROUTABLE_TYPES = new Set(['SiteSettings', 'Tag', 'Folder', '_Folder']);
+// Content that must NEVER be served as a public page — shared blocks (Site Settings,
+// Tag taxonomy terms) and any organizational folder. Guarded by BASE TYPE so it catches
+// every such item regardless of its specific key: `_Component` = shared blocks,
+// `_Folder` = folders. Routable content is `_experience`/`_page` only.
+// See docs/CONTENT-ARCHITECTURE.md §3–§4.
+const NON_ROUTABLE_TYPES = new Set(['_Component', '_Folder']);
 const isNonRoutable = (types: string[] = []) => types.some((t) => NON_ROUTABLE_TYPES.has(t));
 
 /**

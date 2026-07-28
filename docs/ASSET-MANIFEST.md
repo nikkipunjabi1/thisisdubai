@@ -8,7 +8,7 @@ _Auto-generated from `scripts/data/`. **Create these folders in CMP and drop at 
 image in each.** Then run `npm run attach-assets -- --apply` and every image field on every
 item is filled._
 
-**Total folders: 144** — 4 landing pages · 101 places to visit · 19 neighbourhoods · 20 events
+**Total folders: 155** — 5 landing pages · 101 places to visit · 19 neighbourhoods · 20 events · 10 articles
 
 ## The rule that matters
 
@@ -35,7 +35,7 @@ places* are fine and used descriptively. Record each credit in ASSETS.md. See AS
 
 ---
 
-### Landing pages — 4 folders
+### Landing pages — 5 folders
 
 | # | CMP folder | Purpose |
 |---|------------|---------|
@@ -43,6 +43,7 @@ places* are fine and used descriptively. Record each credit in ASSETS.md. See AS
 | 2 | `/This is Dubai/Places to Visit` | Section landing page — social share image |
 | 3 | `/This is Dubai/Neighbourhoods` | Section landing page — social share image |
 | 4 | `/This is Dubai/Events` | Section landing page — social share image |
+| 5 | `/This is Dubai/Articles` | Section landing page — social share image |
 
 ### Places To Visit — 101 folders
 
@@ -204,6 +205,23 @@ Field(s) filled: **Images (list) + Social share image**
 | 18 | `/This is Dubai/Events/Dubai World Cup` | Dubai World Cup | sports, luxury, festivals |
 | 19 | `/This is Dubai/Events/Art Dubai` | Art Dubai | art-design, exhibitions, luxury |
 | 20 | `/This is Dubai/Events/Dubai Summer Surprises` | Dubai Summer Surprises | festivals, shopping, family |
+
+### Articles — 10 folders
+
+Field(s) filled: **Hero image + Social share image**
+
+| # | CMP folder | CMS item | Subject hints (tags) |
+|---|------------|----------|----------------------|
+| 1 | `/This is Dubai/Articles/Three days in Dubai: a first-timer’s itinerary` | Three days in Dubai: a first-timer’s itinerary | landmarks, culture-heritage, views, family |
+| 2 | `/This is Dubai/Articles/Old Dubai in a morning: souks, abras and wind towers` | Old Dubai in a morning: souks, abras and wind towers | culture-heritage, shopping, free-to-visit, street-food |
+| 3 | `/This is Dubai/Articles/Where to swim: a guide to Dubai’s public beaches` | Where to swim: a guide to Dubai’s public beaches | beaches, free-to-visit, family, outdoors |
+| 4 | `/This is Dubai/Articles/Dubai on a budget: the free and nearly-free city` | Dubai on a budget: the free and nearly-free city | free-to-visit, street-food, outdoors, culture-heritage |
+| 5 | `/This is Dubai/Articles/The desert in a day: dunes, wildlife and dark skies` | The desert in a day: dunes, wildlife and dark skies | desert, wildlife, outdoors, adventure |
+| 6 | `/This is Dubai/Articles/Eating in Dubai: from canteens to tasting menus` | Eating in Dubai: from canteens to tasting menus | street-food, fine-dining, culture-heritage, shopping |
+| 7 | `/This is Dubai/Articles/Dubai with kids: a survival guide` | Dubai with kids: a survival guide | family, waterparks, wildlife, outdoors |
+| 8 | `/This is Dubai/Articles/The best views in Dubai, ranked by what you actually see` | The best views in Dubai, ranked by what you actually see | views, landmarks, architecture, free-to-visit |
+| 9 | `/This is Dubai/Articles/Ramadan in Dubai: what visitors should know` | Ramadan in Dubai: what visitors should know | culture-heritage, street-food, family, festivals |
+| 10 | `/This is Dubai/Articles/Dubai’s art scene: warehouses, galleries and the Alserkal effect` | Dubai’s art scene: warehouses, galleries and the Alserkal effect | art-design, museums, culture-heritage, free-to-visit |
 ---
 
 _Regenerate after any change to `scripts/data/`: `npm run asset-manifest`._
