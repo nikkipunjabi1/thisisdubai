@@ -5,12 +5,13 @@ intuitively, and so URLs, faceting, and global settings all follow from one deli
 Supersedes the ad-hoc flat layout we started with. Pairs with CONTENT-MODEL.md (types),
 LISTING-PATTERN.md (listings), SEO.md._
 
-> **We always follow Optimizely CMS best practices and keep content organized.** Nothing is
-> ever dumped flat: pages live in a tree that mirrors the site URLs, shared blocks are grouped
-> into named folders ("Tag - Taxonomy", "Site Configurations"), and any section that would pass
-> ~100 children is bucketed into folders (§10). Every structural change here is made through that
-> lens — a tidy, predictable tree that a content author (not a developer) can navigate. See
-> OPTIMIZELY-BEST-PRACTICES.md §2 for the modelling rules this rests on.
+> **We always follow Optimizely CMS best practices and keep content organized.** Pages live in a
+> routing tree that mirrors the site URLs; shared blocks are grouped into named folders in the
+> assets area ("Tag - Taxonomy", "Site Configurations"). Crucially, **folders live on the
+> assets/blocks side, never in the Pages tree** — the Pages panel is a routing view that doesn't
+> render folders, so a large page section stays flat and is navigated by search + tag facets (§10).
+> Every structural change is made through that lens — a tidy, predictable tree a content author
+> (not a developer) can navigate. See OPTIMIZELY-BEST-PRACTICES.md §2 for the modelling rules.
 
 ## 1. Goals (authoring-first)
 - **Group by kind** — an author adding a place goes to *Places to Visit*; adding a tag goes to
@@ -35,8 +36,7 @@ Root
    ├─ Neighbourhoods        Neighbourhoods (Experience/VB canvas)  → /neighbourhoods
    │   └─ Area… (Downtown, Marina, Old Dubai)                       → /neighbourhoods/<slug>
    └─ Articles              Articles       (Experience/VB canvas)  → /articles
-       └─ 2026 / 2027 …     Folder (year bucket, §10)              → /articles/<year>/
-           └─ Article…                                              → /articles/<year>/<slug>/
+       └─ Article…          (flat — NOT folder-bucketed, §10)      → /articles/<slug>/
 
 SHARED BLOCKS — "For This Application" (app assets folder, /SysSiteAssets/), NOT in the page tree.
 Grouped into named folders (best practice — never flat):
@@ -67,7 +67,8 @@ folder holds them, and the settings singleton is fetched scoped to the Start Pag
   site owns its own tags, brand and SEO — clean multisite isolation.
 - **Shared-block folders** (`Site Configurations`, `Tag - Taxonomy`) are `SysContentFolder`s created
   once in the Shared Blocks UI; the seed only parents blocks into them (see `scripts/seed.mjs`
-  `TAG_TAXONOMY`). **Article year buckets** use the custom `Folder` type (routable segment — §10).
+  `TAG_TAXONOMY`). **Articles are flat** under the Articles experience — no `_folder` buckets in the
+  Pages tree, which the SaaS CMS won't render (§10).
 
 ## 3. Taxonomy — `Tag` (shared block `TagTerm`, in the "Tag - Taxonomy" folder)
 - Type **`TagTerm`** (base **`_component`**), grouped under the **"Tag - Taxonomy"** folder in the
@@ -99,10 +100,9 @@ folder holds them, and the settings singleton is fetched scoped to the Start Pag
   `/places-to-visit/<slug>`, appears in the listing + facets automatically.
 - **Add a tag:** Shared Blocks → *For This Application* → **Tag - Taxonomy** → New → *Tag (Taxonomy term)*;
   set `dimension`, publish. Immediately available as a facet — no page, no access grant.
-- **Add an article:** Pages tree → **Articles** → the **year folder** matching its publish date (create
-  the folder if the year is new) → New → *Article*; fill title/body/heroImage, pick `tags`, publish →
-  live at `/articles/<year>/<slug>/`. Categorization is the `tags` reference (topical) + the year folder
-  (structural) — see §10 for why year, not category, is the bucket.
+- **Add an article:** Pages tree → **Articles** → **＋ Create** (or ⋯ → New) → *Article*; fill
+  title/body/heroImage, pick `tags`, publish → live at `/articles/<slug>/`. Articles are flat (no year
+  folders — §10); categorization is the `tags` reference, and the section is navigated by search + facets.
 - **Edit global branding/SEO:** Shared Blocks → *For This Application* → **Site Configurations** →
   *Site Settings*. One publish rebrands every page title.
 - **Add a new section (e.g. Hotels):** new section experience + card + config entry (LISTING-PATTERN §8);
@@ -227,63 +227,58 @@ Without this, re-running the seed silently wipes every attached image.
 
 ---
 
-## 10. Scaling a section past ~100 items — folder bucketing
+## 10. Scaling a section — why we do NOT bucket with folders (SaaS CMS)
 
-Optimizely's long-standing guidance is to keep **no more than ~100 immediate children**
-under a single container. Past that the *editor* tree is what degrades first — expanding a
-node with thousands of children is slow in edit mode — rather than delivery, which is
-paginated and indifferent. The standard remedy is organisational folders: **year/month for
-editorial, category for products**.
+Optimizely's classic guidance is to keep **no more than ~100 immediate children** per
+container, and the classic remedy is organisational **folders** (year/month for editorial).
+On the SaaS CMS that remedy is a **trap for pages**, and we hit it:
 
-Articles are planned to reach 1000+, so they are bucketed. Places to Visit (101) sits at the
-line and is left flat for now; it can adopt the same mechanism (bucketed by Area) without any
-code change, because the listing engine is already folder-transparent.
+> ⚠️ **A `_folder` is invisible in the SaaS CMS Pages tree.** The left **Pages** panel is a
+> **routing** view — it renders only routable content (`_experience` / `_page`). A `_folder` is
+> non-routable, so it never appears there, **and everything nested under it disappears with it**.
+> We bucketed the 10 articles into a year `Folder`; the result was an *Articles* node with no
+> expandable children and no way for an author to reach or create an article from the tree.
+> Folders are an **assets-side** concept — they render fine in the **Shared Blocks / Media**
+> panel (that is exactly why `Tag - Taxonomy` and `Site Configurations` work), but they do **not**
+> belong in the page hierarchy.
 
-### The structure
+**The rule:** never place a `_folder` in the routing (Pages) tree. If content is a page, it stays
+a direct child of a routable parent.
+
+### What we do instead — flat articles
 
 ```
 Home (/)
 └─ Articles            [Articles experience]   /articles
-   ├─ Folder "2026"                            → contributes /2026/
-   │   ├─ Article                              /articles/2026/<slug>/
-   │   └─ …
-   └─ Folder "2027"
+   ├─ Article                                  /articles/<slug>/
+   ├─ Article                                  /articles/<slug>/
+   └─ …
 ```
 
-Buckets are **year-of-publishDate**. A publish year never changes, so an article's URL is
-stable — unlike a category bucket, which would move the URL whenever the article is
-recategorised. Taxonomy is handled by `Tag` instead, which is free to change.
+Articles are **direct children of the Articles experience** — visible in the Pages tree, created
+in one step (*Articles → ⁺ Create → Article*). Categorization is the `tags` reference (topical);
+structural bucketing is intentionally dropped. This is the SaaS-native shape: the Pages panel is
+**search-first** (the tree has a search box), so a large flat section is navigated by search + tag
+facets, not by drilling folders. `scripts/flatten-articles.mjs` performed the one-time migration
+(re-parent → Articles, then delete the empty year folders); `seed.mjs` now seeds articles flat.
 
-### Verified behaviour (do not assume any of this)
+**If year archives are ever wanted** (for `/articles/2026/` URLs or an SEO archive page), add a
+**routable year _page_** that lists that year — never a `_folder`. A real page shows in the tree,
+serves a URL, and doubles as a landing page. That is the only correct way to reintroduce a
+`/articles/<year>/` segment here.
 
-- **A folder DOES contribute a URL segment.** It is *not* URL-transparent. A folder is
-  created with an auto-derived `routeSegment` (from its display name), and descendants
-  inherit it: an Article under folder "2026" resolves to `/articles/2026/<slug>/`. This is
-  the standard editorial URL shape, so it is a feature here — but it must be a deliberate
-  choice, not a surprise.
-- **The folder itself is not a page.** `[...slug]` lists folder types in
-  `NON_ROUTABLE_TYPES`, so `/articles/2026` returns 404. Confirmed.
-- **`_folder` is non-localized.** Sending `locale` on a version write is rejected: *"A locale
-  should not be provided when creating content of a non-localized content type."*
-- **Folders are created already published and cannot be published again** — a publish attempt
-  returns *"Unable to transition the status…"*. So the seed creates them and skips publish.
-- **`mayContainTypes` is enforced in both directions.** The parent must allow the folder
-  (`Articles.mayContainTypes` includes `Folder`) *and* the folder must allow the child
-  (`Folder.mayContainTypes` includes `Article` and `_self`). Missing either yields
-  *"Content type 'X' is not allowed to be created under parent of content type 'Y'"*.
+### The querying consequence (still true, and why the listing engine is robust)
 
-### The querying consequence
+The listing engine matches children by **`_metadata.path`** (the ancestor chain), not by direct
+`container`. That was originally needed for bucketed sections, and it keeps the engine correct
+whether a section is flat or (via routable sub-pages) nested:
 
-Bucketing breaks any query that matches on the **direct parent**. Measured on the live data
-immediately after the 10 articles moved into their year folder:
+| Query | Flat | (if ever nested) |
+|---|---|---|
+| `_metadata: { container: { eq: sectionKey } }` | matches | misses nested |
+| `_metadata: { path: { eq: sectionKey } }` | matches | matches |
 
-| Query | Result |
-|---|---|
-| `_metadata: { container: { eq: articlesKey } }` | **0** |
-| `_metadata: { path: { eq: articlesKey } }` | **10** |
-
-`_metadata.path` is the ancestor chain, so `src/lib/sections.ts` matches on `path`
-throughout. One query then serves flat *and* bucketed sections.
+`src/lib/sections.ts` matches on `path` throughout — one query serves either shape.
 
 > ⚠️ **`path` includes SELF.** `_Page(where: { path: { eq: sectionKey } }, limit: 1)` returns
 > the *section experience itself*, not a child — which made `detectChildType` detect nothing

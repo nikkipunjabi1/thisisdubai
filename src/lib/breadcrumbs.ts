@@ -5,8 +5,9 @@ import { cachedGraphRead } from './cache';
 /** One breadcrumb. `url` is null for the current (last) page, which is not linked. */
 export type Crumb = { name: string; url: string | null };
 
-// Types that exist in the tree but must never be a breadcrumb link (folders, config).
-const NON_ROUTABLE = new Set(['SiteSettings', 'Tag', 'Folder', '_Folder']);
+// Base types that exist in the tree but must never be a breadcrumb link — shared
+// blocks (`_Component`: config, taxonomy) and folders (`_Folder`).
+const NON_ROUTABLE = new Set(['_Component', '_Folder']);
 
 /**
  * Build the breadcrumb trail for a page from the CMS content tree — the canonical,
