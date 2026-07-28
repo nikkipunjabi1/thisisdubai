@@ -1,7 +1,8 @@
-import { contentType, type ContentProps } from '@optimizely/cms-sdk';
+import { contentType, damAssets, type ContentProps } from '@optimizely/cms-sdk';
 import { getPreviewUtils } from '@optimizely/cms-sdk/react/server';
 import { SectionShell } from '@/components/ui/SectionShell';
 import { JsonLd } from '@/components/ui/JsonLd';
+import { DetailHero } from '@/components/media/DetailHero';
 import { SeoMetadataContract } from './SeoMetadata';
 
 /**
@@ -63,6 +64,8 @@ export const AreaContentType = contentType({
 
 export default function Area({ content }: { content: ContentProps<typeof AreaContentType> }) {
   const { pa } = getPreviewUtils(content);
+  // getAlt prefers the AltText authored on the DAM asset, falling back to the name.
+  const { getAlt } = damAssets(content);
   const hasGeo = content.latitude != null && content.longitude != null;
   const mapUrl = hasGeo
     ? `https://www.google.com/maps/search/?api=1&query=${content.latitude},${content.longitude}`
@@ -81,6 +84,10 @@ export default function Area({ content }: { content: ContentProps<typeof AreaCon
     <SectionShell theme="dark" spacing="spacious">
       <JsonLd data={jsonLd} />
       <article className="mx-auto max-w-page px-6 md:px-10 lg:px-16">
+        <DetailHero
+          src={content.heroImage?.url?.default}
+          alt={getAlt(content.heroImage, content.name ?? 'Neighbourhood')}
+        />
         <header className="max-w-3xl">
           <h1 className="text-[clamp(2.5rem,6vw,4.5rem)]" {...pa('name')}>
             {content.name}

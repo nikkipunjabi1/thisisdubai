@@ -1,7 +1,8 @@
-import { contentType, type ContentProps } from '@optimizely/cms-sdk';
+import { contentType, damAssets, type ContentProps } from '@optimizely/cms-sdk';
 import { getPreviewUtils } from '@optimizely/cms-sdk/react/server';
 import { SectionShell } from '@/components/ui/SectionShell';
 import { JsonLd } from '@/components/ui/JsonLd';
+import { DetailHero } from '@/components/media/DetailHero';
 import { priceLabel } from '@/lib/pois';
 import { SeoMetadataContract } from './SeoMetadata';
 import { AreaContentType } from './Area';
@@ -115,6 +116,9 @@ export default function PointOfInterest({
   content: ContentProps<typeof PointOfInterestContentType>;
 }) {
   const { pa } = getPreviewUtils(content);
+  // getAlt prefers the AltText authored on the DAM asset, falling back to the name.
+  const { getAlt } = damAssets(content);
+  const hero = content.images?.[0];
   const price = priceLabel(content.priceBand ?? null);
   const accolades = (content.accolades ?? []).filter((a): a is string => Boolean(a));
   const hasGeo = content.latitude != null && content.longitude != null;
@@ -136,6 +140,7 @@ export default function PointOfInterest({
     <SectionShell theme="dark" spacing="spacious">
       <JsonLd data={jsonLd} />
       <article className="mx-auto max-w-page px-6 md:px-10 lg:px-16">
+        <DetailHero src={hero?.url?.default} alt={getAlt(hero, content.name ?? 'Place to visit')} />
         <header className="max-w-3xl">
           <h1 className="text-[clamp(2.5rem,6vw,4.5rem)]" {...pa('name')}>
             {content.name}

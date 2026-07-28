@@ -1,7 +1,8 @@
-import { contentType, type ContentProps } from '@optimizely/cms-sdk';
+import { contentType, damAssets, type ContentProps } from '@optimizely/cms-sdk';
 import { getPreviewUtils } from '@optimizely/cms-sdk/react/server';
 import { SectionShell } from '@/components/ui/SectionShell';
 import { JsonLd } from '@/components/ui/JsonLd';
+import { DetailHero } from '@/components/media/DetailHero';
 import { SeoMetadataContract } from './SeoMetadata';
 import { AreaContentType } from './Area';
 import { TagContentType } from './Tag';
@@ -30,6 +31,9 @@ const fmt = (iso?: string | null) =>
 
 export default function Event({ content }: { content: ContentProps<typeof EventContentType> }) {
   const { pa } = getPreviewUtils(content);
+  // getAlt prefers the AltText authored on the DAM asset, falling back to the name.
+  const { getAlt } = damAssets(content);
+  const hero = content.images?.[0];
   const start = fmt(content.startDate);
   const end = fmt(content.endDate);
   const dates = start ? (end && end !== start ? `${start} – ${end}` : start) : null;
@@ -47,6 +51,7 @@ export default function Event({ content }: { content: ContentProps<typeof EventC
     <SectionShell theme="dark" spacing="spacious">
       <JsonLd data={jsonLd} />
       <article className="mx-auto max-w-page px-6 md:px-10 lg:px-16">
+        <DetailHero src={hero?.url?.default} alt={getAlt(hero, content.name ?? 'Event')} />
         <header className="max-w-3xl">
           {dates ? <p className="eyebrow">{dates}</p> : null}
           <h1 className="mt-4 text-[clamp(2.5rem,6vw,4.5rem)]" {...pa('name')}>
