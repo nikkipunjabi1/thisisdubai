@@ -47,8 +47,12 @@ if (!CLIENT_ID || !CLIENT_SECRET) {
   process.exit(1);
 }
 
-// Application shared-assets folder ("For This Application") — home for shared blocks.
-const SITE_ASSETS = process.env.SEED_SITE_ASSETS || '8ce609ddb1984b04a99c5764a540d313';
+// Shared blocks live in the application shared-assets folder ("For This Application",
+// /SysSiteAssets/, key 8ce609ddb1984b04a99c5764a540d313) and are grouped into named
+// sub-folders — Optimizely CMS best practice, never dump blocks flat. Those folders are
+// `SysContentFolder`s created once in the Shared Blocks UI ("For This Application" → New
+// folder); the seed only PARENTS content into them. Override per-environment via env.
+const TAG_TAXONOMY = process.env.SEED_TAG_TAXONOMY || '1064637c853e49519f4d5ebf29d227df'; // "Tag - Taxonomy"
 // Section pages are Visual Builder EXPERIENCES (created by scripts/migrate-experiences.mjs).
 // Their child items are parented to these keys → URLs stay /<section>/<slug>.
 const PLACES_KEY = keyFor('places-to-visit-exp');
@@ -254,10 +258,11 @@ async function main() {
       await upsert(token, { slug: a.slug, key: areaKey(a.slug), contentType: 'Area', container: NEIGHBOURHOODS_KEY, routable: true, displayName: a.displayName, properties: a.props, reparent: true });
     }
   }
-  // Tags → shared blocks (_component) in the app assets folder (non-routable).
+  // Tags → shared blocks (_component) grouped under the "Tag - Taxonomy" folder
+  // (non-routable). `reparent: true` keeps them tucked in the folder on re-runs.
   if (wanted('tag')) {
     for (const t of tags) {
-      await upsert(token, { slug: t.slug, key: tagKey(t.slug), contentType: 'TagTerm', container: SITE_ASSETS, routable: false, displayName: t.displayName, properties: t.props, reparent: true });
+      await upsert(token, { slug: t.slug, key: tagKey(t.slug), contentType: 'TagTerm', container: TAG_TAXONOMY, routable: false, displayName: t.displayName, properties: t.props, reparent: true });
     }
   }
   if (wanted('poi')) {

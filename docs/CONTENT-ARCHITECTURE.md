@@ -5,6 +5,13 @@ intuitively, and so URLs, faceting, and global settings all follow from one deli
 Supersedes the ad-hoc flat layout we started with. Pairs with CONTENT-MODEL.md (types),
 LISTING-PATTERN.md (listings), SEO.md._
 
+> **We always follow Optimizely CMS best practices and keep content organized.** Nothing is
+> ever dumped flat: pages live in a tree that mirrors the site URLs, shared blocks are grouped
+> into named folders ("Tag - Taxonomy", "Site Configurations"), and any section that would pass
+> ~100 children is bucketed into folders (§10). Every structural change here is made through that
+> lens — a tidy, predictable tree that a content author (not a developer) can navigate. See
+> OPTIMIZELY-BEST-PRACTICES.md §2 for the modelling rules this rests on.
+
 ## 1. Goals (authoring-first)
 - **Group by kind** — an author adding a place goes to *Places to Visit*; adding a tag goes to
   *Taxonomy*. No hunting through a flat root.
@@ -18,69 +25,93 @@ LISTING-PATTERN.md (listings), SEO.md._
 Every site lives under its own **site-root node**, so the CMS is multisite-ready from day one —
 adding *This is Abu Dhabi* later is just another sibling subtree, no rework (see §8).
 ```
+PAGES tree
 Root
 └─ This is Dubai            HomePage Experience  ← Home = Site Root = Start Page  → /
    ├─ Places to Visit       PlacesToVisit  (Experience/VB canvas)  → /places-to-visit
    │   └─ Point of Interest…                                        → /places-to-visit/<slug>
    ├─ Events                Events         (Experience/VB canvas)  → /events
    │   └─ Event…                                                    → /events/<slug>
-   └─ Neighbourhoods        Neighbourhoods (Experience/VB canvas)  → /neighbourhoods
-       └─ Area… (Downtown, Marina, Old Dubai)                       → /neighbourhoods/<slug>
+   ├─ Neighbourhoods        Neighbourhoods (Experience/VB canvas)  → /neighbourhoods
+   │   └─ Area… (Downtown, Marina, Old Dubai)                       → /neighbourhoods/<slug>
+   └─ Articles              Articles       (Experience/VB canvas)  → /articles
+       └─ 2026 / 2027 …     Folder (year bucket, §10)              → /articles/<year>/
+           └─ Article…                                              → /articles/<year>/<slug>/
 
-Shared blocks — "For This Application" (app assets folder, /SysSiteAssets/), NOT in the page tree:
-   ├─ Site Settings         SiteConfiguration (_component singleton)  this site's brand / SEO / crawl
-   └─ Tag… (Landmarks, Beaches, Festivals, Luxury…)  TagTerm (_component)  referenced for facets + AI
+SHARED BLOCKS — "For This Application" (app assets folder, /SysSiteAssets/), NOT in the page tree.
+Grouped into named folders (best practice — never flat):
+   ├─ Site Configurations   [folder]
+   │   └─ Site Settings      SiteConfiguration (_component singleton)  brand / SEO / crawl
+   └─ Tag - Taxonomy        [folder]
+       └─ Tag… (Landmarks, Beaches, Festivals, Luxury…)  TagTerm (_component)  facets + AI search
 ```
 Global config + taxonomy are **shared blocks** (`_component`) in the application's shared-assets
 folder, so editors manage them from the Shared Blocks panel — no page tree, no non-routable pages,
-no per-type access grants. References to tags still filter by `key` (facets), and the settings
-singleton is fetched scoped to the Start Page subtree via `_metadata.path`.
+no per-type access grants. Each kind sits in its **own named folder** (`Site Configurations`,
+`Tag - Taxonomy`) rather than flat under "For This Application", so authors always know where a new
+tag or a settings edit lives. References to tags still filter by `key` (facets) regardless of which
+folder holds them, and the settings singleton is fetched scoped to the Start Page subtree via
+`_metadata.path`.
 - **Home IS the site root** (one node, e.g. "This is Dubai"): it's the Start Page the Application
   binds its host(s) to (`localhost:3000` dev, the Vercel domain in prod) AND it parents the section
   pages. URLs resolve relative to it → Home = `/`, children = `/<segment>`. No separate SiteRoot node,
   and no Application rebind when restructuring (Home never moves).
 - **An Experience CAN parent pages** once it declares **`mayContainTypes`** — verified. (The earlier
   "not allowed under parent" error was simply a missing `mayContainTypes`, not an Experience limitation.)
-  So `HomePage.mayContainTypes = [PlacesToVisitPage, EventsPage, NeighbourhoodsPage, Area, Event, SiteSettings]`.
-- **Section pages** (`PlacesToVisitPage`, `EventsPage`, `NeighbourhoodsPage`) share the listing
-  pattern: SEO + heading/intro + `pageSize` + top/bottom composition zones, `mayContainTypes`
-  their item type. See LISTING-PATTERN.md.
-- **Taxonomy & Settings live *per site*** (under each site root) so each site owns its own tags,
-  brand and SEO — clean multisite isolation. (A future "shared" taxonomy could sit under Root if
-  ever needed.)
-- **Folders** (`Taxonomy`, `Settings`) use a `_folder` type purely to organise; not routable.
+  So `HomePage.mayContainTypes` lists the four section experiences (PlacesToVisit, Events,
+  Neighbourhoods, Articles).
+- **Section pages** are Visual Builder **experiences** (`PlacesToVisit`, `Events`, `Neighbourhoods`,
+  `Articles`) that share the listing pattern: a `SectionListing` block on the canvas + top/bottom
+  composition zones, `mayContainTypes` their item type. See LISTING-PATTERN.md.
+- **Taxonomy & Settings live *per site*** (as shared blocks under each site's application) so each
+  site owns its own tags, brand and SEO — clean multisite isolation.
+- **Shared-block folders** (`Site Configurations`, `Tag - Taxonomy`) are `SysContentFolder`s created
+  once in the Shared Blocks UI; the seed only parents blocks into them (see `scripts/seed.mjs`
+  `TAG_TAXONOMY`). **Article year buckets** use the custom `Folder` type (routable segment — §10).
 
-## 3. Taxonomy — `Tag` (managed `_page`)
-- New type **`Tag`** (base `_page`), organised under the **Taxonomy** folder. Fields: `name`, `slug`,
-  `dimension` (theme / cuisine / audience / amenity / interest / season / accessibility), `description`,
+## 3. Taxonomy — `Tag` (shared block `TagTerm`, in the "Tag - Taxonomy" folder)
+- Type **`TagTerm`** (base **`_component`**), grouped under the **"Tag - Taxonomy"** folder in the
+  application's shared-assets area ("For This Application"). Fields: `name`, `slug`, `dimension`
+  (theme / cuisine / audience / amenity / interest / season / accessibility), `description`,
   `synonyms`, `parent` (self, for hierarchy), `featured`, `icon`.
-- **Why `_page`, not `_component`:** Optimizely Graph can only **resolve + filter** a reference whose
-  target is *managed* content. A `_component` can't be a referenced, filterable taxonomy (proven the
-  hard way). A fresh `Tag` type also avoids the old `Category`'s immutable-base-type + interactive-delete
-  block. (The dormant `_component` `Category` type can be deleted later, interactively.)
-- Referenced by items via a **`tags`** field (`array` of `contentReference` → `Tag`). Powers the
-  listing facets (grouped by `dimension`) and later AI/semantic search (`synonyms`/`description`).
-- Tag pages are **noindex** (taxonomy isn't thin-content SEO); they can become real landing pages later.
+- **Why a shared block, not a page:** taxonomy has no page of its own, so authors shouldn't hunt the
+  page tree or need per-type access grants to add a term. As a shared block it's created/edited from
+  the **Shared Blocks panel**, and it filters + resolves fine — a POI/Event/Article `tags` reference
+  facets by `key` (`tags: { key: { eq } }`). This disproves the earlier belief that a filterable
+  taxonomy had to be `_page`. (`compositionBehaviors: ['elementEnabled']` is what exposes the block as
+  a Graph root type for the facet list.)
+- **Organized in a folder, not flat.** All 24 terms live under "Tag - Taxonomy" so the panel stays
+  legible and there's one obvious home for "add a new tag". Moving a term between folders never changes
+  its `key`, so facets/references are unaffected.
+- Referenced by items via a **`tags`** field (`array` of `contentReference` → `TagTerm`). Powers the
+  listing facets (grouped by `dimension`) and AI/semantic search (`synonyms`/`description`).
 
-## 4. Global settings — `SiteSettings` singleton
-- Lives under **Settings**. A single instance authors edit in one place.
+## 4. Global settings — `SiteConfiguration` singleton (in the "Site Configurations" folder)
+- Type **`SiteConfiguration`** (base **`_component`**), a single shared block under the
+  **"Site Configurations"** folder — authors edit brand/SEO in one place from the Shared Blocks panel.
 - Fields: `siteName` ("This is Dubai"), `titleTagline`, `titleSeparator`, `allowSearchIndexing`
-  (global crawl switch, default OFF), `robotsTxtCustom`. Drives the global title template
-  (`<page> | <tagline> | <siteName>`) → rebrand in one publish. **(Gap today: the type is missing the
-  brand fields and no instance exists — this step adds both.)**
+  (global crawl switch, default OFF). Drives the global title template
+  (`<page> | <tagline> | <siteName>`) → rebrand in one publish. Fetched scoped to the Start Page
+  subtree via `_metadata.path`, so multisite instances each read their own settings.
 
 ## 5. Authoring workflows (the test of the design)
 - **Add a place:** Places to Visit → New → *Point of Interest*; set fields, pick `tags`, publish → live at
   `/places-to-visit/<slug>`, appears in the listing + facets automatically.
-- **Add a tag:** Taxonomy → New → *Tag*; set `dimension`. Immediately available as a facet.
-- **Edit global branding/SEO:** Settings → *Site Settings*. One publish rebrands every page title.
-- **Add a new section (e.g. Hotels):** new section page type + card + config entry (LISTING-PATTERN §8);
-  author creates the section page and adds children.
+- **Add a tag:** Shared Blocks → *For This Application* → **Tag - Taxonomy** → New → *Tag (Taxonomy term)*;
+  set `dimension`, publish. Immediately available as a facet — no page, no access grant.
+- **Add an article:** Pages tree → **Articles** → the **year folder** matching its publish date (create
+  the folder if the year is new) → New → *Article*; fill title/body/heroImage, pick `tags`, publish →
+  live at `/articles/<year>/<slug>/`. Categorization is the `tags` reference (topical) + the year folder
+  (structural) — see §10 for why year, not category, is the bucket.
+- **Edit global branding/SEO:** Shared Blocks → *For This Application* → **Site Configurations** →
+  *Site Settings*. One publish rebrands every page title.
+- **Add a new section (e.g. Hotels):** new section experience + card + config entry (LISTING-PATTERN §8);
+  author creates the section and adds children.
 
 ## 6. Naming & conventions
-- Section URLs: `/places-to-visit`, `/events`, `/neighbourhoods` (kebab-case, plural, descriptive).
-- Item `routeSegment` = slug of the name. Tags: kebab-case slug.
-- Folders named for authors ("Taxonomy", "Settings").
+- Section URLs: `/places-to-visit`, `/events`, `/neighbourhoods`, `/articles` (kebab-case, plural).
+- Item `routeSegment` = slug of the name. Tags: kebab-case slug. Article year folders: the 4-digit year.
+- Shared-block folders named for authors ("Tag - Taxonomy", "Site Configurations").
 
 ## 7. Migration
 

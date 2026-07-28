@@ -2,21 +2,22 @@ import { contentType } from '@optimizely/cms-sdk';
 
 /**
  * Tag — the live, faceted, hierarchical taxonomy term (replaces the dormant
- * `_component` Category). Base type is **`_page`** because Optimizely Graph can
- * only resolve + FILTER a reference whose target is *managed* content — this is
- * what lets a POI/Event `tags` reference power the listing facets.
+ * `_component` Category).
  *
- * `dimension` lets one type drive several independent facets (themes, cuisines,
- * audiences…). `synonyms` + `description` also feed Phase-4 AI/semantic search.
+ * Modelled as a **shared block** (`_component`), grouped under the **"Tag - Taxonomy"**
+ * folder in the app's shared-assets area ("For This Application"). Editors add/edit
+ * taxonomy from the Shared Blocks panel — no page tree, no non-routable pages, no
+ * per-type access grants. (Grouping blocks into named folders rather than dumping them
+ * flat is the Optimizely CMS best practice — see docs/CONTENT-ARCHITECTURE.md §3.)
  *
- * Tags are modelled as **shared blocks** (`_component`) in the app's shared-assets
- * folder ("For This Application"), so editors add/edit taxonomy from the Shared
- * Blocks panel — no page tree, no per-type access grants. References to them still
- * filter by key (`tags: { key: { eq } }`), which is what powers the listing facets.
+ * References to a Tag still resolve + FILTER by key (`tags: { key: { eq } }`), which is
+ * what powers the listing facets — disproving the earlier belief that a filterable
+ * taxonomy had to be `_page`. `dimension` lets one type drive several independent facets
+ * (themes, cuisines, audiences…); `synonyms` + `description` feed AI/semantic search.
  *
- * New key `TagTerm`: base types are immutable, so the block can't reuse the retired
- * `_page` `Tag` key. `compositionBehaviors` is required for a block to be exposed as
- * a Graph root type (for the facet list) + creatable as a shared block.
+ * Key `TagTerm` (not the retired `_page` `Tag`): base types are immutable, so the block
+ * couldn't reuse the old key. `compositionBehaviors` is required for a block to be exposed
+ * as a Graph root type (for the facet list) + creatable as a shared block.
  */
 export const TagContentType = contentType({
   key: 'TagTerm',
