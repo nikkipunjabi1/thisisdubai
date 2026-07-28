@@ -86,7 +86,8 @@ export default async function SectionListing({ content, displaySettings }: Props
       : Promise.resolve({ items: [], total: 0, childType: null }),
     getTags(),
   ]);
-  const tags = childType === 'PointOfInterest' || childType === 'Event' ? allTags : [];
+  const tags =
+    childType === 'PointOfInterest' || childType === 'Event' || childType === 'ArticlePost' ? allTags : [];
 
   return (
     <SectionShell

@@ -272,9 +272,12 @@ Public URL:    /articles/2026/06/dubai-on-a-budget
   **Create Shared Block → Article**. Set `slug` + `publishDate`; it appears in the listing and at
   its URL automatically. `scripts/seed.mjs` seeds the blocks + folders (`ensureSharedFolder`).
 
-> **Status:** the block type + instances + folder structure are in place (this section). The
-> frontend cut-over — listing → `ArticlePost`, the `/articles/<year>/<month>/<slug>` detail route,
-> and removal of the legacy `_page` `Article` + its instances — is the follow-up.
+> **Status:** live. The listing (`src/lib/sections.ts` — detects the Articles experience by type
+> and queries `ArticlePost`) and the detail route (`src/app/articles/[year]/[month]/[slug]`) both
+> run on the block model; verified end-to-end (listing shows 10, detail renders with breadcrumb +
+> rich text). The legacy `_page` `Article` type + its 10 instances are retired via
+> `scripts/retire-legacy-articles.mjs` (user-run — CMA deletes are blocked for Claude); once that
+> runs clean, `ArticleContentType` is removed from `Article.tsx` + `layout.tsx` and re-pushed.
 
 ### Listing-engine note (`_metadata.path`)
 
