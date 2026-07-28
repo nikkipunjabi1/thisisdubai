@@ -17,6 +17,7 @@
     "seed": "node --env-file=.env scripts/seed.mjs",
     "asset-manifest": "node scripts/asset-manifest.mjs",
     "cmp-folders": "node --env-file=.env scripts/cmp-folders.mjs",
+    "create-section": "node --env-file=.env scripts/create-section.mjs",
     "migrate:experiences": "node --env-file=.env scripts/migrate-experiences.mjs"
   },
   "dependencies": {

@@ -11,6 +11,7 @@ import {
   PlacesToVisitContentType,
   NeighbourhoodsContentType,
   EventsContentType,
+  ArticlesContentType,
 } from './SectionExperience';
 
 /**
@@ -32,6 +33,7 @@ export const HomePageContentType = contentType({
     PlacesToVisitContentType,
     NeighbourhoodsContentType,
     EventsContentType,
+    ArticlesContentType,
     AreaContentType,
     EventContentType,
   ],

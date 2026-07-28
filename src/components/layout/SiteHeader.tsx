@@ -10,6 +10,7 @@ const NAV: { href: string; label: string }[] = [
   { href: '/places-to-visit', label: 'Places to Visit' },
   { href: '/neighbourhoods', label: 'Neighbourhoods' },
   { href: '/events', label: 'Events' },
+  { href: '/articles', label: 'Articles' },
 ];
 
 export function SiteHeader() {

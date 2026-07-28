@@ -29,6 +29,7 @@ type Node = {
   summary?: string | null;
   startDate?: string | null;
   endDate?: string | null;
+  publishDate?: string | null;
   images?: ImageRef[] | null;
   heroImage?: ImageRef;
   _metadata?: { url?: { default?: string | null } | null } | null;
@@ -75,18 +76,23 @@ const ORDER_BY: Record<SortKey, string> = {
 export const isSortKey = (v: string | undefined): v is SortKey => v === 'name' || v === '-name' || v === 'newest';
 
 /** The concrete child type of a section (drives type-specific filters + fields). */
-export type ChildType = 'PointOfInterest' | 'Area' | 'Event';
-// Note the image field differs by type: POI/Event author a list (`images`), Area a
-// single `heroImage`. Both resolve to a CMP CDN URL via `url { default }`.
+export type ChildType = 'PointOfInterest' | 'Area' | 'Event' | 'Article';
+// Note the image field differs by type: POI/Event author a list (`images`), Area and
+// Article a single `heroImage`. Both resolve to a CMP CDN URL via `url { default }`.
+// Article also names its text fields differently (`title`/`excerpt`, which is what
+// reads correctly for editorial), so they're ALIASED to name/summary here — that
+// keeps one card component serving every section.
 const TYPE_FIELDS: Record<ChildType, string> = {
   PointOfInterest: 'name summary priceBand images { url { default } }',
   Area: 'name summary heroImage { url { default } }',
   Event: 'name summary startDate endDate images { url { default } }',
+  Article: 'name: title summary: excerpt publishDate heroImage { url { default } }',
 };
 /** Which facets each child type supports (drives the FilterControls UI). */
 export const TYPE_FACETS: Record<ChildType, Array<'tag' | 'price'>> = {
   PointOfInterest: ['price', 'tag'],
   Event: ['tag'],
+  Article: ['tag'],
   Area: [],
 };
 
@@ -121,7 +127,7 @@ export const detectChildType = cache(
         { c: containerKey },
       )) as { _Page?: { items?: Array<{ _metadata?: { types?: string[] } }> } };
       const types = data?._Page?.items?.[0]?._metadata?.types ?? [];
-      return (['PointOfInterest', 'Area', 'Event'] as ChildType[]).find((t) => types.includes(t)) ?? null;
+      return (['PointOfInterest', 'Area', 'Event', 'Article'] as ChildType[]).find((t) => types.includes(t)) ?? null;
     } catch {
       return null;
     }
@@ -181,7 +187,12 @@ export const getSectionChildren = cachedGraphRead(async function getSectionChild
 
     const result = data?.[childType];
     const items = (result?.items ?? []).map((n) => {
-      const meta = childType === 'Event' ? eventMeta(n) : priceMeta(n.priceBand);
+      const meta =
+        childType === 'Event'
+          ? eventMeta(n)
+          : childType === 'Article'
+            ? fmtDate(n.publishDate)
+            : priceMeta(n.priceBand);
       return toCard({ ...n, name: n.name ?? n._metadata?.displayName ?? 'Untitled' }, meta);
     });
     return { items, total: result?.total ?? items.length, childType };

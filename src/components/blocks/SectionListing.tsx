@@ -19,7 +19,7 @@ import { getListingState } from '@/lib/listing-context';
  * §8): put content above it (Hero, heading) and below it (RichText) on the canvas.
  *
  * `source` points at the section page whose CHILDREN to list (usually the page the
- * block sits on). The children query is generic (POIs, Areas, Events) so one block
+ * block sits on). The children query is generic (POIs, Areas, Events, Articles) so one block
  * serves every section. Pagination/sort/filters layer on here in later phases.
  */
 export const SectionListingContentType = contentType({
@@ -34,7 +34,7 @@ export const SectionListingContentType = contentType({
       description: 'The section page whose child items are listed. Usually the page this block sits on.',
       group: 'content',
       sortOrder: 1,
-      allowedTypes: ['PlacesToVisit', 'Neighbourhoods', 'Events'],
+      allowedTypes: ['PlacesToVisit', 'Neighbourhoods', 'Events', 'Articles'],
     },
     heading: {
       type: 'string',

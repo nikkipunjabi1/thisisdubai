@@ -21,14 +21,15 @@
 // scripts/data/_helpers.mjs.
 //
 // Flags:
-//   --type=poi|event|area|tag   seed only one collection (repeatable)
+//   --type=poi|event|area|tag|article   seed only one collection (repeatable)
 //   --dry-run                   print what would be written, touch nothing
 
-import { keyFor, areaKey, poiKey, eventKey, tagKey } from './data/_helpers.mjs';
+import { keyFor, areaKey, poiKey, eventKey, tagKey, articleKey } from './data/_helpers.mjs';
 import { areas } from './data/areas.mjs';
 import { tags } from './data/tags.mjs';
 import { pois } from './data/pois/index.mjs';
 import { events } from './data/events.mjs';
+import { articles } from './data/articles/index.mjs';
 
 const GATEWAY = (process.env.OPTIMIZELY_CMS_API_URL || 'https://api.cms.optimizely.com').replace(/\/$/, '');
 const CLIENT_ID = process.env.OPTIMIZELY_CMS_CLIENT_ID;
@@ -52,6 +53,7 @@ const SITE_ASSETS = process.env.SEED_SITE_ASSETS || '8ce609ddb1984b04a99c5764a54
 const PLACES_KEY = keyFor('places-to-visit-exp');
 const NEIGHBOURHOODS_KEY = keyFor('neighbourhoods-exp');
 const EVENTS_KEY = keyFor('events-exp');
+const ARTICLES_KEY = keyFor('articles-exp');
 
 async function getToken() {
   const res = await fetch(`${GATEWAY}/oauth/token`, {
@@ -154,7 +156,7 @@ function validate() {
   const problems = [];
   const areaSlugs = new Set(areas.map((a) => a.slug));
 
-  for (const [label, list] of [['area', areas], ['tag', tags], ['poi', pois], ['event', events]]) {
+  for (const [label, list] of [['area', areas], ['tag', tags], ['poi', pois], ['event', events], ['article', articles]]) {
     const seen = new Set();
     for (const item of list) {
       if (seen.has(item.slug)) problems.push(`duplicate ${label} slug: ${item.slug}`);
@@ -177,12 +179,21 @@ function validate() {
   // Same check for tag references — a typo'd tag slug would otherwise fail one
   // item at a time, 100 items into the run.
   const tagKeyToSlug = new Map(tags.map((t) => [tagKey(t.slug), t.slug]));
-  for (const list of [pois, events]) {
+  for (const list of [pois, events, articles]) {
     for (const item of list) {
       for (const ref of item.props.tags?.value ?? []) {
         const refKey = String(ref).replace('cms://content/', '');
         if (!tagKeyToSlug.has(refKey)) problems.push(`${item.slug}: unknown tag reference (${refKey})`);
       }
+    }
+  }
+
+  // Articles cross-link to POIs; a typo'd slug would fail one item at a time.
+  const poiKeyToSlug = new Map(pois.map((p) => [poiKey(p.slug), p.slug]));
+  for (const a of articles) {
+    for (const ref of a.props.relatedPlaces?.value ?? []) {
+      const refKey = String(ref).replace('cms://content/', '');
+      if (!poiKeyToSlug.has(refKey)) problems.push(`${a.slug}: relatedPlaces points at a POI not in the seed (${refKey})`);
     }
   }
 
@@ -196,7 +207,7 @@ async function main() {
   validate();
   console.log(
     `Seeding → ${GATEWAY} (locale ${LOCALE})${DRY_RUN ? ' — DRY RUN' : ''}\n` +
-      `${areas.length} neighbourhoods · ${tags.length} tags · ${pois.length} places · ${events.length} events\n`,
+      `${areas.length} neighbourhoods · ${tags.length} tags · ${pois.length} places · ${events.length} events · ${articles.length} articles\n`,
   );
   const token = DRY_RUN ? null : await getToken();
 
@@ -221,6 +232,12 @@ async function main() {
   if (wanted('event')) {
     for (const e of events) {
       await upsert(token, { slug: e.slug, key: eventKey(e.slug), contentType: 'Event', container: EVENTS_KEY, routable: true, displayName: e.displayName, properties: e.props, reparent: true });
+    }
+  }
+
+  if (wanted('article')) {
+    for (const a of articles) {
+      await upsert(token, { slug: a.slug, key: articleKey(a.slug), contentType: 'Article', container: ARTICLES_KEY, routable: true, displayName: a.displayName, properties: a.props, reparent: true });
     }
   }
 

@@ -8,6 +8,7 @@ import { SeoMetadataContract } from './SeoMetadata';
 import { PointOfInterestContentType } from './PointOfInterest';
 import { AreaContentType } from './Area';
 import { EventContentType } from './Event';
+import { ArticleContentType } from './Article';
 
 /**
  * Section experiences — the Visual Builder version of the listing/section pages.
@@ -54,6 +55,15 @@ export const EventsContentType = contentType({
   baseType: '_experience',
   extends: SeoMetadataContract,
   mayContainTypes: [EventContentType],
+  properties: internalTitle,
+});
+
+export const ArticlesContentType = contentType({
+  key: 'Articles',
+  displayName: 'Articles (Section)',
+  baseType: '_experience',
+  extends: SeoMetadataContract,
+  mayContainTypes: [ArticleContentType],
   properties: internalTitle,
 });
 

@@ -26,6 +26,7 @@ export const areaKey = (slug) => keyFor(`area:${slug}`);
 export const poiKey = (slug) => keyFor(`poi:${slug}`);
 export const eventKey = (slug) => keyFor(`event:${slug}`);
 export const tagKey = (slug) => keyFor(`tagblock:${slug}`);
+export const articleKey = (slug) => keyFor(`article:${slug}`);
 
 /** Single content reference → an Area. */
 export const REF = (slug) => ({ value: `cms://content/${areaKey(slug)}` });
@@ -71,6 +72,30 @@ export function event(slug, displayName, { name, summary, body, startDate, endDa
       ...(area ? { area: REF(area) } : {}),
       ...(tags.length ? { tags: TAGREFS(tags) } : {}),
       ...(ticketUrl ? { ticketUrl: S(ticketUrl) } : {}),
+    },
+  };
+}
+
+/** List of content references → Points of Interest (an Article's `relatedPlaces`). */
+export const POIREFS = (slugs) => ({ value: slugs.map((s) => `cms://content/${poiKey(s)}`) });
+
+/**
+ * Build an Article seed record. Note the field names differ from the other types —
+ * `title`/`excerpt` rather than `name`/`summary`, because that is what reads
+ * correctly for editorial. The listing query aliases them (src/lib/sections.ts).
+ */
+export function article(slug, displayName, { title, excerpt, body, author, publishDate, tags = [], relatedPlaces = [] }) {
+  return {
+    slug,
+    displayName,
+    props: {
+      title: S(title ?? displayName),
+      excerpt: S(excerpt),
+      body: RT(body),
+      ...(author ? { author: S(author) } : {}),
+      ...(publishDate ? { publishDate: S(publishDate) } : {}),
+      ...(tags.length ? { tags: TAGREFS(tags) } : {}),
+      ...(relatedPlaces.length ? { relatedPlaces: POIREFS(relatedPlaces) } : {}),
     },
   };
 }
