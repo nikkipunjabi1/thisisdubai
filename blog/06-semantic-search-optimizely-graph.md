@@ -1,5 +1,5 @@
 ---
-title: "Semantic Search with Optimizely Graph — a Practical Guide (and the Three Things the Docs Don't Tell You)"
+title: "Semantic Search with Optimizely Graph — a Practical Guide (and the Four Things the Docs Don't Tell You)"
 status: draft
 audience: Optimizely community / dev.to / LinkedIn (long-form)
 author: Nikki Punjabi
@@ -157,6 +157,53 @@ So I **group results by type** — Places to Visit, Events, Neighbourhoods — e
 itself. It's more honest, and it's also better UX: people scanning a travel site usually know
 whether they want a place or an event.
 
+## Gotcha #4 — your taxonomy's synonyms aren't in search until you put them there
+
+Stripping stop words got *"swimming sea"* to surface beaches. But a blunter query exposed a deeper
+gap: **"swimming"** on its own ranked three waterparks first, then a fountain, an aquarium and a
+dolphinarium — and the actual **beaches** sat below them.
+
+That's not *wrong*, exactly — a waterpark genuinely is about swimming. The real problem is what
+*didn't* rank: a **beach**, the most obvious place a human means by "swimming." Semantic ranking
+scores the **text each place carries**, and my beach summaries talk about "boardwalks, beach clubs,
+sunset" — never swimming. **The engine has no world-knowledge that a beach is where you swim.**
+
+I *had* modelled that knowledge — my `Beaches` taxonomy term carries a `synonyms` list of exactly
+`sea, coast, swimming, shore`. The trouble:
+
+> **Optimizely Graph's `_fulltext` only searches a type's OWN fields.** It does **not** follow a
+> `contentReference` to search the referenced Tag's `synonyms`. So all that carefully-authored
+> synonym vocabulary was completely invisible to search — a beach tagged "Beaches (swimming)" gained
+> nothing from it.
+
+The fix is **denormalization**: bake each item's tag vocabulary into a **searchable field on the
+item itself**. I added a `searchKeywords` string (indexed `searchable`) to `PointOfInterest` and
+`Event`; the seed populates it from the item's tags — name + synonyms:
+
+```ts
+// seed: tag slug → "Name synonym1 synonym2 …", joined across an item's tags
+const tagVocab = new Map(tags.map((t) => [t.slug, [t.name, ...t.synonyms].join(' ')]));
+const searchKeywords = item.tags.map((slug) => tagVocab.get(slug)).join(' ');
+// → Palm West Beach: "Beaches waterfront sea coast swimming shore  Free to Visit …"
+```
+
+Now the beach's own index literally contains "swimming", so `_fulltext` matches it **and** the
+semantic embedding shifts toward the concept — beaches rank where a human expects them. Because
+`_fulltext` automatically covers every searchable field, **the search query didn't change at all**;
+the whole fix lives in the model + seed.
+
+Two things worth knowing:
+- **It enriches BM25 *and* the vector.** The denormalized text is part of what Graph embeds, so this
+  isn't keyword stuffing — it moves the semantic representation too.
+- **It's denormalized, so it can go stale.** Edit a tag's synonyms and the places carrying it won't
+  reflect it until they're re-saved. On a seed-driven demo that's a re-run; in production you'd
+  repopulate from the publish webhook.
+
+The broader lesson: **semantic search matches what your content *says*, not what you *know*.** When
+there's a real-world association the prose doesn't state — beach ⇒ swimming — you have to hand the
+model that signal, and your taxonomy is where it already lives. You just have to get it into the
+searchable index.
+
 ## The part nobody warns you about: vector search always returns *something*
 
 Keyword search has a natural empty state — no keyword, no match. **Vector search doesn't.** It
@@ -218,7 +265,7 @@ Site-wide search that matches on meaning, across three content types, in one Gra
 with no vector database and no client JavaScript. "Skyscraper" finds the tower. "Fish tank" finds
 the mall with the aquarium.
 
-If you take four things from this:
+If you take five things from this:
 
 1. **Test relevance against a control ranking** (`RELEVANCE` vs `SEMANTIC`), with zero-overlap
    queries — or you'll ship keyword search believing it's semantic.
@@ -226,12 +273,15 @@ If you take four things from this:
    broken.
 3. **Query concrete types, not `_Content`**, and never merge scores across types.
 4. **Use a relative relevance floor**, because vector search always returns something.
+5. **Get your taxonomy into the index.** `_fulltext` can't see a referenced tag's `synonyms` —
+   denormalize them onto the item, or your carefully-modelled vocabulary does nothing for search.
 
 ## What's next
 
-The retrieval layer is deliberately the same one my AI features will call: autocomplete, a
-synonyms dictionary, and Gaussian date-decay boosting for events come next, and then Claude sits
-on top of this — Graph does retrieval, Claude does phrasing, so the answers stay grounded in real
-CMS content.
+The retrieval layer is deliberately the same one my AI features will call: autocomplete and
+Gaussian date-decay boosting for events come next, and then Claude sits on top of this — Graph does
+retrieval, Claude does phrasing, so the answers stay grounded in real CMS content. (The synonyms
+dictionary is already wired — see Gotcha #4: the taxonomy's synonyms are denormalized into each
+item's searchable index.)
 
 _Repo: github.com/nikkipunjabi1/thisisdubai — built in the open toward Optimizely MVP._

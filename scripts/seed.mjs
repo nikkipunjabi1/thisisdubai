@@ -255,14 +255,25 @@ async function main() {
       await upsert(token, { slug: t.slug, key: tagKey(t.slug), contentType: 'TagTerm', container: TAG_TAXONOMY, routable: false, displayName: t.displayName, properties: t.props, reparent: true });
     }
   }
+  // Denormalized search vocabulary: tag slug → "Name synonym1 synonym2 …". Baked into each
+  // item's `searchKeywords` (a searchable field) so an intent query like "swimming" matches a
+  // beach (tagged Beaches → "sea coast swimming shore") in BOTH BM25 and the semantic embedding.
+  // Optimizely Graph's `_fulltext` only searches a type's OWN fields, so a referenced Tag's
+  // synonyms are invisible to search unless denormalized here. See docs/AI-SEARCH.md.
+  const tagVocab = new Map(tags.map((t) => [t.slug, [t.props.name?.value, ...(t.props.synonyms?.value ?? [])].filter(Boolean).join(' ')]));
+  const withKeywords = (item) => {
+    const kw = (item.tagSlugs ?? []).map((s) => tagVocab.get(s)).filter(Boolean).join(' ');
+    return kw ? { ...item.props, searchKeywords: { value: kw } } : item.props;
+  };
+
   if (wanted('poi')) {
     for (const p of pois) {
-      await upsert(token, { slug: p.slug, key: poiKey(p.slug), contentType: 'PointOfInterest', container: PLACES_KEY, routable: true, displayName: p.displayName, properties: p.props, reparent: true });
+      await upsert(token, { slug: p.slug, key: poiKey(p.slug), contentType: 'PointOfInterest', container: PLACES_KEY, routable: true, displayName: p.displayName, properties: withKeywords(p), reparent: true });
     }
   }
   if (wanted('event')) {
     for (const e of events) {
-      await upsert(token, { slug: e.slug, key: eventKey(e.slug), contentType: 'Event', container: EVENTS_KEY, routable: true, displayName: e.displayName, properties: e.props, reparent: true });
+      await upsert(token, { slug: e.slug, key: eventKey(e.slug), contentType: 'Event', container: EVENTS_KEY, routable: true, displayName: e.displayName, properties: withKeywords(e), reparent: true });
     }
   }
 

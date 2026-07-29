@@ -62,6 +62,20 @@ export const PointOfInterestContentType = contentType({
       sortOrder: 6,
       items: { type: 'contentReference', allowedTypes: [TagContentType] },
     },
+    // Denormalized tag names + synonyms, indexed for search. Optimizely Graph's
+    // `_fulltext` matches a type's OWN searchable fields — it can't reach a referenced
+    // Tag's `synonyms`. Baking that vocabulary in here means a query like "swimming"
+    // hits a beach (tagged Beaches → "sea, coast, swimming, shore") in BOTH BM25 and the
+    // semantic embedding, so intent-driven searches surface the right places. Populated
+    // by scripts/seed.mjs from the item's tags; not authored by hand. See docs/AI-SEARCH.md.
+    searchKeywords: {
+      type: 'string',
+      displayName: 'Search keywords (auto)',
+      description: 'Auto-derived from tags for semantic search — do not edit by hand.',
+      group: 'seo',
+      sortOrder: 20,
+      indexingType: 'searchable',
+    },
     latitude: {
       type: 'float',
       displayName: 'Latitude',
