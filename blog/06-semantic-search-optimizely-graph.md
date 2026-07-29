@@ -188,13 +188,28 @@ const searchKeywords = item.tags.map((slug) => tagVocab.get(slug)).join(' ');
 ```
 
 Now the beach's own index literally contains "swimming", so `_fulltext` matches it **and** the
-semantic embedding shifts toward the concept — beaches rank where a human expects them. Because
-`_fulltext` automatically covers every searchable field, **the search query didn't change at all**;
-the whole fix lives in the model + seed.
+semantic embedding shifts toward the concept. Because `_fulltext` automatically covers every
+searchable field, **the search query didn't change at all** — the whole fix lives in the model + seed.
 
-Two things worth knowing:
+The before/after, measured live on the same query:
+
+| `swimming` — before | `swimming` — after |
+|---------------------|--------------------|
+| Legoland, Wild Wadi, Aquaventure (waterparks), then **Dubai Fountain, Dubai Aquarium, Dolphinarium** | Jumeirah Corniche, Bluewaters Beach, Sunset Beach, Palm Jumeirah, Marina Beach, **Jumeirah Beach** … |
+
+Every "after" result is a **beach**, and **none of them contain the word "swim" in their own name or
+summary** — they surface purely through the denormalized tag vocabulary. The water-*themed* noise
+(fountain, aquarium, dolphinarium) drops out entirely, because it isn't tagged with a swimming
+concept and so never gains the keyword.
+
+Three things worth knowing:
 - **It enriches BM25 *and* the vector.** The denormalized text is part of what Graph embeds, so this
   isn't keyword stuffing — it moves the semantic representation too.
+- **Denormalization amplifies your taxonomy, so curate it.** My first pass also added `swim`/`swimming`
+  to the *Waterparks* tag ("a waterpark is a swimming place, right?"). Every waterpark inherited it and,
+  being short keyword-dense pages, they shot **back above the beaches** — the exact thing I was fixing.
+  A synonym you add propagates to *every* item carrying that tag and can outrank what you actually
+  meant. Keep synonyms tight and intent-aligned; put a concept on the one tag it most belongs to.
 - **It's denormalized, so it can go stale.** Edit a tag's synonyms and the places carrying it won't
   reflect it until they're re-saved. On a seed-driven demo that's a re-run; in production you'd
   repopulate from the publish webhook.
