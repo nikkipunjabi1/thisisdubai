@@ -26,10 +26,10 @@ Blog when we hit any of:
 | # | Working title | Trigger | Phase |
 |---|---------------|---------|-------|
 | 1 | Why I'm building This is Dubai on Optimizely SaaS (in the open) | Kickoff | 0 |
-| 2 | Optimizely SaaS CMS + Visual Builder on Vercel with Next.js — setup & gotchas | Challenge | 1 |
-| 2b | **Connecting a Next.js app to Optimizely CMS SaaS for live Visual Builder preview** — Application + preview tokens, local HTTPS (mkcert), and the registry-must-mirror-the-model gotcha (`13 errors in the GraphQL query` / `GraphMissingContentTypeError`) | 🧩 Challenge solved | 2 |
-| 3 | Content modeling for Visual Builder: pages vs experiences vs components | New/learning | 2 |
-| 4 | Server-rendered SEO + JSON-LD for every Optimizely SaaS page (Next.js) | New/learning | 2 |
+| 2 | Optimizely SaaS CMS + Visual Builder on Vercel with Next.js — setup & gotchas _(draft: blog/02-optimizely-saas-visual-builder-nextjs-vercel-setup.md)_ | Challenge | 1 |
+| 2b | **Connecting a Next.js app to Optimizely CMS SaaS for live Visual Builder preview** — Application + preview tokens, local HTTPS (mkcert), and the registry-must-mirror-the-model gotcha (`13 errors in the GraphQL query` / `GraphMissingContentTypeError`) _(draft: blog/02b-live-visual-builder-preview-nextjs.md)_ | 🧩 Challenge solved | 2 |
+| 3 | Content modeling for Visual Builder: pages vs experiences vs components _(draft: blog/03-content-modeling-pages-experiences-components.md)_ | New/learning | 2 |
+| 4 | Server-rendered SEO + JSON-LD for every Optimizely SaaS page (Next.js) _(draft: blog/04-server-rendered-seo-jsonld.md)_ | New/learning | 2 |
 | 5 | **Shareable stakeholder previews for Optimizely SaaS + Next.js** (preview-before-publish) | New (headline) | 3 |
 | 6 | **Semantic search with Optimizely Graph — a practical guide** — the four-line switch (`_ranking: SEMANTIC`), proving it's really semantic with a `RELEVANCE` control, and 3 undocumented gotchas (stop words drown the semantic signal + make `_semanticWeight` look broken; `_Content` surfaces non-routable taxonomy blocks; scores aren't comparable across types) + why a relevance floor must be relative, not absolute. _(draft: blog/06-semantic-search-optimizely-graph.md)_ | New (headline) | 3 |
 | 7 | EN + AR semantic search & localization on Optimizely SaaS | New/learning | 3 |
@@ -40,7 +40,7 @@ Blog when we hit any of:
 | 11 | I open-sourced a stakeholder-preview module for Optimizely SaaS — here's how | Module | 5 |
 | 12 | **How to connect Optimizely CMP (Content Marketing Platform) with Optimizely SaaS CMS** — publishing/asset flow between CMP and CMS SaaS _(outline only for now; detailed write-up later)_ | New/learning | TBD |
 | 14 | **A Reusable, Server-Rendered Listing Engine on Optimizely SaaS + Visual Builder** — section pages as experiences, the grid as a `SectionListing` block, request-scoped state via React `cache()`, server-side pagination/sort/faceted filters, and 3 hard-won gotchas (cascade-delete on parent delete, `limit`≤100, `indexingType`/reference-`key` filtering). _(draft: blog/14-listing-engine-visual-builder.md)_ | 🎯 Phase + 🧩 Challenge | 3 |
-| 13 | **The Page That Shouldn't Have a URL: Best-Practice Site Settings in Optimizely SaaS CMS** — where global settings belong in the content tree, how to keep them off the public web (non-routable / router-excluded), the placement + security guardrails, and the multisite-safe GraphQL query (scope by Start Page key). Includes the options considered + the test queries proving no public URL. | 🧩 Challenge / New | 2 |
+| 13 | **The Page That Shouldn't Have a URL: Best-Practice Site Settings in Optimizely SaaS CMS** — where global settings belong in the content tree, how to keep them off the public web (non-routable / router-excluded), the placement + security guardrails, and the multisite-safe GraphQL query (scope by Start Page key). Includes the options considered + the test queries proving no public URL. _(draft: blog/13-non-routable-site-settings.md)_ | 🧩 Challenge / New | 2 |
 | 15 | **Thousands of Articles in Optimizely SaaS CMS: model them as blocks, not pages** — why folders can't live in the SaaS Pages tree, why a flat page-per-article doesn't scale, and the fix: articles as shared blocks foldered by year/month in the Assets panel, with the Next.js app owning `/articles/<year>/<month>/<slug>` routing (resolve by `slug`, URL from `publishDate`). The two failed attempts, the doc quotes that settle it, and how the listing detects a block-backed section. _(draft: blog/15-articles-as-blocks-not-pages.md)_ | 🧩 Challenge solved + 🎯 Phase | 3 |
 
 ## Post skeleton (reuse for each)
