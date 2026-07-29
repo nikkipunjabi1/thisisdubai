@@ -45,6 +45,7 @@ export function poi(slug, displayName, { name, summary, body, area, tags = [], l
   return {
     slug,
     displayName,
+    tagSlugs: tags, // raw slugs, so the seed can denormalize tag vocab into `searchKeywords`
     props: {
       name: S(name ?? displayName),
       summary: S(summary),
@@ -65,6 +66,7 @@ export function event(slug, displayName, { name, summary, body, startDate, endDa
   return {
     slug,
     displayName,
+    tagSlugs: tags, // raw slugs, so the seed can denormalize tag vocab into `searchKeywords`
     props: {
       name: S(name ?? displayName),
       summary: S(summary),

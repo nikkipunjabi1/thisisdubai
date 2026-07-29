@@ -23,6 +23,9 @@ export const EventContentType = contentType({
     endDate: { type: 'dateTime', displayName: 'End date', group: 'content', sortOrder: 6 },
     area: { type: 'contentReference', allowedTypes: [AreaContentType], displayName: 'Area / venue', group: 'content', sortOrder: 7 },
     tags: { type: 'array', displayName: 'Tags', description: 'Taxonomy terms (event type, audience…) — power filtering/facets + AI search.', group: 'content', sortOrder: 8, items: { type: 'contentReference', allowedTypes: [TagContentType] } },
+    // Denormalized tag names + synonyms, indexed for search (see PointOfInterest.tsx for why).
+    // Auto-populated by scripts/seed.mjs from the event's tags; not authored by hand.
+    searchKeywords: { type: 'string', displayName: 'Search keywords (auto)', description: 'Auto-derived from tags for semantic search — do not edit by hand.', group: 'seo', sortOrder: 20, indexingType: 'searchable' },
     ticketUrl: { type: 'url', displayName: 'Ticket URL', group: 'content', sortOrder: 9 },
   },
 });

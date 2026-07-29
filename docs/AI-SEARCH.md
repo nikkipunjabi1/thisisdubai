@@ -71,7 +71,7 @@ on queries with **zero lexical overlap** with the target content:
 | "skyscraper" | 0 results | **Burj Khalifa** ("tallest building") |
 | "fish tank" | 0 results | **The Dubai Mall** ("aquarium") |
 
-Three findings that shaped the implementation:
+Four findings that shaped the implementation:
 
 1. **Strip stop words before querying.** `_fulltext` is BM25-scored and stop words dominate:
    *"swimming in the sea"* ranked a historical district top (7.5) on `in`/`the` alone, while the
@@ -84,6 +84,13 @@ Three findings that shaped the implementation:
 3. **Scores are not comparable across types**, so results are **grouped by type**, not merged into
    one list. The same query scored an `Area` 13.7 and a `PointOfInterest` 1.5 — Graph normalizes
    BM25 per index. A blended ranking would be fiction.
+4. **Denormalize taxonomy synonyms into the item.** `_fulltext` searches a type's OWN fields only —
+   it does NOT follow a `contentReference` to a Tag's `synonyms`. So a query like *"swimming"* under-
+   ranked beaches (their prose says "boardwalk/beach club", not "swim") even though the `Beaches` tag
+   carries `swimming` as a synonym. Fix: a `searchKeywords` (searchable) field on `PointOfInterest`/
+   `Event`, populated by `scripts/seed.mjs` with each item's tag names + synonyms — so the concept is
+   in the item's own BM25 index AND its semantic embedding. No `search.ts` change (`_fulltext` auto-
+   covers searchable fields). Trade-off: denormalized → repopulate on tag edits (reseed / webhook).
 
 **Relevance floor.** Vector search always returns nearest neighbours, so weak queries trail a tail
 of near-zero matches. We drop results below **10% of their group's top score** — relative, not
