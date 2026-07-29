@@ -1,0 +1,1050 @@
+{
+  "business-bay": {
+    "type": "Neighbourhood",
+    "assetId": "658f1aa28b7a11f19cb9162a8d3fe148",
+    "provider": "pexels",
+    "photographer": "Walid Ahmad",
+    "photographerUrl": "https://www.pexels.com/@walidphotoz",
+    "sourceUrl": "https://www.pexels.com/photo/cityscape-of-dubai-under-a-dramatic-sky-17238022/"
+  },
+  "zabeel": {
+    "type": "Neighbourhood",
+    "assetId": "6a85e1128b7a11f18eedda7b8d447cd5",
+    "provider": "pexels",
+    "photographer": "The Lazy Artist Gallery",
+    "photographerUrl": "https://www.pexels.com/@thelazyartist",
+    "sourceUrl": "https://www.pexels.com/photo/aerial-photo-of-lake-1488087/"
+  },
+  "at-the-top-sky": {
+    "type": "Point of Interest",
+    "assetId": "a0a076d68b7a11f1adced2e68063bdff",
+    "provider": "pexels",
+    "photographer": "Nishant Vyas",
+    "photographerUrl": "https://www.pexels.com/@nishantvy",
+    "sourceUrl": "https://www.pexels.com/photo/modern-architectural-detail-of-burj-khalifa-at-night-36909907/"
+  },
+  "dubai-aquarium": {
+    "type": "Point of Interest",
+    "assetId": "a5868fd28b7a11f1838ed2e68063bdff",
+    "provider": "pexels",
+    "photographer": "Dawid Tkocz",
+    "photographerUrl": "https://www.pexels.com/@dawidtkocz",
+    "sourceUrl": "https://www.pexels.com/photo/vibrant-red-jellyfish-in-dubai-aquarium-display-35665818/"
+  },
+  "dubai-ice-rink": {
+    "type": "Point of Interest",
+    "assetId": "aa99239a8b7a11f19381162a8d3fe148",
+    "provider": "pexels",
+    "photographer": "Pavel Danilyuk",
+    "photographerUrl": "https://www.pexels.com/@pavel-danilyuk",
+    "sourceUrl": "https://www.pexels.com/photo/person-riding-a-zamboni-on-an-ice-skating-rink-6539485/"
+  },
+  "kidzania-dubai": {
+    "type": "Point of Interest",
+    "assetId": "af3e5f5a8b7a11f1a59342bad72655ea",
+    "provider": "pexels",
+    "photographer": "AJ  Ahamad",
+    "photographerUrl": "https://www.pexels.com/@aj-ahamad-767001191",
+    "sourceUrl": "https://www.pexels.com/photo/vibrant-dubai-marina-skyline-at-night-30554306/"
+  },
+  "vr-park-dubai": {
+    "type": "Point of Interest",
+    "assetId": "b46e28028b7a11f1aa212e2415fbf52f",
+    "provider": "pexels",
+    "photographer": "Lajos Kristóf Kántor",
+    "photographerUrl": "https://www.pexels.com/@lajos-kristof-kantor-2158796893",
+    "sourceUrl": "https://www.pexels.com/photo/palm-tree-lined-walkway-in-dubai-park-36339290/"
+  },
+  "souk-al-bahar": {
+    "type": "Point of Interest",
+    "assetId": "b8cb54ec8b7a11f1af1f162a8d3fe148",
+    "provider": "pexels",
+    "photographer": "Pavlo Luchkovski",
+    "photographerUrl": "https://www.pexels.com/@pashal",
+    "sourceUrl": "https://www.pexels.com/photo/city-at-waterfront-337932/"
+  },
+  "dubai-opera": {
+    "type": "Point of Interest",
+    "assetId": "bd4ca0ca8b7a11f1a745d2e68063bdff",
+    "provider": "pexels",
+    "photographer": "JESHOOTS.com",
+    "photographerUrl": "https://www.pexels.com/@jeshoots-com-147458",
+    "sourceUrl": "https://www.pexels.com/photo/black-concrete-buildings-under-cloudy-sky-442579/"
+  },
+  "burj-park": {
+    "type": "Point of Interest",
+    "assetId": "c20910bc8b7a11f1acd38246cb06f1a9",
+    "provider": "pexels",
+    "photographer": "Lajos Kristóf Kántor",
+    "photographerUrl": "https://www.pexels.com/@lajos-kristof-kantor-2158796893",
+    "sourceUrl": "https://www.pexels.com/photo/burj-khalifa-and-reflection-in-dubai-36339269/"
+  },
+  "dubai-water-canal": {
+    "type": "Point of Interest",
+    "assetId": "c722b5d08b7a11f1838ed2e68063bdff",
+    "provider": "pexels",
+    "photographer": "Walid Ahmad",
+    "photographerUrl": "https://www.pexels.com/@walidphotoz",
+    "sourceUrl": "https://www.pexels.com/photo/water-and-city-17285751/"
+  },
+  "bay-avenue-park": {
+    "type": "Point of Interest",
+    "assetId": "cc3564d28b7a11f18ad28246cb06f1a9",
+    "provider": "pexels",
+    "photographer": "Kate Trysh",
+    "photographerUrl": "https://www.pexels.com/@katetrysh",
+    "sourceUrl": "https://www.pexels.com/photo/palm-tree-boulevard-with-blank-white-billboards-along-the-urban-street-road-28028559/"
+  },
+  "dubai-frame": {
+    "type": "Point of Interest",
+    "assetId": "d12b45568b7a11f1bb36162a8d3fe148",
+    "provider": "pexels",
+    "photographer": "Bee Captures",
+    "photographerUrl": "https://www.pexels.com/@bee-captures-3626300",
+    "sourceUrl": "https://www.pexels.com/photo/spectacular-fireworks-at-dubai-frame-30034153/"
+  },
+  "zabeel-park": {
+    "type": "Point of Interest",
+    "assetId": "d8d3e9fc8b7a11f1838ed2e68063bdff",
+    "provider": "pexels",
+    "photographer": "Denys Gromov",
+    "photographerUrl": "https://www.pexels.com/@jdgromov",
+    "sourceUrl": "https://www.pexels.com/photo/the-dubai-frame-4612430/"
+  },
+  "sky-views-dubai": {
+    "type": "Point of Interest",
+    "assetId": "ddd4a6b28b7a11f1838ed2e68063bdff",
+    "provider": "pexels",
+    "photographer": "Heinz Klier",
+    "photographerUrl": "https://www.pexels.com/@heinz-klier-261981",
+    "sourceUrl": "https://www.pexels.com/photo/ain-dubai-the-world-s-tallest-ferris-wheel-30690139/"
+  },
+  "dubai-garden-glow": {
+    "type": "Point of Interest",
+    "assetId": "e2cd4f208b7a11f19d00da7b8d447cd5",
+    "provider": "pexels",
+    "photographer": "Diego F. Parra",
+    "photographerUrl": "https://www.pexels.com/@diego-f-parra-33199",
+    "sourceUrl": "https://www.pexels.com/photo/dubai-miracle-garden-in-summer-15131322/"
+  },
+  "dubai-world-trade-centre": {
+    "type": "Point of Interest",
+    "assetId": "e7216ac08b7a11f1bb36162a8d3fe148",
+    "provider": "pexels",
+    "photographer": "Walid Ahmad",
+    "photographerUrl": "https://www.pexels.com/@walidphotoz",
+    "sourceUrl": "https://www.pexels.com/photo/modern-architecture-and-traditional-boats-in-dubai-31146745/"
+  },
+  "safa-park": {
+    "type": "Point of Interest",
+    "assetId": "ebed4e0c8b7a11f18f68d2e68063bdff",
+    "provider": "pexels",
+    "photographer": "Alexander Shabanov",
+    "photographerUrl": "https://www.pexels.com/@alexander-shabanov-2151372921",
+    "sourceUrl": "https://www.pexels.com/photo/stunning-view-of-dubai-skyline-from-a-park-37173167/"
+  },
+  "spice-souk": {
+    "type": "Point of Interest",
+    "assetId": "f0c283a28b7a11f18c5d2e2415fbf52f",
+    "provider": "pexels",
+    "photographer": "AXP Photography",
+    "photographerUrl": "https://www.pexels.com/@axp-photography-500641970",
+    "sourceUrl": "https://www.pexels.com/photo/display-of-dried-spices-16412108/"
+  },
+  "perfume-souk": {
+    "type": "Point of Interest",
+    "assetId": "f527e2988b7a11f1a2228246cb06f1a9",
+    "provider": "pexels",
+    "photographer": "Kate Trysh",
+    "photographerUrl": "https://www.pexels.com/@katetrysh",
+    "sourceUrl": "https://www.pexels.com/photo/vibrant-spice-market-in-dubai-souq-28515826/"
+  },
+  "textile-souk": {
+    "type": "Point of Interest",
+    "assetId": "fa0898e88b7a11f184cd42bad72655ea",
+    "provider": "pexels",
+    "photographer": "Kate Trysh",
+    "photographerUrl": "https://www.pexels.com/@katetrysh",
+    "sourceUrl": "https://www.pexels.com/photo/sleeping-cats-in-dubai-textile-market-scene-28515814/"
+  },
+  "abra-creek-crossing": {
+    "type": "Point of Interest",
+    "assetId": "feefcade8b7a11f1838ed2e68063bdff",
+    "provider": "pexels",
+    "photographer": "Adamant Edindon",
+    "photographerUrl": "https://www.pexels.com/@adamant-edindon-779703529",
+    "sourceUrl": "https://www.pexels.com/photo/boats-in-canal-in-united-emirates-20542413/"
+  },
+  "al-seef": {
+    "type": "Point of Interest",
+    "assetId": "04839f668b7b11f18020162a8d3fe148",
+    "provider": "pexels",
+    "photographer": "aboodi vesakaran",
+    "photographerUrl": "https://www.pexels.com/@aboodi",
+    "sourceUrl": "https://www.pexels.com/photo/al-seef-heritage-hotel-in-dubai-11755215/"
+  },
+  "al-shindagha-museum": {
+    "type": "Point of Interest",
+    "assetId": "08cb849e8b7b11f18eedda7b8d447cd5",
+    "provider": "pexels",
+    "photographer": "Eslam Mohammed Abdelmaksoud",
+    "photographerUrl": "https://www.pexels.com/@eslames1",
+    "sourceUrl": "https://www.pexels.com/photo/historical-architecture-at-al-shindagha-museum-28406955/"
+  },
+  "sheikh-saeed-al-maktoum-house": {
+    "type": "Point of Interest",
+    "assetId": "0de3377e8b7b11f188b3162a8d3fe148",
+    "provider": "pexels",
+    "photographer": "Jestin Antony",
+    "photographerUrl": "https://www.pexels.com/@jestin-antony-602690562",
+    "sourceUrl": "https://www.pexels.com/photo/traditional-architecture-in-historic-middle-eastern-alley-36149325/"
+  },
+  "coffee-museum": {
+    "type": "Point of Interest",
+    "assetId": "126b09668b7b11f18eedda7b8d447cd5",
+    "provider": "pexels",
+    "photographer": "The Lazy Artist Gallery",
+    "photographerUrl": "https://www.pexels.com/@thelazyartist",
+    "sourceUrl": "https://www.pexels.com/photo/woman-holding-cup-of-coffee-and-reading-book-4545869/"
+  },
+  "al-ahmadiya-school": {
+    "type": "Point of Interest",
+    "assetId": "17a6b1508b7b11f1aa212e2415fbf52f",
+    "provider": "pexels",
+    "photographer": "Walid Ahmad",
+    "photographerUrl": "https://www.pexels.com/@walidphotoz",
+    "sourceUrl": "https://www.pexels.com/photo/traditional-architecture-in-dubai-s-historic-al-fahidi-quarter-33665954/"
+  },
+  "heritage-house": {
+    "type": "Point of Interest",
+    "assetId": "1c8bcab68b7b11f1838ed2e68063bdff",
+    "provider": "pexels",
+    "photographer": "Walid Ahmad",
+    "photographerUrl": "https://www.pexels.com/@walidphotoz",
+    "sourceUrl": "https://www.pexels.com/photo/traditional-wooden-door-in-dubai-s-historic-area-33230887/"
+  },
+  "waterfront-market": {
+    "type": "Point of Interest",
+    "assetId": "214645d68b7b11f1838ed2e68063bdff",
+    "provider": "pexels",
+    "photographer": "Ayrat",
+    "photographerUrl": "https://www.pexels.com/@ayrat-244411276",
+    "sourceUrl": "https://www.pexels.com/photo/a-river-in-a-city-19136333/"
+  },
+  "saruq-al-hadid-museum": {
+    "type": "Point of Interest",
+    "assetId": "25ee00b08b7b11f18ad28246cb06f1a9",
+    "provider": "pexels",
+    "photographer": "Atoosa Ryanne Arfa",
+    "photographerUrl": "https://www.pexels.com/@atoosa-ryanne-arfa-889847941",
+    "sourceUrl": "https://www.pexels.com/photo/national-museum-of-qatar-in-doha-25781448/"
+  },
+  "ras-al-khor-wildlife-sanctuary": {
+    "type": "Point of Interest",
+    "assetId": "2a9d67548b7b11f1a745d2e68063bdff",
+    "provider": "pexels",
+    "photographer": "Denys Gromov",
+    "photographerUrl": "https://www.pexels.com/@jdgromov",
+    "sourceUrl": "https://www.pexels.com/photo/flamingos-in-water-12898628/"
+  },
+  "creek-park": {
+    "type": "Point of Interest",
+    "assetId": "2e75c39e8b7b11f1803342bad72655ea",
+    "provider": "pexels",
+    "photographer": "Kate Trysh",
+    "photographerUrl": "https://www.pexels.com/@katetrysh",
+    "sourceUrl": "https://www.pexels.com/photo/scenic-view-of-dubai-creek-with-traditional-dhow-28515818/"
+  },
+  "dubai-dolphinarium": {
+    "type": "Point of Interest",
+    "assetId": "331926b68b7b11f1992a42bad72655ea",
+    "provider": "pexels",
+    "photographer": "Efrem  Efre",
+    "photographerUrl": "https://www.pexels.com/@efrem-efre-2786187",
+    "sourceUrl": "https://www.pexels.com/photo/group-of-dolphins-jumping-out-of-swimming-pool-26436663/"
+  },
+  "dubai-creek-golf-yacht-club": {
+    "type": "Point of Interest",
+    "assetId": "37656d6a8b7b11f1af692e2415fbf52f",
+    "provider": "pexels",
+    "photographer": "Khuram Naseem",
+    "photographerUrl": "https://www.pexels.com/@khuramnaseemfilms",
+    "sourceUrl": "https://www.pexels.com/photo/golfer-teeing-off-with-dubai-skyline-in-background-37825475/"
+  },
+  "deira-clocktower": {
+    "type": "Point of Interest",
+    "assetId": "3be54efa8b7b11f1838ed2e68063bdff",
+    "provider": "pexels",
+    "photographer": "Kirandeep Singh Walia",
+    "photographerUrl": "https://www.pexels.com/@kirandeepsingh",
+    "sourceUrl": "https://www.pexels.com/photo/deira-twin-towers-on-sea-coast-in-dubai-19913932/"
+  },
+  "bur-dubai-grand-mosque": {
+    "type": "Point of Interest",
+    "assetId": "409fa8b48b7b11f19a138246cb06f1a9",
+    "provider": "pexels",
+    "photographer": "Kirandeep Singh Walia",
+    "photographerUrl": "https://www.pexels.com/@kirandeepsingh",
+    "sourceUrl": "https://www.pexels.com/photo/sharjah-grand-mosque-in-united-arab-emirates-11143082/"
+  },
+  "jumeirah-mosque": {
+    "type": "Point of Interest",
+    "assetId": "44dd53ea8b7b11f19d00da7b8d447cd5",
+    "provider": "pexels",
+    "photographer": "Mahmoud Alaydi",
+    "photographerUrl": "https://www.pexels.com/@malaydi",
+    "sourceUrl": "https://www.pexels.com/photo/dome-of-the-sheikh-zayed-grand-mosque-abu-dhabi-7941689/"
+  },
+  "madinat-jumeirah": {
+    "type": "Point of Interest",
+    "assetId": "4962c5da8b7b11f1a2228246cb06f1a9",
+    "provider": "pexels",
+    "photographer": "Denys Gromov",
+    "photographerUrl": "https://www.pexels.com/@jdgromov",
+    "sourceUrl": "https://www.pexels.com/photo/madinat-jumeirah-hotel-by-marina-in-dubai-uae-4852758/"
+  },
+  "souk-madinat-jumeirah": {
+    "type": "Point of Interest",
+    "assetId": "4dbb57148b7b11f19a138246cb06f1a9",
+    "provider": "pexels",
+    "photographer": "Magda Ehlers",
+    "photographerUrl": "https://www.pexels.com/@magda-ehlers-pexels",
+    "sourceUrl": "https://www.pexels.com/photo/souk-madinat-jumeirah-entrance-with-palm-trees-35171474/"
+  },
+  "wild-wadi-waterpark": {
+    "type": "Point of Interest",
+    "assetId": "525cdb9e8b7b11f19a138246cb06f1a9",
+    "provider": "pexels",
+    "photographer": "Denys Gromov",
+    "photographerUrl": "https://www.pexels.com/@jdgromov",
+    "sourceUrl": "https://www.pexels.com/photo/people-enjoying-the-waterpark-4957436/"
+  },
+  "kite-beach": {
+    "type": "Point of Interest",
+    "assetId": "56f06d1a8b7b11f18020162a8d3fe148",
+    "provider": "pexels",
+    "photographer": "Denys Gromov",
+    "photographerUrl": "https://www.pexels.com/@jdgromov",
+    "sourceUrl": "https://www.pexels.com/photo/man-is-holding-a-kite-on-seashore-7816077/"
+  },
+  "sunset-beach": {
+    "type": "Point of Interest",
+    "assetId": "5b3afafc8b7b11f18f68d2e68063bdff",
+    "provider": "pexels",
+    "photographer": "Selim Karadayı",
+    "photographerUrl": "https://www.pexels.com/@selimkrdy",
+    "sourceUrl": "https://www.pexels.com/photo/sunset-view-of-dubai-eye-ferris-wheel-at-beach-29561719/"
+  },
+  "la-mer": {
+    "type": "Point of Interest",
+    "assetId": "60b022508b7b11f1a2228246cb06f1a9",
+    "provider": "pexels",
+    "photographer": "Courtney RA",
+    "photographerUrl": "https://www.pexels.com/@courtney-ra-1608069",
+    "sourceUrl": "https://www.pexels.com/photo/beachside-tiki-hut-bar-on-sandy-shore-37088029/"
+  },
+  "laguna-waterpark": {
+    "type": "Point of Interest",
+    "assetId": "64efc8e88b7b11f1af692e2415fbf52f",
+    "provider": "pexels",
+    "photographer": "Mikhail Nilov",
+    "photographerUrl": "https://www.pexels.com/@mikhail-nilov",
+    "sourceUrl": "https://www.pexels.com/photo/aquaventure-waterpark-in-dubai-8319455/"
+  },
+  "etihad-museum": {
+    "type": "Point of Interest",
+    "assetId": "69a33f828b7b11f1992a42bad72655ea",
+    "provider": "pexels",
+    "photographer": "Miguel Cuenca",
+    "photographerUrl": "https://www.pexels.com/@miguel-cuenca-67882473",
+    "sourceUrl": "https://www.pexels.com/photo/photo-of-a-museum-building-13396890/"
+  },
+  "mercato-shopping-mall": {
+    "type": "Point of Interest",
+    "assetId": "6df35bf88b7b11f19a138246cb06f1a9",
+    "provider": "pexels",
+    "photographer": "Daniel  ..",
+    "photographerUrl": "https://www.pexels.com/@daniel-736236834",
+    "sourceUrl": "https://www.pexels.com/photo/hall-in-dubai-mall-18669645/"
+  },
+  "jumeirah-corniche": {
+    "type": "Point of Interest",
+    "assetId": "7223a2328b7b11f1a59342bad72655ea",
+    "provider": "pexels",
+    "photographer": "Eslam Mohammed Abdelmaksoud",
+    "photographerUrl": "https://www.pexels.com/@eslames1",
+    "sourceUrl": "https://www.pexels.com/photo/abu-dhabi-corniche-28406816/"
+  },
+  "city-walk": {
+    "type": "Neighbourhood",
+    "assetId": "be117cc28b7c11f1af1f162a8d3fe148",
+    "provider": "pexels",
+    "photographer": "Diego F. Parra",
+    "photographerUrl": "https://www.pexels.com/@diego-f-parra-33199",
+    "sourceUrl": "https://www.pexels.com/photo/glass-dome-walls-and-buildings-under-clear-sky-15478472/"
+  },
+  "the-green-planet": {
+    "type": "Point of Interest",
+    "assetId": "7a4dfce68b7b11f1aa212e2415fbf52f",
+    "provider": "pexels",
+    "photographer": "Denys Gromov",
+    "photographerUrl": "https://www.pexels.com/@jdgromov",
+    "sourceUrl": "https://www.pexels.com/photo/the-green-planet-in-dubai-4835292/"
+  },
+  "coca-cola-arena": {
+    "type": "Point of Interest",
+    "assetId": "7eab4d708b7b11f19a138246cb06f1a9",
+    "provider": "pexels",
+    "photographer": "Mitchell Luo",
+    "photographerUrl": "https://www.pexels.com/@mitchel3uo",
+    "sourceUrl": "https://www.pexels.com/photo/green-chairs-on-stadium-6998683/"
+  },
+  "museum-of-illusions-dubai": {
+    "type": "Point of Interest",
+    "assetId": "84b4113e8b7b11f19a138246cb06f1a9",
+    "provider": "pexels",
+    "photographer": "MAMADO UAE",
+    "photographerUrl": "https://www.pexels.com/@wathegony",
+    "sourceUrl": "https://www.pexels.com/photo/dubai-museum-of-the-future-architecture-32690046/"
+  },
+  "aya-universe": {
+    "type": "Point of Interest",
+    "assetId": "8982f0e08b7b11f18c5d2e2415fbf52f",
+    "provider": "pexels",
+    "photographer": "AJ  Ahamad",
+    "photographerUrl": "https://www.pexels.com/@aj-ahamad-767001191",
+    "sourceUrl": "https://www.pexels.com/photo/modern-playground-in-dubai-residential-area-29247929/"
+  },
+  "theatre-of-digital-art": {
+    "type": "Point of Interest",
+    "assetId": "8e0e08528b7b11f1aa212e2415fbf52f",
+    "provider": "pexels",
+    "photographer": "Denys Gromov",
+    "photographerUrl": "https://www.pexels.com/@jdgromov",
+    "sourceUrl": "https://www.pexels.com/photo/a-3d-model-of-earth-in-expo-2020-12381329/"
+  },
+  "al-mamzar-beach-park": {
+    "type": "Point of Interest",
+    "assetId": "91ee676e8b7b11f1a745d2e68063bdff",
+    "provider": "pexels",
+    "photographer": "Thushara   shaji",
+    "photographerUrl": "https://www.pexels.com/@thushara-shaji-2156415173",
+    "sourceUrl": "https://www.pexels.com/photo/beautiful-al-mamzar-beach-sunset-in-dubai-34345411/"
+  },
+  "atlantis-the-palm": {
+    "type": "Point of Interest",
+    "assetId": "965c27288b7b11f1992a42bad72655ea",
+    "provider": "pexels",
+    "photographer": "Mikhail Nilov",
+    "photographerUrl": "https://www.pexels.com/@mikhail-nilov",
+    "sourceUrl": "https://www.pexels.com/photo/hotel-atlantis-in-dubai-at-sunset-8319463/"
+  },
+  "aquaventure-waterpark": {
+    "type": "Point of Interest",
+    "assetId": "9a78028c8b7b11f1ae2fd2e68063bdff",
+    "provider": "pexels",
+    "photographer": "Rick Josey",
+    "photographerUrl": "https://www.pexels.com/@rick-josey-130171209",
+    "sourceUrl": "https://www.pexels.com/photo/double-waterslide-at-the-atlantis-bahamas-12359638/"
+  },
+  "the-lost-chambers-aquarium": {
+    "type": "Point of Interest",
+    "assetId": "9e4aecd08b7b11f19eb82e2415fbf52f",
+    "provider": "pexels",
+    "photographer": "Pixabay",
+    "photographerUrl": "https://www.pexels.com/@pixabay",
+    "sourceUrl": "https://www.pexels.com/photo/ammonites-221219/"
+  },
+  "the-view-at-the-palm": {
+    "type": "Point of Interest",
+    "assetId": "a2c20bf48b7b11f1a59342bad72655ea",
+    "provider": "pexels",
+    "photographer": "Nelemson G",
+    "photographerUrl": "https://www.pexels.com/@nelemson",
+    "sourceUrl": "https://www.pexels.com/photo/aerial-view-of-palm-jumeirah-islands-in-dubai-29212700/"
+  },
+  "the-pointe": {
+    "type": "Point of Interest",
+    "assetId": "a757bc0e8b7b11f19eb82e2415fbf52f",
+    "provider": "pexels",
+    "photographer": "Denys Gromov",
+    "photographerUrl": "https://www.pexels.com/@jdgromov",
+    "sourceUrl": "https://www.pexels.com/photo/time-lapse-photography-of-ferris-wheel-during-night-time-7974825/"
+  },
+  "palm-west-beach": {
+    "type": "Point of Interest",
+    "assetId": "ab9bbc168b7b11f19cb9162a8d3fe148",
+    "provider": "pexels",
+    "photographer": "Nelemson G",
+    "photographerUrl": "https://www.pexels.com/@nelemson",
+    "sourceUrl": "https://www.pexels.com/photo/scenic-view-of-palm-jumeirah-beach-in-dubai-29212684/"
+  },
+  "nakheel-mall": {
+    "type": "Point of Interest",
+    "assetId": "af6affe68b7b11f19eb82e2415fbf52f",
+    "provider": "pexels",
+    "photographer": "Dina",
+    "photographerUrl": "https://www.pexels.com/@dina-872032140",
+    "sourceUrl": "https://www.pexels.com/photo/palm-trees-by-modern-dubai-mall-in-uae-19749291/"
+  },
+  "dubai-marina-mall": {
+    "type": "Point of Interest",
+    "assetId": "b4adfa308b7b11f1838ed2e68063bdff",
+    "provider": "pexels",
+    "photographer": "jc dubi",
+    "photographerUrl": "https://www.pexels.com/@jc-dubi-205977",
+    "sourceUrl": "https://www.pexels.com/photo/high-rise-building-near-body-of-water-during-night-time-713458/"
+  },
+  "skydive-dubai": {
+    "type": "Point of Interest",
+    "assetId": "b8a4c1e68b7b11f1838ed2e68063bdff",
+    "provider": "pexels",
+    "photographer": "Ralph Burrows",
+    "photographerUrl": "https://www.pexels.com/@ralphburrows",
+    "sourceUrl": "https://www.pexels.com/photo/parachuters-on-air-5035655/"
+  },
+  "xline-dubai-marina": {
+    "type": "Point of Interest",
+    "assetId": "bd17478a8b7b11f1992a42bad72655ea",
+    "provider": "pexels",
+    "photographer": "Denys Gromov",
+    "photographerUrl": "https://www.pexels.com/@jdgromov",
+    "sourceUrl": "https://www.pexels.com/photo/dubai-marina-dubai-uae-28350360/"
+  },
+  "pier-7": {
+    "type": "Point of Interest",
+    "assetId": "c296b2908b7b11f1a745d2e68063bdff",
+    "provider": "pexels",
+    "photographer": "Selim Karadayı",
+    "photographerUrl": "https://www.pexels.com/@selimkrdy",
+    "sourceUrl": "https://www.pexels.com/photo/vibrant-dubai-marina-at-night-with-illuminated-skyline-29561721/"
+  },
+  "dubai-harbour": {
+    "type": "Point of Interest",
+    "assetId": "c6b20e7e8b7b11f19cb9162a8d3fe148",
+    "provider": "pexels",
+    "photographer": "Mahmoud Alsakhnini",
+    "photographerUrl": "https://www.pexels.com/@mahmoud-alsakhnini-5767275",
+    "sourceUrl": "https://www.pexels.com/photo/brown-boat-on-seashore-5939895/"
+  },
+  "ain-dubai": {
+    "type": "Point of Interest",
+    "assetId": "cbd70a628b7b11f18020162a8d3fe148",
+    "provider": "pexels",
+    "photographer": "Rcastro creative",
+    "photographerUrl": "https://www.pexels.com/@rcastro-creative-530099892",
+    "sourceUrl": "https://www.pexels.com/photo/skyscraper-and-ferris-wheel-on-sea-coast-at-sunset-16681448/"
+  },
+  "bluewaters-beach": {
+    "type": "Point of Interest",
+    "assetId": "d10105e28b7b11f19eb82e2415fbf52f",
+    "provider": "pexels",
+    "photographer": "Anisha Dahiya",
+    "photographerUrl": "https://www.pexels.com/@anisha-dahiya-2147722286",
+    "sourceUrl": "https://www.pexels.com/photo/ain-dubai-ferris-wheel-at-night-in-uae-29731165/"
+  },
+  "the-beach-at-jbr": {
+    "type": "Point of Interest",
+    "assetId": "d5d5d0988b7b11f1838ed2e68063bdff",
+    "provider": "pexels",
+    "photographer": "Frederick Cana",
+    "photographerUrl": "https://www.pexels.com/@frederick-cana-2149043416",
+    "sourceUrl": "https://www.pexels.com/photo/modern-skyscrapers-in-dubai-marina-at-daytime-30445927/"
+  },
+  "the-walk-at-jbr": {
+    "type": "Point of Interest",
+    "assetId": "da619e268b7b11f19a138246cb06f1a9",
+    "provider": "pexels",
+    "photographer": "Denys Gromov",
+    "photographerUrl": "https://www.pexels.com/@jdgromov",
+    "sourceUrl": "https://www.pexels.com/photo/city-buildings-under-the-blue-sky-4531667/"
+  },
+  "marina-beach": {
+    "type": "Point of Interest",
+    "assetId": "df44a8d48b7b11f1af692e2415fbf52f",
+    "provider": "pexels",
+    "photographer": "Denys Gromov",
+    "photographerUrl": "https://www.pexels.com/@jdgromov",
+    "sourceUrl": "https://www.pexels.com/photo/modern-skyscrapers-and-beach-in-dubai-united-arab-emirates-4768984/"
+  },
+  "bluewaters-island": {
+    "type": "Neighbourhood",
+    "assetId": "b0947e288b7c11f18f48da7b8d447cd5",
+    "provider": "pexels",
+    "photographer": "Denys Gromov",
+    "photographerUrl": "https://www.pexels.com/@jdgromov",
+    "sourceUrl": "https://www.pexels.com/photo/huge-white-ferris-wheel-in-dubai-uae-4584928/"
+  },
+  "global-village": {
+    "type": "Point of Interest",
+    "assetId": "e96c63ce8b7b11f1838ed2e68063bdff",
+    "provider": "pexels",
+    "photographer": "Nipun Sandaru",
+    "photographerUrl": "https://www.pexels.com/@nipun-sandaru-2158400918",
+    "sourceUrl": "https://www.pexels.com/photo/charming-architectural-scene-in-dubai-s-global-village-37485056/"
+  },
+  "img-worlds-of-adventure": {
+    "type": "Point of Interest",
+    "assetId": "edcedda28b7b11f1aa212e2415fbf52f",
+    "provider": "pexels",
+    "photographer": "Mikhail Nilov",
+    "photographerUrl": "https://www.pexels.com/@mikhail-nilov",
+    "sourceUrl": "https://www.pexels.com/photo/atlantis-hotel-in-dubai-8319454/"
+  },
+  "dubai-miracle-garden": {
+    "type": "Point of Interest",
+    "assetId": "f231bd108b7b11f189a1da7b8d447cd5",
+    "provider": "pexels",
+    "photographer": "Nishant Vyas",
+    "photographerUrl": "https://www.pexels.com/@nishantvy",
+    "sourceUrl": "https://www.pexels.com/photo/vibrant-flower-display-at-dubai-miracle-garden-36871353/"
+  },
+  "dubai-butterfly-garden": {
+    "type": "Point of Interest",
+    "assetId": "f77c6f2c8b7b11f18eedda7b8d447cd5",
+    "provider": "pexels",
+    "photographer": "Chandra Prasad",
+    "photographerUrl": "https://www.pexels.com/@chandra-prasad-2160300844",
+    "sourceUrl": "https://www.pexels.com/photo/close-up-of-three-owl-butterflies-feeding-in-dubai-36625383/"
+  },
+  "motiongate-dubai": {
+    "type": "Point of Interest",
+    "assetId": "fbc809388b7b11f18887162a8d3fe148",
+    "provider": "pexels",
+    "photographer": "aboodi vesakaran",
+    "photographerUrl": "https://www.pexels.com/@aboodi",
+    "sourceUrl": "https://www.pexels.com/photo/wooden-old-fashioned-cart-12984936/"
+  },
+  "legoland-dubai": {
+    "type": "Point of Interest",
+    "assetId": "011af0588b7c11f19746da7b8d447cd5",
+    "provider": "pexels",
+    "photographer": "Milan Kiro",
+    "photographerUrl": "https://www.pexels.com/@milan-kiro-14866370",
+    "sourceUrl": "https://www.pexels.com/photo/uae-flags-displayed-on-a-sandy-dubai-beach-29188668/"
+  },
+  "legoland-water-park": {
+    "type": "Point of Interest",
+    "assetId": "05ad908a8b7c11f19a17d2e68063bdff",
+    "provider": "pexels",
+    "photographer": "Magda Ehlers",
+    "photographerUrl": "https://www.pexels.com/@magda-ehlers-pexels",
+    "sourceUrl": "https://www.pexels.com/photo/stunning-view-of-burj-al-arab-and-water-park-35171472/"
+  },
+  "riverland-dubai": {
+    "type": "Point of Interest",
+    "assetId": "0a0e7c3e8b7c11f1acd38246cb06f1a9",
+    "provider": "pexels",
+    "photographer": "The Lazy Artist Gallery",
+    "photographerUrl": "https://www.pexels.com/@thelazyartist",
+    "sourceUrl": "https://www.pexels.com/photo/aerial-photo-of-lake-1488087/"
+  },
+  "real-madrid-world": {
+    "type": "Point of Interest",
+    "assetId": "0e348f928b7c11f19d00da7b8d447cd5",
+    "provider": "pexels",
+    "photographer": "Lajos Kristóf Kántor",
+    "photographerUrl": "https://www.pexels.com/@lajos-kristof-kantor-2158796893",
+    "sourceUrl": "https://www.pexels.com/photo/santiago-bernabeu-stadium-in-madrid-on-a-summer-day-37174993/"
+  },
+  "mall-of-the-emirates": {
+    "type": "Point of Interest",
+    "assetId": "128dd0448b7c11f18020162a8d3fe148",
+    "provider": "pexels",
+    "photographer": "Heinz Klier",
+    "photographerUrl": "https://www.pexels.com/@heinz-klier-261981",
+    "sourceUrl": "https://www.pexels.com/photo/majestic-glass-dome-at-mall-of-the-emirates-37271379/"
+  },
+  "ski-dubai": {
+    "type": "Point of Interest",
+    "assetId": "1754a67a8b7c11f18020162a8d3fe148",
+    "provider": "pexels",
+    "photographer": "Denys Gromov",
+    "photographerUrl": "https://www.pexels.com/@jdgromov",
+    "sourceUrl": "https://www.pexels.com/photo/modern-high-rise-buildings-near-a-body-of-water-4491948/"
+  },
+  "dubai-safari-park": {
+    "type": "Point of Interest",
+    "assetId": "1c7abeaa8b7c11f18f48da7b8d447cd5",
+    "provider": "pexels",
+    "photographer": "Magda Ehlers",
+    "photographerUrl": "https://www.pexels.com/@magda-ehlers-pexels",
+    "sourceUrl": "https://www.pexels.com/photo/animal-statues-in-outdoor-zoo-exhibit-35012778/"
+  },
+  "al-qudra-lakes": {
+    "type": "Point of Interest",
+    "assetId": "211e26368b7c11f18eedda7b8d447cd5",
+    "provider": "pexels",
+    "photographer": "The Lazy Artist Gallery",
+    "photographerUrl": "https://www.pexels.com/@thelazyartist",
+    "sourceUrl": "https://www.pexels.com/photo/oasis-in-desert-area-in-cloudy-weather-1117481/"
+  },
+  "love-lake-dubai": {
+    "type": "Point of Interest",
+    "assetId": "26a1a9a28b7c11f1b385da7b8d447cd5",
+    "provider": "pexels",
+    "photographer": "Ashal Abbas",
+    "photographerUrl": "https://www.pexels.com/@ashal-abbas-2623660",
+    "sourceUrl": "https://www.pexels.com/photo/islands-on-desert-5855866/"
+  },
+  "al-marmoom-desert-conservation-reserve": {
+    "type": "Point of Interest",
+    "assetId": "2b2fe33a8b7c11f19746da7b8d447cd5",
+    "provider": "pexels",
+    "photographer": "Denys Gromov",
+    "photographerUrl": "https://www.pexels.com/@jdgromov",
+    "sourceUrl": "https://www.pexels.com/photo/antelope-drinking-out-of-a-street-on-a-safari-7101145/"
+  },
+  "dubai-desert-conservation-reserve": {
+    "type": "Point of Interest",
+    "assetId": "2f9ac1388b7c11f18eedda7b8d447cd5",
+    "provider": "pexels",
+    "photographer": "Denys Gromov",
+    "photographerUrl": "https://www.pexels.com/@jdgromov",
+    "sourceUrl": "https://www.pexels.com/photo/gazelles-in-the-desert-4813557/"
+  },
+  "hatta-dam": {
+    "type": "Point of Interest",
+    "assetId": "35bcfa9a8b7c11f1aa5742bad72655ea",
+    "provider": "pexels",
+    "photographer": "Eslam Mohammed Abdelmaksoud",
+    "photographerUrl": "https://www.pexels.com/@eslames1",
+    "sourceUrl": "https://www.pexels.com/photo/scenic-aerial-view-of-hatta-lake-dubai-31169361/"
+  },
+  "hatta-wadi-hub": {
+    "type": "Point of Interest",
+    "assetId": "3bdeb5d08b7c11f1adced2e68063bdff",
+    "provider": "pexels",
+    "photographer": "Eslam Mohammed Abdelmaksoud",
+    "photographerUrl": "https://www.pexels.com/@eslames1",
+    "sourceUrl": "https://www.pexels.com/photo/scenic-view-of-hatta-lake-in-dubai-31169358/"
+  },
+  "hatta-heritage-village": {
+    "type": "Point of Interest",
+    "assetId": "41a852be8b7c11f1a2228246cb06f1a9",
+    "provider": "pexels",
+    "photographer": "Salman Av",
+    "photographerUrl": "https://www.pexels.com/@salman-av-2323323",
+    "sourceUrl": "https://www.pexels.com/photo/tower-with-flag-under-cloudscape-sharjah-united-arab-emirates-6259274/"
+  },
+  "alserkal-avenue": {
+    "type": "Point of Interest",
+    "assetId": "4620e2848b7c11f19eb82e2415fbf52f",
+    "provider": "pexels",
+    "photographer": "Lajos Kristóf Kántor",
+    "photographerUrl": "https://www.pexels.com/@lajos-kristof-kantor-2158796893",
+    "sourceUrl": "https://www.pexels.com/photo/modern-dubai-boulevard-with-skyscrapers-36339267/"
+  },
+  "expo-city-dubai": {
+    "type": "Point of Interest",
+    "assetId": "4a85281c8b7c11f19eb82e2415fbf52f",
+    "provider": "pexels",
+    "photographer": "Image Hunter",
+    "photographerUrl": "https://www.pexels.com/@image-hunter-281453274",
+    "sourceUrl": "https://www.pexels.com/photo/view-of-dome-and-pavilion-at-the-expo-city-in-dubai-13012258/"
+  },
+  "dubai-fitness-challenge": {
+    "type": "Event",
+    "assetId": "5155dff68b7c11f195aa8246cb06f1a9",
+    "provider": "pexels",
+    "photographer": "Kate Trysh",
+    "photographerUrl": "https://www.pexels.com/@katetrysh",
+    "sourceUrl": "https://www.pexels.com/photo/morning-waterfront-promenade-with-palm-trees-and-jogger-on-modern-marina-walkway-27504018/"
+  },
+  "gitex-global": {
+    "type": "Event",
+    "assetId": "561719ec8b7c11f18f48da7b8d447cd5",
+    "provider": "pexels",
+    "photographer": "Magda Ehlers",
+    "photographerUrl": "https://www.pexels.com/@magda-ehlers-pexels",
+    "sourceUrl": "https://www.pexels.com/photo/dubai-downtown-skyline-with-busy-roads-35027037/"
+  },
+  "dubai-design-week": {
+    "type": "Event",
+    "assetId": "5ba9e3c68b7c11f19381162a8d3fe148",
+    "provider": "pexels",
+    "photographer": "Denys Gromov",
+    "photographerUrl": "https://www.pexels.com/@jdgromov",
+    "sourceUrl": "https://www.pexels.com/photo/photograph-of-lights-in-tubes-8312016/"
+  },
+  "dubai-rugby-sevens": {
+    "type": "Event",
+    "assetId": "60638dc28b7c11f19cb9162a8d3fe148",
+    "provider": "pexels",
+    "photographer": "Milan Kiro",
+    "photographerUrl": "https://www.pexels.com/@milan-kiro-14866370",
+    "sourceUrl": "https://www.pexels.com/photo/uae-national-flags-on-dubai-beach-with-burj-al-arab-29188670/"
+  },
+  "sole-dxb": {
+    "type": "Event",
+    "assetId": "64df3c488b7c11f18ad28246cb06f1a9",
+    "provider": "pexels",
+    "photographer": "Mohd Atir",
+    "photographerUrl": "https://www.pexels.com/@mohdatir",
+    "sourceUrl": "https://www.pexels.com/photo/airplane-on-tarmac-at-dubai-international-airport-38593294/"
+  },
+  "new-years-eve-dubai": {
+    "type": "Event",
+    "assetId": "690ccd3a8b7c11f19eb82e2415fbf52f",
+    "provider": "pexels",
+    "photographer": "Marvin  Sacdalan",
+    "photographerUrl": "https://www.pexels.com/@marvin-sacdalan-276316567",
+    "sourceUrl": "https://www.pexels.com/photo/fireworks-over-the-buildings-13076922/"
+  },
+  "dubai-marathon": {
+    "type": "Event",
+    "assetId": "6e39e41e8b7c11f18020162a8d3fe148",
+    "provider": "pexels",
+    "photographer": "Rockwell branding agency",
+    "photographerUrl": "https://www.pexels.com/@rockwell-branding-agency-85164430",
+    "sourceUrl": "https://www.pexels.com/photo/cruise-ships-moored-in-dubai-19612315/"
+  },
+  "hero-dubai-desert-classic": {
+    "type": "Event",
+    "assetId": "72c0da428b7c11f18eedda7b8d447cd5",
+    "provider": "pexels",
+    "photographer": "MART  PRODUCTION",
+    "photographerUrl": "https://www.pexels.com/@mart-production",
+    "sourceUrl": "https://www.pexels.com/photo/photo-of-sand-dunes-in-a-desert-8869381/"
+  },
+  "quoz-arts-fest": {
+    "type": "Event",
+    "assetId": "78412b0c8b7c11f1a745d2e68063bdff",
+    "provider": "pexels",
+    "photographer": "Yan Krukau",
+    "photographerUrl": "https://www.pexels.com/@yankrukov",
+    "sourceUrl": "https://www.pexels.com/photo/man-in-black-t-shirt-and-black-sunglasses-using-audio-mixer-9005452/"
+  },
+  "emirates-festival-of-literature": {
+    "type": "Event",
+    "assetId": "7d2f14088b7c11f1b13ada7b8d447cd5",
+    "provider": "pexels",
+    "photographer": "aboodi vesakaran",
+    "photographerUrl": "https://www.pexels.com/@aboodi",
+    "sourceUrl": "https://www.pexels.com/photo/books-stored-in-bookcases-in-a-library-18620051/"
+  },
+  "dubai-jazz-festival": {
+    "type": "Event",
+    "assetId": "82101fb28b7c11f1a2228246cb06f1a9",
+    "provider": "pexels",
+    "photographer": "Drinu Cutajar",
+    "photographerUrl": "https://www.pexels.com/@drinu-cutajar-347725497",
+    "sourceUrl": "https://www.pexels.com/photo/emirates-boeing-777-on-airport-runway-32622848/"
+  },
+  "dubai-tennis-championships": {
+    "type": "Event",
+    "assetId": "864fdde28b7c11f1992a42bad72655ea",
+    "provider": "pexels",
+    "photographer": "The Lazy Artist Gallery",
+    "photographerUrl": "https://www.pexels.com/@thelazyartist",
+    "sourceUrl": "https://www.pexels.com/photo/aerial-photography-basketball-court-1598347/"
+  },
+  "dubai-international-boat-show": {
+    "type": "Event",
+    "assetId": "8bd608f48b7c11f19d00da7b8d447cd5",
+    "provider": "pexels",
+    "photographer": "AJ  Ahamad",
+    "photographerUrl": "https://www.pexels.com/@aj-ahamad-767001191",
+    "sourceUrl": "https://www.pexels.com/photo/a-yacht-in-a-city-19159184/"
+  },
+  "ramadan-in-dubai": {
+    "type": "Event",
+    "assetId": "903a111a8b7c11f1acd38246cb06f1a9",
+    "provider": "pexels",
+    "photographer": "aboodi vesakaran",
+    "photographerUrl": "https://www.pexels.com/@aboodi",
+    "sourceUrl": "https://www.pexels.com/photo/dubai-ramadan-kareem-illuminated-sign-at-night-31215846/"
+  },
+  "eid-al-fitr-dubai": {
+    "type": "Event",
+    "assetId": "945dd8628b7c11f1838ed2e68063bdff",
+    "provider": "pexels",
+    "photographer": "Timur Weber",
+    "photographerUrl": "https://www.pexels.com/@timur-weber",
+    "sourceUrl": "https://www.pexels.com/photo/father-and-son-sitting-at-the-table-9127752/"
+  },
+  "art-dubai": {
+    "type": "Event",
+    "assetId": "992677c88b7c11f1a6822e2415fbf52f",
+    "provider": "pexels",
+    "photographer": "aboodi vesakaran",
+    "photographerUrl": "https://www.pexels.com/@aboodi",
+    "sourceUrl": "https://www.pexels.com/photo/abstract-stainless-steel-sculpture-in-dubai-uae-18620033/"
+  },
+  "dubai-summer-surprises": {
+    "type": "Event",
+    "assetId": "9d84a8308b7c11f1838ed2e68063bdff",
+    "provider": "pexels",
+    "photographer": "Aleksandar Pasaric",
+    "photographerUrl": "https://www.pexels.com/@apasaric",
+    "sourceUrl": "https://www.pexels.com/photo/burj-al-arab-saudi-823696/"
+  },
+  "deira": {
+    "type": "Neighbourhood",
+    "assetId": "a372bf2a8b7c11f1838ed2e68063bdff",
+    "provider": "pexels",
+    "photographer": "Kate Trysh",
+    "photographerUrl": "https://www.pexels.com/@katetrysh",
+    "sourceUrl": "https://www.pexels.com/photo/waterfront-harbor-skyline-with-traditional-drifting-fishing-boat-on-the-sea-27522502/"
+  },
+  "jumeirah": {
+    "type": "Neighbourhood",
+    "assetId": "a80f69de8b7c11f19381162a8d3fe148",
+    "provider": "pexels",
+    "photographer": "Magda Ehlers",
+    "photographerUrl": "https://www.pexels.com/@magda-ehlers-pexels",
+    "sourceUrl": "https://www.pexels.com/photo/modern-jumeirah-architectural-landmark-dubai-35171473/"
+  },
+  "jbr": {
+    "type": "Neighbourhood",
+    "assetId": "ac4fe5aa8b7c11f18020162a8d3fe148",
+    "provider": "pexels",
+    "photographer": "Anton Massalov",
+    "photographerUrl": "https://www.pexels.com/@antonhansenphotography",
+    "sourceUrl": "https://www.pexels.com/photo/stunning-dubai-marina-skyline-waterfront-view-29353234/"
+  },
+  "dubai-creek-harbour": {
+    "type": "Neighbourhood",
+    "assetId": "b515ca568b7c11f19cb9162a8d3fe148",
+    "provider": "pexels",
+    "photographer": "Yassen Kounchev",
+    "photographerUrl": "https://www.pexels.com/@yassen-kounchev-889850329",
+    "sourceUrl": "https://www.pexels.com/photo/dubai-creek-harbour-at-sunset-19845370/"
+  },
+  "al-quoz": {
+    "type": "Neighbourhood",
+    "assetId": "b981494e8b7c11f1992a42bad72655ea",
+    "provider": "pexels",
+    "photographer": "Kadir Avşar",
+    "photographerUrl": "https://www.pexels.com/@kadiravsarr",
+    "sourceUrl": "https://www.pexels.com/photo/an-aerial-view-of-a-building-with-a-large-square-in-the-middle-14749843/"
+  },
+  "expo-city": {
+    "type": "Neighbourhood",
+    "assetId": "c28f99508b7c11f1838ed2e68063bdff",
+    "provider": "pexels",
+    "photographer": "Diego F. Parra",
+    "photographerUrl": "https://www.pexels.com/@diego-f-parra-33199",
+    "sourceUrl": "https://www.pexels.com/photo/sustainability-pavilion-in-dubai-15177911/"
+  },
+  "al-barsha": {
+    "type": "Neighbourhood",
+    "assetId": "c731660a8b7c11f1bb36162a8d3fe148",
+    "provider": "pexels",
+    "photographer": "MAMADO UAE",
+    "photographerUrl": "https://www.pexels.com/@wathegony",
+    "sourceUrl": "https://www.pexels.com/photo/busy-street-scene-in-dubai-with-high-rise-buildings-32660887/"
+  },
+  "dubailand": {
+    "type": "Neighbourhood",
+    "assetId": "cbe2953e8b7c11f1838ed2e68063bdff",
+    "provider": "pexels",
+    "photographer": "Kate Trysh",
+    "photographerUrl": "https://www.pexels.com/@katetrysh",
+    "sourceUrl": "https://www.pexels.com/photo/stunning-panoramic-view-of-city-skyline-with-skyscrapers-and-blue-sky-27206533/"
+  },
+  "jebel-ali": {
+    "type": "Neighbourhood",
+    "assetId": "d09146b68b7c11f1a937da7b8d447cd5",
+    "provider": "pexels",
+    "photographer": "Hasham Khosa",
+    "photographerUrl": "https://www.pexels.com/@hasham4367",
+    "sourceUrl": "https://www.pexels.com/photo/aerial-view-of-traffic-on-dubai-highway-35284999/"
+  },
+  "al-marmoom": {
+    "type": "Neighbourhood",
+    "assetId": "d4d1f0868b7c11f18020162a8d3fe148",
+    "provider": "pexels",
+    "photographer": "Eslam Mohammed Abdelmaksoud",
+    "photographerUrl": "https://www.pexels.com/@eslames1",
+    "sourceUrl": "https://www.pexels.com/photo/golden-sand-dunes-in-al-ain-desert-at-sunset-28718301/"
+  },
+  "hatta": {
+    "type": "Neighbourhood",
+    "assetId": "da62defc8b7c11f1a59342bad72655ea",
+    "provider": "pexels",
+    "photographer": "Abed Ismail",
+    "photographerUrl": "https://www.pexels.com/@abed-ismail",
+    "sourceUrl": "https://www.pexels.com/photo/the-hatta-mountain-in-dubai-10004805/"
+  },
+  "three-days-in-dubai": {
+    "type": "Article",
+    "assetId": "e11b14c68b7c11f19a138246cb06f1a9",
+    "provider": "pexels",
+    "photographer": "Tima Miroshnichenko",
+    "photographerUrl": "https://www.pexels.com/@tima-miroshnichenko",
+    "sourceUrl": "https://www.pexels.com/photo/statue-of-a-hand-with-three-finger-salute-between-buildings-under-blue-sky-7169931/"
+  },
+  "old-dubai-in-a-morning": {
+    "type": "Article",
+    "assetId": "e582d5da8b7c11f19746da7b8d447cd5",
+    "provider": "pexels",
+    "photographer": "MAMADO UAE",
+    "photographerUrl": "https://www.pexels.com/@wathegony",
+    "sourceUrl": "https://www.pexels.com/photo/traditional-architecture-in-al-fahidi-dubai-at-dawn-29401696/"
+  },
+  "dubai-public-beaches-guide": {
+    "type": "Article",
+    "assetId": "ea506ffa8b7c11f19e4d2e2415fbf52f",
+    "provider": "pexels",
+    "photographer": "Vika Glitter",
+    "photographerUrl": "https://www.pexels.com/@vika-glitter-392079",
+    "sourceUrl": "https://www.pexels.com/photo/scenic-beach-and-mosque-with-city-skyline-36094292/"
+  },
+  "dubai-on-a-budget": {
+    "type": "Article",
+    "assetId": "ef1620708b7c11f1838ed2e68063bdff",
+    "provider": "pexels",
+    "photographer": "Denys Gromov",
+    "photographerUrl": "https://www.pexels.com/@jdgromov",
+    "sourceUrl": "https://www.pexels.com/photo/dubai-skyline-with-tall-buildings-and-water-28350363/"
+  },
+  "desert-in-a-day": {
+    "type": "Article",
+    "assetId": "f44c855c8b7c11f1803342bad72655ea",
+    "provider": "pexels",
+    "photographer": "The Lazy Artist Gallery",
+    "photographerUrl": "https://www.pexels.com/@thelazyartist",
+    "sourceUrl": "https://www.pexels.com/photo/blue-car-on-the-road-1559179/"
+  },
+  "eating-in-dubai": {
+    "type": "Article",
+    "assetId": "f8cb86508b7c11f1803342bad72655ea",
+    "provider": "pexels",
+    "photographer": "Denys Gromov",
+    "photographerUrl": "https://www.pexels.com/@jdgromov",
+    "sourceUrl": "https://www.pexels.com/photo/person-holding-a-slice-of-pizza-12645182/"
+  },
+  "dubai-with-kids": {
+    "type": "Article",
+    "assetId": "fd14d1268b7c11f19eb82e2415fbf52f",
+    "provider": "pexels",
+    "photographer": "Hugo Sykes",
+    "photographerUrl": "https://www.pexels.com/@hugosykes",
+    "sourceUrl": "https://www.pexels.com/photo/man-with-daughters-on-promenade-in-dubai-19350915/"
+  },
+  "best-views-in-dubai": {
+    "type": "Article",
+    "assetId": "011d6d648b7d11f1a59342bad72655ea",
+    "provider": "pexels",
+    "photographer": "Aleksandar Pasaric",
+    "photographerUrl": "https://www.pexels.com/@apasaric",
+    "sourceUrl": "https://www.pexels.com/photo/view-of-cityscape-325185/"
+  },
+  "ramadan-in-dubai-visitors": {
+    "type": "Article",
+    "assetId": "073268bc8b7d11f19a138246cb06f1a9",
+    "provider": "pexels",
+    "photographer": "Kate Trysh",
+    "photographerUrl": "https://www.pexels.com/@katetrysh",
+    "sourceUrl": "https://www.pexels.com/photo/urban-outdoor-park-with-palm-trees-and-high-rise-buildings-decorated-with-string-lights-27277169/"
+  },
+  "dubai-art-scene": {
+    "type": "Article",
+    "assetId": "0bff0f308b7d11f1a59342bad72655ea",
+    "provider": "pexels",
+    "photographer": "Denys Gromov",
+    "photographerUrl": "https://www.pexels.com/@jdgromov",
+    "sourceUrl": "https://www.pexels.com/photo/glass-sculpture-on-the-street-4550735/"
+  }
+}

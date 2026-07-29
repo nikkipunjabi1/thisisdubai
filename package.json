@@ -18,7 +18,9 @@
     "asset-manifest": "node scripts/asset-manifest.mjs",
     "cmp-folders": "node --env-file=.env scripts/cmp-folders.mjs",
     "create-section": "node --env-file=.env scripts/create-section.mjs",
-    "migrate:experiences": "node --env-file=.env scripts/migrate-experiences.mjs"
+    "migrate:experiences": "node --env-file=.env scripts/migrate-experiences.mjs",
+    "attach-assets": "node --env-file=.env scripts/attach-assets.mjs",
+    "source-images": "node --env-file=.env scripts/source-images.mjs"
   },
   "dependencies": {
     "@opentelemetry/api": "^1.9.0",
