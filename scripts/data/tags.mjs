@@ -43,7 +43,7 @@ export const tags = [
   // — activity ——————————————————————————————————————————————
   tag('adventure', 'Adventure', 'interest', 'Adrenaline, heights and speed.', ['thrill', 'adrenaline', 'extreme', 'skydiving', 'zipline'], '🪂', true),
   tag('outdoors', 'Outdoors', 'interest', 'Parks, trails, water and open air.', ['park', 'walk', 'hike', 'trail', 'cycling', 'green'], '🌳'),
-  tag('waterparks', 'Waterparks', 'interest', 'Slides, wave pools and lazy rivers.', ['slides', 'pool', 'aquapark', 'water slides', 'swim', 'swimming'], '🌊'),
+  tag('waterparks', 'Waterparks', 'interest', 'Slides, wave pools and lazy rivers.', ['slides', 'pool', 'aquapark', 'water slides'], '🌊'),
   tag('sports', 'Sports', 'interest', 'Racing, golf, motorsport and stadium events.', ['golf', 'racing', 'motorsport', 'stadium', 'match'], '🏇'),
   tag('wellness', 'Wellness', 'interest', 'Spas, retreats and slower days.', ['spa', 'relax', 'retreat', 'massage', 'calm'], '🧘'),
 
