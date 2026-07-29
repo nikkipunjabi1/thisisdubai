@@ -1,9 +1,11 @@
 ---
-title: "Semantic Search with Optimizely Graph — a Practical Guide (and the Four Things the Docs Don't Tell You)"
+title: "Semantic Search with Optimizely Graph — a Practical Guide"
 status: draft
 audience: Optimizely community / dev.to / LinkedIn (long-form)
 author: Nikki Punjabi
 tags: [optimizely, saas-cms, optimizely-graph, semantic-search, vector-search, nextjs, search-relevance]
+metaTitle: "Semantic Search with Optimizely Graph: A Practical Guide"
+metaDescription: "Optimizely Graph has semantic (vector) search built in — no vector DB. Turn it on in four lines of GraphQL, plus the four gotchas the docs never mention."
 ---
 
 > **Draft for your review.** Edit the voice/details freely before publishing. A LinkedIn variant
@@ -290,13 +292,5 @@ If you take five things from this:
 4. **Use a relative relevance floor**, because vector search always returns something.
 5. **Get your taxonomy into the index.** `_fulltext` can't see a referenced tag's `synonyms` —
    denormalize them onto the item, or your carefully-modelled vocabulary does nothing for search.
-
-## What's next
-
-The retrieval layer is deliberately the same one my AI features will call: autocomplete and
-Gaussian date-decay boosting for events come next, and then Claude sits on top of this — Graph does
-retrieval, Claude does phrasing, so the answers stay grounded in real CMS content. (The synonyms
-dictionary is already wired — see Gotcha #4: the taxonomy's synonyms are denormalized into each
-item's searchable index.)
 
 _Repo: github.com/nikkipunjabi1/thisisdubai — built in the open toward Optimizely MVP._
