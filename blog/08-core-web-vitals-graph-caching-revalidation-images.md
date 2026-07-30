@@ -144,6 +144,35 @@ cards omit it and lazy-load. Detail-page hero lands at **~33 KB**, DOMContentLoa
 > matters: keep `priority` on the LCP hero, raise `minimumCacheTTL` so variants live longer, or
 > pre-warm critical images by requesting them at deploy time.
 
+### 🧩 Gotcha — editing an image in place (same URL) doesn't refresh for 4 hours
+
+Crop or replace an image *in CMP* and the site keeps showing the old one — a restart is the only thing
+that seems to fix it. Two facts explain it, and neither is obvious:
+
+- **The CMP URL is keyed on the asset ID.** `…/assets/aya-universe-1.jpg/Zz04OTgyZjBl…` — that trailing
+  token decodes to `g=<assetId>`, not a content hash. An in-place edit reuses the **exact same URL**.
+- **The optimizer caches by URL for 4 hours by default.** `minimumCacheTTL` defaults to **14400s**, and
+  Next uses `max(upstreamMaxAge, minimumCacheTTL)` — so it **overrides CMP's `Cache-Control: no-store`**
+  and serves the stale variant for 4h. A restart just wipes `.next/cache/images`, which is why it
+  "works."
+
+Note the publish webhook (`revalidateTag`) does **not** help here: it clears the Graph cache (the URL
+string), and the URL didn't change. The image-optimizer cache is a separate layer.
+
+The catch is that CMP *does* ship a **changing ETag** (`"<id>-<modified-timestamp>"`) — it's telling
+caches to revalidate; Next just isn't listening within the TTL window. So the fix is one line — shorten
+the window so Next revalidates against that ETag:
+
+```ts
+// next.config.ts — DAM images edited in place appear within ~60s, no restart.
+images: { minimumCacheTTL: 60 }
+```
+
+Because Next revalidates against the ETag, an *unchanged* image is refreshed cheaply (no re-encode);
+only a genuinely edited one is re-fetched and re-encoded. If you'd rather have **instant** pickup and
+avoid the shorter TTL, publish the crop as a **new asset** (new ID → new URL → fresh everywhere, and the
+publish webhook makes the reference swap instant) — which is how immutable-URL CDNs are meant to be used.
+
 ### 🧩 Gotcha — a DAM image reference has no width/height, and an unset one is *truthy*
 
 Two traps unique to CMS image references:
