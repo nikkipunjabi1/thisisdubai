@@ -127,9 +127,15 @@ cards omit it and lazy-load. Detail-page hero lands at **~33 KB**, DOMContentLoa
 > **Note — the *first* load of each image is cold, and AVIF makes it colder.** The optimizer only
 > caches *after* it has produced a variant. The first request for a given (image × width × format) must
 > download the original from CMP and **re-encode** it before responding — and AVIF encoding is
-> markedly heavier than WebP. Measured here: a cold AVIF variant took **0.6–1.6 s**; every request
-> after was a **~5 ms** cache hit. So AVIF trades a slower *first* encode for smaller bytes on every
-> delivery — usually the right trade, but worth knowing.
+> markedly heavier than WebP. Measured on this app:
+>
+> | Request | Cold (first ever) | Warm (cached) |
+> | --- | --- | --- |
+> | AVIF `w=828` | 1.59 s | 5 ms |
+> | AVIF `w=2048` | 0.57 s | 6 ms |
+>
+> So AVIF trades a slower *first* encode for smaller bytes on every delivery — usually the right
+> trade, but worth knowing.
 >
 > **Dev vs production:** in `next dev` the optimized-image cache doesn't survive a server restart, so
 > you re-pay the cold cost after every restart (which is exactly why images feel slow on the first load
