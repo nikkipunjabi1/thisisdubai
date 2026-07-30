@@ -33,7 +33,7 @@ Blog when we hit any of:
 | 5 | **Shareable stakeholder previews for Optimizely SaaS + Next.js** (preview-before-publish) | New (headline) | 3 |
 | 6 | **Semantic search with Optimizely Graph — a practical guide** — the four-line switch (`_ranking: SEMANTIC`), proving it's really semantic with a `RELEVANCE` control, and 3 undocumented gotchas (stop words drown the semantic signal + make `_semanticWeight` look broken; `_Content` surfaces non-routable taxonomy blocks; scores aren't comparable across types) + why a relevance floor must be relative, not absolute. _(draft: blog/06-semantic-search-optimizely-graph.md)_ | New (headline) | 3 |
 | 7 | EN + AR semantic search & localization on Optimizely SaaS | New/learning | 3 |
-| 8 | Core Web Vitals + on-demand revalidation with Graph webhooks (Vercel free) | Result | 3 |
+| 8 | **Fast AND fresh on Optimizely SaaS + Next.js** — Core Web Vitals via three levers: caching Graph reads across requests (`unstable_cache` + tags), on-demand revalidation with a Graph publish webhook (`revalidateTag(_, 'max')`, secret-gated), and responsive AVIF image delivery (CMP JPEG → `next/image` resize+re-encode per device; 342 KB → 32 KB on a phone). Includes the Next 16 single-arg `revalidateTag` gotcha + the unset-reference-is-truthy trap. _(draft: blog/08-core-web-vitals-graph-caching-revalidation-images.md)_ | 🎯 Result / 🧩 Challenge | 3 |
 | 9 | Building an AI Trip Planner on Optimizely Graph + Claude | New (headline) | 4 |
 | 9b | Building an Optimizely Graph **MCP server** (content as tools for any AI) | New (headline) | 4 |
 | 10 | Using Optimizely Opal for Arabic translation | New/learning | 4 |
