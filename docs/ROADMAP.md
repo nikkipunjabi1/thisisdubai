@@ -48,12 +48,16 @@ _Phased plan. Each phase ends with a working, deployable state and (usually) a b
 - [ ] **Stakeholder preview links** — durable, shareable, login-free preview-before-publish
       (signed token → Next Draft Mode → Graph HMAC draft render) + "PREVIEW" banner + noindex.
       See PREVIEW-WORKFLOW.md. **(Primary module/blog candidate.)**
-- [ ] **Semantic search** page (autocomplete, synonyms, faceting) — the headline feature
+- [x] **Semantic search** page (autocomplete, synonyms, faceting) — the headline feature
+      (shipped S3.2; taxonomy synonyms denormalized into `searchKeywords`. See docs/AI-SEARCH.md.)
 - [ ] **Localization**: EN + **AR semantic search** on showcase pages (RTL); Opal AR translation
       path scoped (guided)
 - [ ] **Multisite** (optional): stand up a second site on the same instance
 - [ ] Personalization/experimentation hook (at least one visible experiment)
-- [ ] Performance pass: Core Web Vitals, image optimization, webhook revalidation (Vercel free)
+- [~] Performance pass: Core Web Vitals, image optimization, webhook revalidation (Vercel free)
+      — **done:** on-demand revalidation webhook (`/api/revalidate` → `revalidateTag`), AVIF+WebP
+      image formats, LCP hero `priority` + responsive `sizes`/lazy cards (measured: detail hero
+      ~33KB, AVIF ~13% under WebP). _Remaining: full-page CWV/Lighthouse pass under load._
 - [ ] Accessibility pass (WCAG 2.1 AA)
 - **Blog:** _"Shareable stakeholder previews for Optimizely SaaS + Next.js"_ +
   _"Semantic search with Optimizely Graph"_
