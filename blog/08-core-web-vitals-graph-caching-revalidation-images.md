@@ -124,6 +124,20 @@ The measured result for that one 342 KB JPEG:
 The **LCP hero** on a detail page sets `priority` (skips lazy-loading, since it's above the fold);
 cards omit it and lazy-load. Detail-page hero lands at **~33 KB**, DOMContentLoaded ~200 ms.
 
+> **Note — the *first* load of each image is cold, and AVIF makes it colder.** The optimizer only
+> caches *after* it has produced a variant. The first request for a given (image × width × format) must
+> download the original from CMP and **re-encode** it before responding — and AVIF encoding is
+> markedly heavier than WebP. Measured here: a cold AVIF variant took **0.6–1.6 s**; every request
+> after was a **~5 ms** cache hit. So AVIF trades a slower *first* encode for smaller bytes on every
+> delivery — usually the right trade, but worth knowing.
+>
+> **Dev vs production:** in `next dev` the optimized-image cache doesn't survive a server restart, so
+> you re-pay the cold cost after every restart (which is exactly why images feel slow on the first load
+> after restarting). In production the variants persist (`images.minimumCacheTTL`), so only the **first
+> visitor** of a given variant pays it and everyone else is instant. Mitigations if that first hit
+> matters: keep `priority` on the LCP hero, raise `minimumCacheTTL` so variants live longer, or
+> pre-warm critical images by requesting them at deploy time.
+
 ### 🧩 Gotcha — a DAM image reference has no width/height, and an unset one is *truthy*
 
 Two traps unique to CMS image references:
