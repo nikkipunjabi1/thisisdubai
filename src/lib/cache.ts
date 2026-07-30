@@ -12,9 +12,10 @@ import { unstable_cache } from 'next/cache';
  *
  * `unstable_cache` persists across requests, so a page is only slow the first
  * time anyone visits it. Published content changes rarely, so this is the right
- * trade: correctness is preserved by a short revalidate window, and can be made
- * instant later by calling `revalidateTag(CACHE_TAGS.content)` from the Graph
- * publish webhook (docs/ARCHITECTURE.md §11).
+ * trade: correctness is preserved by a short revalidate window, and made instant
+ * by the publish webhook at `src/app/api/revalidate/route.ts`, which calls
+ * `revalidateTag` on these tags (configure the CMS webhook → GRAPH_CACHE_SECONDS
+ * can then be raised freely). See docs/ARCHITECTURE.md §11.
  *
  * NOTE: preview/draft rendering must never be cached — it uses
  * `getPreviewContent` in src/app/preview/page.tsx and deliberately doesn't go
