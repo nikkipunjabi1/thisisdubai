@@ -37,7 +37,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const [article, settings] = await Promise.all([getArticleBySlug(slug), getSiteSettings()]);
   if (!article) return {};
   return buildContentMetadata(
-    { metaTitle: article.metaTitle, metaDescription: article.metaDescription ?? article.excerpt, noindex: article.noindex, nofollow: article.nofollow },
+    {
+      metaTitle: article.metaTitle,
+      metaDescription: article.metaDescription ?? article.excerpt,
+      noindex: article.noindex,
+      nofollow: article.nofollow,
+      // Articles use the hero as the social share image (every article has one).
+      ogImage: article.heroUrl ? { url: { default: article.heroUrl } } : null,
+    },
     settings,
     article.title,
   );

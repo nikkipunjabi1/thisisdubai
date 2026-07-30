@@ -102,6 +102,12 @@ export type PageSeo = {
   metaDescription?: string | null;
   noindex?: boolean | null;
   nofollow?: boolean | null;
+  /**
+   * "Social share image". NOTE: an unset content reference is NOT null — Graph
+   * returns `{ key: null, url: { default: null } }` — so always read `url.default`
+   * rather than testing the property itself for truthiness.
+   */
+  ogImage?: { url?: { default?: string | null } | null } | null;
 };
 
 /**
@@ -120,12 +126,29 @@ export function buildContentMetadata(
   fallbackSegment: string,
 ): Metadata {
   const segment = (seo?.metaTitle ?? '').trim() || fallbackSegment;
+  const title = buildPageTitle(settings, segment);
   const meta: Metadata = {
-    title: { absolute: buildPageTitle(settings, segment) },
+    title: { absolute: title },
   };
   if (seo?.metaDescription) meta.description = seo.metaDescription;
   if (seo?.noindex || seo?.nofollow) {
     meta.robots = { index: !seo?.noindex, follow: !seo?.nofollow };
   }
+
+  // Open Graph / Twitter, so the authored "Social share image" actually reaches
+  // social previews (docs/SEO.md §"Non-negotiables"). Emitted even without an
+  // image so shared links still carry a title + description.
+  const image = seo?.ogImage?.url?.default ?? undefined;
+  meta.openGraph = {
+    title,
+    ...(seo?.metaDescription ? { description: seo.metaDescription } : {}),
+    ...(image ? { images: [{ url: image }] } : {}),
+  };
+  meta.twitter = {
+    card: image ? 'summary_large_image' : 'summary',
+    title,
+    ...(seo?.metaDescription ? { description: seo.metaDescription } : {}),
+    ...(image ? { images: [image] } : {}),
+  };
   return meta;
 }
