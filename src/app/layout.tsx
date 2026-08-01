@@ -3,7 +3,7 @@ import React from 'react';
 import { Fraunces, Hanken_Grotesk, Noto_Kufi_Arabic, Noto_Sans_Arabic } from 'next/font/google';
 import { headers } from 'next/headers';
 import './globals.css';
-import { DEFAULT_LOCALE, isLocale, dir, htmlLang } from '@/lib/i18n';
+import { DEFAULT_LOCALE, isLocale, dir, htmlLang, withLocale } from '@/lib/i18n';
 import {
   BlankExperienceContentType,
   BlankSectionContentType,
@@ -149,8 +149,12 @@ export default async function RootLayout({
   // The active locale is set on `x-locale` by the middleware (this layout sits above
   // the `[locale]` segment, so it can't read the route param). Non-localized routes
   // (`/preview`, `/styleguide`) have no header → default locale.
-  const headerLocale = (await headers()).get('x-locale');
+  const h = await headers();
+  const headerLocale = h.get('x-locale');
   const locale = isLocale(headerLocale) ? headerLocale : DEFAULT_LOCALE;
+  // Current path (set by the proxy) so the header's language switcher can target the
+  // same page in the other locale. Falls back to the locale home for non-localized routes.
+  const pathname = h.get('x-pathname') ?? withLocale(locale, '/');
 
   return (
     // Dark by default (obsidian + champagne luxury). Individual sections opt into
@@ -168,9 +172,9 @@ export default async function RootLayout({
       ].join(' ')}
     >
       <body className='flex min-h-dvh flex-col bg-bg text-fg'>
-        <SiteHeader />
+        <SiteHeader locale={locale} pathname={pathname} />
         <main className='flex-1'>{children}</main>
-        <SiteFooter />
+        <SiteFooter locale={locale} />
       </body>
     </html>
   );

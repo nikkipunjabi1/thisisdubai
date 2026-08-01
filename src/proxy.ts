@@ -23,6 +23,9 @@ export function proxy(req: NextRequest) {
   if (isLocale(first)) {
     const headers = new Headers(req.headers);
     headers.set('x-locale', first);
+    // The current path, so the root layout can build the language switcher's target
+    // (the same page in the other locale) and per-page hreflang alternates (L5).
+    headers.set('x-pathname', pathname);
     return NextResponse.next({ request: { headers } });
   }
 
