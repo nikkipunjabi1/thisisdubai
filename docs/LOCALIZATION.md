@@ -138,5 +138,24 @@ Every visitor page now lives under a locale prefix; `/` redirects to `/en`.
 `/ar` show EN data; nav/footer/card links (`SiteHeader`/`SiteFooter`/`SectionCard`) aren't
 locale-prefixed yet, so some in-page links bounce through the `/ → /en` redirect.
 
+## L2 — locale-aware data layer + language switcher — DONE
+
+- **L2.1 — chrome + switcher.** `SiteHeader`/`SiteFooter`/`Wordmark` links are locale-prefixed
+  (`withLocale`), so in-locale navigation stays same-direction — fixing the stale-`dir` bug (English
+  page rendering RTL after soft-navigating from `/ar`). A new `LocaleSwitcher` (EN · العربية) is the
+  only cross-locale jump: a **plain `<a>` (full reload)** so the root layout re-renders `<html lang dir>`
+  and Arabic fonts. `proxy.ts` also stamps `x-pathname` so the switcher targets the same page.
+- **L2.2 — data layer.** `locale` is threaded through `getSectionChildren`, `getTags`,
+  `getBreadcrumbs`, `getArticleBySlug`, `getPlacesByKeys` — each Graph query passes
+  `locale: en|ar` (and locale is folded into the `cachedGraphRead` key). `toAppPath(locale, url)`
+  maps a CMS `url.default` to the locale-prefixed app path (adds `/en` for the unprefixed default
+  locale, keeps `/ar`), so every card/breadcrumb/related link stays in-locale. `SectionListing`
+  reads the request locale via `getRequestLocale()` (server-only `x-locale` read) because it renders
+  deep in a VB composition where the route param can't be threaded. Dates format per locale.
+- **Verified:** `/ar/places-to-visit` 200 with `/ar` card + breadcrumb links; `/en` gives `/en`.
+- **Deferred:** search results paths + labels (that's L4, AR semantic search); UI string labels still
+  English regardless of locale (L3). `src/components/content/Article.tsx` (rare composed-block path)
+  still defaults to EN for related places.
+
 ## Related docs
 - `docs/ROADMAP.md` (Phase 3 — Localization), `docs/SPRINTS.md` (S4.5 Opal), `docs/OPTIMIZELY-RESEARCH.md:113–124` (Graph 28-language semantic support + `locale` recipe), `docs/OPTIMIZELY-BEST-PRACTICES.md:91` (`hreflang`), `docs/BLOG-PLAN.md` (#7, #10).
