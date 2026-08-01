@@ -148,6 +148,37 @@ One more, free of charge: a big App Router route move (deleting `app/page.tsx`, 
 can panic Turbopack's HMR (*"AppPageLoaderTree no longer exists"*). It's a stale-cache bug — `rm -rf
 .next` and restart, not a code error.
 
+## The bigger lesson: start i18n-ready even if you launch in one language
+
+Everything above was a **retrofit** — bolting Arabic onto a site already ~50% built in English.
+That's where the cost lives. The language *itself* is cheap to add whenever (a settings toggle + a
+sync). What's expensive is retrofitting the **structure** onto populated data and shipped routes.
+
+So the split that matters, when you start any new Optimizely SaaS + Next.js project:
+
+**Structure on day 1 — painful to retrofit (do it even with one active locale):**
+
+1. **Mark translatable fields `isLocalized: true` in the content model.** Retrofitting is a schema
+   migration the CLI flags as *data loss* and forces across every populated item (Gotcha 2). Setting
+   it up front costs nothing.
+2. **Build the `[locale]` route segment + proxy** with just your default locale. Retrofitting means
+   *moving every route* (deleting `app/page.tsx`, re-nesting `[...slug]`, articles, search…).
+3. **Route internal links through a `withLocale()` helper** — never hardcode `/places-to-visit`.
+   Retrofitting means touching *every* link (and until you do, on-locale nav leaks to the default
+   locale and you get English-in-RTL).
+4. **Centralize UI strings in a catalog** from the start — so adding a language is *data*, not a code
+   refactor.
+5. **Make `<html lang dir>` dynamic and write RTL-safe CSS** — logical properties (`margin-inline`,
+   `text-align: start`), not `left`/`right`. Otherwise RTL is an audit later, not a flag flip.
+6. **Locale-aware `Intl` date/number formatting** (not hardcoded `en-GB`), and **locale in cache keys.**
+
+**Cheap to defer — it's content, not structure:** enabling the second language, authoring the
+translations, configuring fallback, semantic search in the new language.
+
+None of the day-1 items slow down a single-language launch. All of them save you a forced, data-loss-
+flagged migration later. If there's one line to remember: **structure for multi-locale up front; defer
+the content.**
+
 ## Result
 
 `/` → `/en`; `/en` and `/ar` both render; `<html>` is `lang="en-GB" dir="ltr"` vs
