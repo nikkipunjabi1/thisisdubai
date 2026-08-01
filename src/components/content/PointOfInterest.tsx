@@ -26,6 +26,7 @@ export const PointOfInterestContentType = contentType({
       sortOrder: 1,
       isRequired: true,
       indexingType: 'searchable',
+      isLocalized: true, // translatable per language
     },
     summary: {
       type: 'string',
@@ -33,12 +34,14 @@ export const PointOfInterestContentType = contentType({
       group: 'content',
       sortOrder: 2,
       indexingType: 'searchable',
+      isLocalized: true, // translatable per language
     },
     body: {
       type: 'richText',
       displayName: 'Body',
       group: 'content',
       sortOrder: 3,
+      isLocalized: true, // translatable per language
     },
     images: {
       type: 'array',
@@ -115,12 +118,14 @@ export const PointOfInterestContentType = contentType({
       group: 'content',
       sortOrder: 10,
       items: { type: 'string' },
+      isLocalized: true, // translatable per language
     },
     openingHours: {
       type: 'string',
       displayName: 'Opening hours',
       group: 'content',
       sortOrder: 11,
+      isLocalized: true, // translatable per language
     },
   },
 });

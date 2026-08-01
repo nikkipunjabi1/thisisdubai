@@ -15,9 +15,9 @@ export const EventContentType = contentType({
   baseType: '_page',
   extends: SeoMetadataContract,
   properties: {
-    name: { type: 'string', displayName: 'Name', group: 'content', sortOrder: 1, isRequired: true, indexingType: 'searchable' },
-    summary: { type: 'string', displayName: 'Summary', group: 'content', sortOrder: 2, indexingType: 'searchable' },
-    body: { type: 'richText', displayName: 'Body', group: 'content', sortOrder: 3 },
+    name: { type: 'string', displayName: 'Name', group: 'content', sortOrder: 1, isRequired: true, indexingType: 'searchable', isLocalized: true },
+    summary: { type: 'string', displayName: 'Summary', group: 'content', sortOrder: 2, indexingType: 'searchable', isLocalized: true },
+    body: { type: 'richText', displayName: 'Body', group: 'content', sortOrder: 3, isLocalized: true },
     images: { type: 'array', displayName: 'Images', group: 'content', sortOrder: 4, items: { type: 'contentReference', allowedTypes: ['_image'] } },
     startDate: { type: 'dateTime', displayName: 'Start date', group: 'content', sortOrder: 5, isRequired: true },
     endDate: { type: 'dateTime', displayName: 'End date', group: 'content', sortOrder: 6 },

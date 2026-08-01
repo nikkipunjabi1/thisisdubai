@@ -86,6 +86,15 @@ body {
   text-rendering: optimizeLegibility;
 }
 
+/* RTL (Arabic): swap the Latin display/body fonts for their Arabic counterparts.
+   One attribute on <html dir="rtl"> re-points the tokens, so every element that
+   reads --font-display / --font-body switches without per-component changes.
+   Latin remains as a fallback for any interleaved ASCII (URLs, brand names). */
+:root[dir='rtl'] {
+  --font-display: var(--font-arabic-display), var(--font-fraunces), Georgia, serif;
+  --font-body: var(--font-arabic-body), var(--font-hanken), ui-sans-serif, system-ui, sans-serif;
+}
+
 h1,
 h2,
 h3,

@@ -32,6 +32,7 @@ export const TagContentType = contentType({
       sortOrder: 1,
       isRequired: true,
       indexingType: 'searchable',
+      isLocalized: true, // translatable per language
     },
     slug: {
       type: 'string',
@@ -67,6 +68,7 @@ export const TagContentType = contentType({
       group: 'content',
       sortOrder: 4,
       indexingType: 'searchable',
+      isLocalized: true, // translatable per language
     },
     synonyms: {
       type: 'array',
@@ -75,6 +77,7 @@ export const TagContentType = contentType({
       group: 'content',
       sortOrder: 5,
       items: { type: 'string' },
+      isLocalized: true, // AR needs its own synonyms for semantic search (L4)
     },
     parent: {
       type: 'contentReference',
