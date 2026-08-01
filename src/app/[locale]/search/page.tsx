@@ -6,19 +6,20 @@ import { SearchBox } from '@/components/ui/SearchBox';
 import { Breadcrumbs } from '@/components/ui/Breadcrumbs';
 import { search } from '@/lib/search';
 import { getSiteSettings, buildPageTitle } from '@/lib/seo';
+import { isLocale, withLocale, DEFAULT_LOCALE } from '@/lib/i18n';
 
 /**
- * /search — semantic search results, 100% server-rendered and URL-driven (`?q=`).
- * Matching runs on Optimizely Graph's vector ranking, so queries match on MEANING:
- * "skyscraper" finds Burj Khalifa and "fish tank" finds The Dubai Mall, even though
- * neither word appears in the content.
- *
- * Results are grouped by section because Graph scores aren't comparable across types
- * (see src/lib/search.ts). Search result pages are `noindex` per docs/SEO.md — they're
- * thin/duplicate content and shouldn't be crawled.
+ * /<locale>/search — semantic search results, server-rendered and URL-driven (`?q=`).
+ * Matching runs on Optimizely Graph's vector ranking (matches on MEANING). Results are
+ * grouped by section (Graph scores aren't comparable across types) and are `noindex`.
+ * Locale-aware AR search (the query's `locale` arg + AR stop-words) is L4; for now the
+ * ranking runs in the default index and the chrome is locale-prefixed.
  */
 
-type Props = { searchParams: Promise<{ q?: string | string[] }>; };
+type Props = {
+  params: Promise<{ locale: string }>;
+  searchParams: Promise<{ q?: string | string[] }>;
+};
 
 const readQuery = (q: string | string[] | undefined) =>
   (Array.isArray(q) ? q[0] : q ?? '').trim();
@@ -34,20 +35,22 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
       absolute: buildPageTitle(settings, query ? `Search: ${query}` : 'Search'),
     },
     description: 'Search places to visit, events and neighbourhoods across This is Dubai.',
-    // Search results are thin/duplicate content — never index them (docs/SEO.md §7).
     robots: { index: false, follow: true },
   };
 }
 
-export default async function SearchPage({ searchParams }: Props) {
+export default async function SearchPage({ params, searchParams }: Props) {
+  const { locale: raw } = await params;
+  const locale = isLocale(raw) ? raw : DEFAULT_LOCALE;
   const query = readQuery((await searchParams).q);
   const results = query ? await search(query) : null;
+  const searchHref = (q: string) => `${withLocale(locale, '/search')}?q=${encodeURIComponent(q)}`;
 
   return (
     <>
       <Breadcrumbs
         crumbs={[
-          { name: 'Home', url: '/' },
+          { name: 'Home', url: withLocale(locale, '/') },
           { name: 'Search', url: null },
         ]}
       />
@@ -75,7 +78,7 @@ export default async function SearchPage({ searchParams }: Props) {
               {SUGGESTIONS.map((s) => (
                 <li key={s}>
                   <Link
-                    href={`/search?q=${encodeURIComponent(s)}`}
+                    href={searchHref(s)}
                     className="inline-block rounded-full border border-line px-4 py-2 text-sm text-fg transition hover:border-accent hover:text-accent"
                   >
                     {s}
@@ -93,15 +96,15 @@ export default async function SearchPage({ searchParams }: Props) {
             </p>
             <p className="mt-4 text-muted">
               Try fewer or more general words — or browse{' '}
-              <Link href="/places-to-visit" className="text-accent hover:underline">
+              <Link href={withLocale(locale, '/places-to-visit')} className="text-accent hover:underline">
                 Places to Visit
               </Link>
               ,{' '}
-              <Link href="/events" className="text-accent hover:underline">
+              <Link href={withLocale(locale, '/events')} className="text-accent hover:underline">
                 Events
               </Link>{' '}
               and{' '}
-              <Link href="/neighbourhoods" className="text-accent hover:underline">
+              <Link href={withLocale(locale, '/neighbourhoods')} className="text-accent hover:underline">
                 Neighbourhoods
               </Link>
               .

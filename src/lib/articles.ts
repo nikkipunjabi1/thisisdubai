@@ -1,6 +1,7 @@
 import { cache } from 'react';
 import { getClient } from '@optimizely/cms-sdk';
 import { cachedGraphRead } from './cache';
+import { graphLocale, withLocale, DEFAULT_LOCALE, type Locale } from './i18n';
 
 /**
  * Article data access. Articles are shared BLOCKS (`ArticlePost` `_component`), so they
@@ -9,12 +10,12 @@ import { cachedGraphRead } from './cache';
  * `publishDate` (see `articleHref`), not from the block's folder (docs/CONTENT-ARCHITECTURE.md §10).
  */
 
-/** Build an article's public URL from its slug + publishDate (year/month). */
-export function articleHref(slug: string, publishDate?: string | null): string {
+/** Build an article's public URL from its slug + publishDate (year/month), locale-prefixed. */
+export function articleHref(slug: string, publishDate?: string | null, locale: Locale = DEFAULT_LOCALE): string {
   const iso = String(publishDate ?? '');
   const y = iso.slice(0, 4) || 'undated';
   const m = iso.slice(5, 7) || '00';
-  return `/articles/${y}/${m}/${slug}`;
+  return withLocale(locale, `/articles/${y}/${m}/${slug}`);
 }
 
 export type ArticleDetail = {
@@ -38,11 +39,11 @@ export type ArticleDetail = {
 
 /** One article by slug, with everything the detail route + its metadata need. Cached. */
 export const getArticleBySlug = cache(
-  cachedGraphRead(async (slug: string): Promise<ArticleDetail | null> => {
+  cachedGraphRead(async (slug: string, locale: Locale = DEFAULT_LOCALE): Promise<ArticleDetail | null> => {
     try {
       const data = (await getClient().request(
         `query($s: String!) {
-          ArticlePost(where: { slug: { eq: $s } }, limit: 1) {
+          ArticlePost(locale: ${graphLocale(locale)}, where: { slug: { eq: $s } }, limit: 1) {
             items {
               slug title excerpt author publishDate
               metaTitle metaDescription noindex nofollow

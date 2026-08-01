@@ -15,6 +15,7 @@ export const SeoMetadataContract = contract({
       group: 'seo',
       sortOrder: 1,
       maxLength: 70,
+      isLocalized: true, // translatable per language
     },
     metaDescription: {
       type: 'string',
@@ -22,6 +23,7 @@ export const SeoMetadataContract = contract({
       group: 'seo',
       sortOrder: 2,
       maxLength: 180,
+      isLocalized: true, // translatable per language
     },
     canonicalUrl: {
       type: 'url',

@@ -2,6 +2,7 @@ import { cache } from 'react';
 import { getClient } from '@optimizely/cms-sdk';
 import { cachedGraphRead } from './cache';
 import { articleHref } from './articles';
+import { graphLocale, htmlLang, toAppPath, DEFAULT_LOCALE, type Locale } from './i18n';
 
 /**
  * Generic "children of a section page" queries for the listing pattern. Each
@@ -44,23 +45,23 @@ type Node = {
 const leadImage = (node: Node): string | null =>
   node.images?.find((i) => i?.url?.default)?.url?.default ?? node.heroImage?.url?.default ?? null;
 
-function toCard(node: Node, meta: string | null = null): SectionCardItem {
+function toCard(node: Node, meta: string | null, locale: Locale): SectionCardItem {
   return {
     name: node.name ?? 'Untitled',
     summary: node.summary ?? null,
-    path: node._metadata?.url?.default ?? '#',
+    path: toAppPath(locale, node._metadata?.url?.default ?? '#'),
     meta,
     imageUrl: leadImage(node),
   };
 }
 
-const fmtDate = (iso?: string | null) =>
-  iso ? new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : null;
+const fmtDate = (iso: string | null | undefined, locale: Locale) =>
+  iso ? new Date(iso).toLocaleDateString(htmlLang(locale), { day: 'numeric', month: 'short', year: 'numeric' }) : null;
 
-function eventMeta(node: Node): string | null {
-  const start = fmtDate(node.startDate);
+function eventMeta(node: Node, locale: Locale): string | null {
+  const start = fmtDate(node.startDate, locale);
   if (!start) return null;
-  const end = fmtDate(node.endDate);
+  const end = fmtDate(node.endDate, locale);
   return end && end !== start ? `${start} – ${end}` : start;
 }
 
@@ -105,10 +106,10 @@ export type TagOption = { name: string; slug: string; key: string };
 
 /** All taxonomy terms (name/slug/key), for the tag facet UI + slug→key resolution. */
 export const getTags = cache(
-  cachedGraphRead(async (): Promise<TagOption[]> => {
+  cachedGraphRead(async (locale: Locale = DEFAULT_LOCALE): Promise<TagOption[]> => {
     try {
       const data = (await getClient().request(
-        `query { TagTerm(orderBy: { name: ASC }, limit: 100) { items { name slug _metadata { key } } } }`,
+        `query { TagTerm(locale: ${graphLocale(locale)}, orderBy: { name: ASC }, limit: 100) { items { name slug _metadata { key } } } }`,
         {},
       )) as { TagTerm?: { items?: Array<{ name?: string; slug?: string; _metadata?: { key?: string } }> } };
       return (data?.TagTerm?.items ?? [])
@@ -176,6 +177,7 @@ export const getSectionChildren = cachedGraphRead(async function getSectionChild
     sort = 'name',
     filters = {},
   }: { skip?: number; limit?: number; sort?: SortKey; filters?: Filters } = {},
+  locale: Locale = DEFAULT_LOCALE,
 ): Promise<SectionChildrenPage> {
   const childType = await detectChildType(containerKey);
   if (!childType) return { items: [], total: 0, childType: null };
@@ -197,7 +199,7 @@ export const getSectionChildren = cachedGraphRead(async function getSectionChild
     }
 
     if (filters.tag && facets.includes('tag')) {
-      const tagKey = (await getTags()).find((t) => t.slug === filters.tag)?.key;
+      const tagKey = (await getTags(locale)).find((t) => t.slug === filters.tag)?.key;
       if (tagKey) {
         wheres.push('tags: { key: { eq: $tagKey } }');
         decls.push('$tagKey: String!');
@@ -213,7 +215,7 @@ export const getSectionChildren = cachedGraphRead(async function getSectionChild
     const whereClause = wheres.length ? `where: { ${wheres.join(', ')} }, ` : '';
     const data = (await getClient().request(
       `query(${decls.join(', ')}) {
-        ${childType}(${whereClause}orderBy: ${orderBy}, skip: $skip, limit: $limit) {
+        ${childType}(locale: ${graphLocale(locale)}, ${whereClause}orderBy: ${orderBy}, skip: $skip, limit: $limit) {
           total
           items { _metadata { displayName url { default } types } ${TYPE_FIELDS[childType]} }
         }
@@ -225,13 +227,13 @@ export const getSectionChildren = cachedGraphRead(async function getSectionChild
     const items = (result?.items ?? []).map((n) => {
       const meta =
         childType === 'Event'
-          ? eventMeta(n)
+          ? eventMeta(n, locale)
           : childType === 'ArticlePost'
-            ? fmtDate(n.publishDate)
+            ? fmtDate(n.publishDate, locale)
             : priceMeta(n.priceBand);
-      const card = toCard({ ...n, name: n.name ?? n._metadata?.displayName ?? 'Untitled' }, meta);
+      const card = toCard({ ...n, name: n.name ?? n._metadata?.displayName ?? 'Untitled' }, meta, locale);
       // Blocks have no CMS URL — build the article href from slug + publishDate.
-      if (childType === 'ArticlePost') card.path = articleHref(n.slug ?? '', n.publishDate);
+      if (childType === 'ArticlePost') card.path = articleHref(n.slug ?? '', n.publishDate, locale);
       return card;
     });
     return { items, total: result?.total ?? items.length, childType };

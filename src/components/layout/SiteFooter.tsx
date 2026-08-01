@@ -1,16 +1,18 @@
 import Link from 'next/link';
 import { Wordmark } from '@/components/ui/Wordmark';
+import { withLocale, type Locale } from '@/lib/i18n';
 
 /**
  * SiteFooter — site-wide footer with the wordmark, nav, and the generic
  * "unofficial demo" disclaimer (no specific tourism entity called out).
+ * Links are locale-prefixed so the footer stays within the active locale.
  */
 const FOOTER_NAV: { href: string; label: string }[] = [
   { href: '/', label: 'Home' },
   { href: '/places-to-visit', label: 'Places to Visit' },
 ];
 
-export function SiteFooter() {
+export function SiteFooter({ locale }: { locale: Locale }) {
   const year = new Date().getFullYear();
   return (
     <footer className="mt-auto border-t border-line">
@@ -27,7 +29,7 @@ export function SiteFooter() {
             <ul className="flex flex-col gap-3 text-sm">
               {FOOTER_NAV.map((item) => (
                 <li key={item.href}>
-                  <Link href={item.href} className="text-muted transition hover:text-accent">
+                  <Link href={withLocale(locale, item.href)} className="text-muted transition hover:text-accent">
                     {item.label}
                   </Link>
                 </li>

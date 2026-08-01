@@ -16,11 +16,11 @@ export const ItineraryContentType = contentType({
   baseType: '_page',
   extends: SeoMetadataContract,
   properties: {
-    title: { type: 'string', displayName: 'Title', group: 'content', sortOrder: 1, isRequired: true, indexingType: 'searchable' },
-    summary: { type: 'string', displayName: 'Summary', group: 'content', sortOrder: 2, indexingType: 'searchable' },
+    title: { type: 'string', displayName: 'Title', group: 'content', sortOrder: 1, isRequired: true, indexingType: 'searchable', isLocalized: true },
+    summary: { type: 'string', displayName: 'Summary', group: 'content', sortOrder: 2, indexingType: 'searchable', isLocalized: true },
     heroImage: { type: 'contentReference', allowedTypes: ['_image'], displayName: 'Hero image', group: 'content', sortOrder: 3 },
     durationDays: { type: 'integer', displayName: 'Duration (days)', group: 'content', sortOrder: 4, minimum: 1 },
-    highlights: { type: 'array', displayName: 'Highlights', group: 'content', sortOrder: 5, items: { type: 'string' } },
+    highlights: { type: 'array', displayName: 'Highlights', group: 'content', sortOrder: 5, items: { type: 'string' }, isLocalized: true },
     stops: {
       type: 'array',
       displayName: 'Stops',

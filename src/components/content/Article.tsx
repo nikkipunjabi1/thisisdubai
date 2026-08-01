@@ -39,9 +39,9 @@ export const ArticlePostContentType = contentType({
   extends: SeoMetadataContract,
   properties: {
     slug: { type: 'string', displayName: 'Slug (URL)', description: 'URL segment, e.g. dubai-on-a-budget. Unique.', group: 'content', sortOrder: 0, isRequired: true, indexingType: 'queryable' },
-    title: { type: 'string', displayName: 'Title', group: 'content', sortOrder: 1, isRequired: true, indexingType: 'searchable' },
-    excerpt: { type: 'string', displayName: 'Excerpt', group: 'content', sortOrder: 2, indexingType: 'searchable' },
-    body: { type: 'richText', displayName: 'Body', group: 'content', sortOrder: 3 },
+    title: { type: 'string', displayName: 'Title', group: 'content', sortOrder: 1, isRequired: true, indexingType: 'searchable', isLocalized: true },
+    excerpt: { type: 'string', displayName: 'Excerpt', group: 'content', sortOrder: 2, indexingType: 'searchable', isLocalized: true },
+    body: { type: 'richText', displayName: 'Body', group: 'content', sortOrder: 3, isLocalized: true },
     heroImage: { type: 'contentReference', allowedTypes: ['_image'], displayName: 'Hero image', group: 'content', sortOrder: 4 },
     author: { type: 'string', displayName: 'Author', group: 'content', sortOrder: 5 },
     publishDate: { type: 'dateTime', displayName: 'Publish date', group: 'content', sortOrder: 6, indexingType: 'queryable' },

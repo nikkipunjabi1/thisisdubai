@@ -9,32 +9,35 @@ import { JsonLd } from '@/components/ui/JsonLd';
 import { DetailHero } from '@/components/media/DetailHero';
 import { Prose } from '@/components/ui/Prose';
 import { Breadcrumbs } from '@/components/ui/Breadcrumbs';
+import { isLocale, withLocale, DEFAULT_LOCALE, LOCALES } from '@/lib/i18n';
 
 /**
- * Article detail — `/articles/<year>/<month>/<slug>`.
+ * Article detail — `/<locale>/articles/<year>/<month>/<slug>`.
  *
  * Articles are shared BLOCKS (`ArticlePost`), which have no CMS URL, so this route owns
- * routing: it resolves the block by `slug` (the year/month segments are cosmetic — they
- * come from `publishDate`). See docs/CONTENT-ARCHITECTURE.md §10.
+ * routing: it resolves the block by `slug` (year/month are cosmetic, from `publishDate`).
+ * Locale-aware article CONTENT is threaded in L2; for now the block resolves in EN.
  */
 
-type Params = { year: string; month: string; slug: string };
+type Params = { locale: string; year: string; month: string; slug: string };
 type Props = { params: Promise<Params> };
 
-// Prerender every published article (no searchParams here, so static generation is safe).
-// New/edited articles render on demand via dynamicParams and refresh via the data cache.
+// Prerender every published article per locale. New/edited articles render on demand.
 export const dynamicParams = true;
 export async function generateStaticParams() {
   if (!process.env.APPLICATION_HOST) return [];
-  return getAllArticleParams();
+  const params = await getAllArticleParams();
+  // The route is nested under [locale], so each param set needs its locale.
+  return LOCALES.flatMap((locale) => params.map((p) => ({ locale, ...p })));
 }
 
 const fmtDate = (iso?: string | null) =>
   iso ? new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : null;
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { slug } = await params;
-  const [article, settings] = await Promise.all([getArticleBySlug(slug), getSiteSettings()]);
+  const { locale: raw, slug } = await params;
+  const locale = isLocale(raw) ? raw : DEFAULT_LOCALE;
+  const [article, settings] = await Promise.all([getArticleBySlug(slug, locale), getSiteSettings()]);
   if (!article) return {};
   return buildContentMetadata(
     {
@@ -42,7 +45,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       metaDescription: article.metaDescription ?? article.excerpt,
       noindex: article.noindex,
       nofollow: article.nofollow,
-      // Articles use the hero as the social share image (every article has one).
       ogImage: article.heroUrl ? { url: { default: article.heroUrl } } : null,
     },
     settings,
@@ -51,16 +53,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function ArticlePage({ params }: Props) {
-  const { slug } = await params;
-  const article = await getArticleBySlug(slug);
+  const { locale: raw, slug } = await params;
+  const locale = isLocale(raw) ? raw : DEFAULT_LOCALE;
+  const article = await getArticleBySlug(slug, locale);
   if (!article) notFound();
 
-  const related = await getPlacesByKeys(article.relatedPlaceKeys);
+  const related = await getPlacesByKeys(article.relatedPlaceKeys, locale);
   const published = fmtDate(article.publishDate);
 
   const crumbs = [
-    { name: 'Home', url: '/' },
-    { name: 'Articles', url: '/articles' },
+    { name: 'Home', url: withLocale(locale, '/') },
+    { name: 'Articles', url: withLocale(locale, '/articles') },
     { name: article.title, url: null },
   ];
 
