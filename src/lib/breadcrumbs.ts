@@ -1,6 +1,7 @@
 import { cache } from 'react';
 import { getClient } from '@optimizely/cms-sdk';
 import { cachedGraphRead } from './cache';
+import { cmsContentPath, graphLocale, splitLocale, withLocale, DEFAULT_LOCALE, type Locale } from './i18n';
 
 /** One breadcrumb. `url` is null for the current (last) page, which is not linked. */
 export type Crumb = { name: string; url: string | null };
@@ -20,23 +21,27 @@ const NON_ROUTABLE = new Set(['_Component', '_Folder']);
  * trail always renders.
  */
 export const getBreadcrumbs = cache(
-  cachedGraphRead(async (currentUrl: string): Promise<Crumb[]> => {
-  const clean = currentUrl.replace(/^\/|\/$/g, '');
+  cachedGraphRead(async (currentUrl: string, locale: Locale = DEFAULT_LOCALE): Promise<Crumb[]> => {
+  // Strip the locale prefix first, so ancestor computation is locale-agnostic (the AR
+  // `/ar/` prefix would otherwise be mistaken for a first ancestor → a duplicate Home).
+  const { path } = splitLocale(currentUrl);
+  const clean = path.replace(/^\/|\/$/g, '');
   const segments = clean ? clean.split('/') : [];
   if (segments.length === 0) return [{ name: 'Home', url: null }];
 
-  // Cumulative ancestor URLs: "/a/", "/a/b/", … (Graph stores a trailing slash).
-  const urls = segments.map((_, i) => `/${segments.slice(0, i + 1).join('/')}/`);
+  // Ancestor URLs to MATCH in Graph — the CMS form (default locale unprefixed, others
+  // carry their segment). App LINK urls are always prefixed (withLocale) below.
+  const cmsUrls = segments.map((_, i) => cmsContentPath(locale, segments.slice(0, i + 1)));
 
   let byUrl = new Map<string, { displayName?: string; types?: string[] }>();
   try {
     const data = (await getClient().request(
       `query($u: [String!]!) {
-        _Content(where: { _metadata: { url: { default: { in: $u } } } }) {
+        _Content(locale: ${graphLocale(locale)}, where: { _metadata: { url: { default: { in: $u } } } }) {
           items { _metadata { displayName types url { default } } }
         }
       }`,
-      { u: urls },
+      { u: cmsUrls },
     )) as { _Content?: { items?: Array<{ _metadata?: { displayName?: string; types?: string[]; url?: { default?: string } } }> } };
     byUrl = new Map(
       (data?._Content?.items ?? [])
@@ -49,13 +54,14 @@ export const getBreadcrumbs = cache(
 
   const titleCase = (seg: string) => seg.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 
-  const crumbs: Crumb[] = [{ name: 'Home', url: '/' }];
-  urls.forEach((u, idx) => {
-    const meta = byUrl.get(u);
+  const crumbs: Crumb[] = [{ name: 'Home', url: withLocale(locale, '/') }];
+  segments.forEach((seg, idx) => {
+    const meta = byUrl.get(cmsUrls[idx]);
     // Skip non-routable ancestors (folders never appear as breadcrumb links).
     if (meta?.types?.some((t) => NON_ROUTABLE.has(t))) return;
-    const isLast = idx === urls.length - 1;
-    crumbs.push({ name: meta?.displayName || titleCase(segments[idx]), url: isLast ? null : u });
+    const isLast = idx === segments.length - 1;
+    const appUrl = withLocale(locale, `/${segments.slice(0, idx + 1).join('/')}/`);
+    crumbs.push({ name: meta?.displayName || titleCase(seg), url: isLast ? null : appUrl });
   });
   return crumbs;
   }, ['breadcrumbs']),

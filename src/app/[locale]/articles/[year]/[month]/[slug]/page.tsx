@@ -33,8 +33,9 @@ const fmtDate = (iso?: string | null) =>
   iso ? new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : null;
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { slug } = await params;
-  const [article, settings] = await Promise.all([getArticleBySlug(slug), getSiteSettings()]);
+  const { locale: raw, slug } = await params;
+  const locale = isLocale(raw) ? raw : DEFAULT_LOCALE;
+  const [article, settings] = await Promise.all([getArticleBySlug(slug, locale), getSiteSettings()]);
   if (!article) return {};
   return buildContentMetadata(
     {
@@ -52,10 +53,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function ArticlePage({ params }: Props) {
   const { locale: raw, slug } = await params;
   const locale = isLocale(raw) ? raw : DEFAULT_LOCALE;
-  const article = await getArticleBySlug(slug);
+  const article = await getArticleBySlug(slug, locale);
   if (!article) notFound();
 
-  const related = await getPlacesByKeys(article.relatedPlaceKeys);
+  const related = await getPlacesByKeys(article.relatedPlaceKeys, locale);
   const published = fmtDate(article.publishDate);
 
   const crumbs = [

@@ -114,6 +114,18 @@ export function cmsContentPath(locale: Locale, segments: string[]): string {
   return locale === DEFAULT_LOCALE ? `/${body}` : `/${locale}/${body}`;
 }
 
+/**
+ * Convert a CMS `url.default` to the locale-prefixed **app** path used for links.
+ * The CMS leaves the default locale's URLs unprefixed (`/places-to-visit/x/`) and gives
+ * others a segment (`/ar/places-to-visit/x/`), but every app link must carry the prefix —
+ * so this adds `/en` for the default locale and leaves an existing `/ar` intact. Non-path
+ * values (`#`, external URLs) pass through untouched.
+ */
+export function toAppPath(locale: Locale, cmsUrl: string): string {
+  if (!cmsUrl.startsWith('/')) return cmsUrl;
+  return withLocale(locale, splitLocale(cmsUrl).path);
+}
+
 /** Locale-aware date formatting. Replaces the 5 hardcoded `toLocaleDateString('en-GB')` sites. */
 export function formatDate(locale: Locale, value: string | number | Date): string {
   const date = value instanceof Date ? value : new Date(value);

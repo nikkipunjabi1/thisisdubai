@@ -1,5 +1,6 @@
 import { getClient } from '@optimizely/cms-sdk';
 import { cachedGraphRead } from './cache';
+import { graphLocale, toAppPath, DEFAULT_LOCALE, type Locale } from './i18n';
 
 /**
  * Data access for PointOfInterest content via Optimizely Graph (published-only,
@@ -90,12 +91,13 @@ export type RelatedPlace = { name: string; path: string };
 
 export const getPlacesByKeys = cachedGraphRead(async function getPlacesByKeys(
   keys: string[],
+  locale: Locale = DEFAULT_LOCALE,
 ): Promise<RelatedPlace[]> {
   if (!keys.length) return [];
   try {
     const data = (await getClient().request(
       `query($keys: [String!]!) {
-         PointOfInterest(where: { _metadata: { key: { in: $keys } } }, limit: 100) {
+         PointOfInterest(locale: ${graphLocale(locale)}, where: { _metadata: { key: { in: $keys } } }, limit: 100) {
            items { name _metadata { key displayName url { default } } }
          }
        }`,
@@ -110,7 +112,7 @@ export const getPlacesByKeys = cachedGraphRead(async function getPlacesByKeys(
         .filter((i) => i._metadata?.key && i._metadata?.url?.default)
         .map((i) => [
           i._metadata!.key!,
-          { name: i.name ?? i._metadata!.displayName ?? 'View place', path: i._metadata!.url!.default! },
+          { name: i.name ?? i._metadata!.displayName ?? 'View place', path: toAppPath(locale, i._metadata!.url!.default!) },
         ]),
     );
     // Preserve the authored order rather than Graph's.

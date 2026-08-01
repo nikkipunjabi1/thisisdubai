@@ -12,6 +12,7 @@ import { Pagination } from '@/components/ui/Pagination';
 import { ListingControls } from '@/components/ui/ListingControls';
 import { getSectionChildren, getTags, isSortKey, type SortKey, type Filters } from '@/lib/sections';
 import { getListingState } from '@/lib/listing-context';
+import { getRequestLocale } from '@/lib/server-locale';
 
 /**
  * SectionListing — the reusable "list this section's items" block that authors drop
@@ -75,6 +76,9 @@ export default async function SectionListing({ content, displaySettings }: Props
   const page = Math.max(1, state.page);
   const sort: SortKey = isSortKey(state.query.sort) ? state.query.sort : 'name';
   const filters: Filters = { tag: state.query.tag, price: state.query.price };
+  // This block renders deep in a VB composition, so the route's locale param can't be
+  // threaded as a prop — read it from the request (set by the proxy) instead.
+  const locale = await getRequestLocale();
 
   // Fetch the children and the tag vocabulary CONCURRENTLY. `getTags` doesn't depend
   // on the children result, so awaiting it afterwards cost an extra Graph round trip
@@ -82,9 +86,9 @@ export default async function SectionListing({ content, displaySettings }: Props
   // type has a tag facet, but fetching them is cached and cheap.
   const [{ items, total, childType }, allTags] = await Promise.all([
     sourceKey
-      ? getSectionChildren(sourceKey, { skip: (page - 1) * pageSize, limit: pageSize, sort, filters })
+      ? getSectionChildren(sourceKey, { skip: (page - 1) * pageSize, limit: pageSize, sort, filters }, locale)
       : Promise.resolve({ items: [], total: 0, childType: null }),
-    getTags(),
+    getTags(locale),
   ]);
   const tags =
     childType === 'PointOfInterest' || childType === 'Event' || childType === 'ArticlePost' ? allTags : [];

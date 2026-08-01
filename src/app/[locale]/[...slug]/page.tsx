@@ -69,7 +69,7 @@ export default async function Page({ params, searchParams }: Props) {
   const path = cmsContentPath(locale, slug);
   const [content, crumbs] = await Promise.all([
     getByPath(path),
-    getBreadcrumbs(path),
+    getBreadcrumbs(path, locale),
   ]);
 
   const node = content[0] as { _metadata?: { types?: string[] } } | undefined;
