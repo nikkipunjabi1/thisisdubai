@@ -9,7 +9,7 @@ import { JsonLd } from '@/components/ui/JsonLd';
 import { DetailHero } from '@/components/media/DetailHero';
 import { Prose } from '@/components/ui/Prose';
 import { Breadcrumbs } from '@/components/ui/Breadcrumbs';
-import { isLocale, withLocale, DEFAULT_LOCALE } from '@/lib/i18n';
+import { isLocale, withLocale, DEFAULT_LOCALE, LOCALES } from '@/lib/i18n';
 
 /**
  * Article detail — `/<locale>/articles/<year>/<month>/<slug>`.
@@ -26,7 +26,9 @@ type Props = { params: Promise<Params> };
 export const dynamicParams = true;
 export async function generateStaticParams() {
   if (!process.env.APPLICATION_HOST) return [];
-  return getAllArticleParams();
+  const params = await getAllArticleParams();
+  // The route is nested under [locale], so each param set needs its locale.
+  return LOCALES.flatMap((locale) => params.map((p) => ({ locale, ...p })));
 }
 
 const fmtDate = (iso?: string | null) =>
