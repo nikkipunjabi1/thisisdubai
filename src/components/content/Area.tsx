@@ -23,6 +23,7 @@ export const AreaContentType = contentType({
       sortOrder: 1,
       isRequired: true,
       indexingType: 'searchable',
+      isLocalized: true, // translatable per language
     },
     summary: {
       type: 'string',
@@ -30,12 +31,14 @@ export const AreaContentType = contentType({
       group: 'content',
       sortOrder: 2,
       indexingType: 'searchable',
+      isLocalized: true, // translatable per language
     },
     description: {
       type: 'richText',
       displayName: 'Description',
       group: 'content',
       sortOrder: 3,
+      isLocalized: true, // translatable per language
     },
     heroImage: {
       type: 'contentReference',

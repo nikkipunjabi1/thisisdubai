@@ -29,6 +29,7 @@ export const SiteSettingsContentType = contentType({
         'Appended to every page title, e.g. "…| This is Dubai". Change here to rebrand the whole site in one publish.',
       group: 'content',
       sortOrder: 1,
+      isLocalized: true, // translatable per language
     },
     titleTagline: {
       type: 'string',
@@ -36,6 +37,7 @@ export const SiteSettingsContentType = contentType({
       description: 'Optional middle segment of the title, e.g. "Unofficial Travel & Tourism Guide".',
       group: 'content',
       sortOrder: 2,
+      isLocalized: true, // translatable per language
     },
     titleSeparator: {
       type: 'string',
