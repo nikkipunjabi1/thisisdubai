@@ -113,5 +113,30 @@ Confirmed against Graph with the single key:
   proves VB experiences localize by authoring the language version of the *experience* — no per-field
   `isLocalized` on blocks needed (which is why forcing it was breaking). See [[#22]].
 
+## L1 — routing + RTL shell — DONE
+
+Every visitor page now lives under a locale prefix; `/` redirects to `/en`.
+
+- **`src/proxy.ts`** (Next 16 renamed `middleware` → `proxy`) — redirects unprefixed paths to
+  the default locale (`/` → `/en`, `/places-to-visit/x` → `/en/places-to-visit/x`) and stamps the
+  active locale on an `x-locale` request header. Matcher skips `api`, `_next`, `preview`,
+  `styleguide`, and file paths (`/robots.txt`).
+- **`src/app/layout.tsx`** (now async) reads `x-locale` (it sits above `[locale]` and can't read the
+  param) and sets `<html lang dir>` — verified `lang="en-GB" dir="ltr"` vs `lang="ar-AE" dir="rtl"`.
+  Loads Noto Kufi/Sans Arabic; `globals.css` re-points `--font-display`/`--font-body` under
+  `:root[dir='rtl']` so the whole RTL tree switches fonts with one attribute.
+- **`src/app/[locale]/`** — home, `[...slug]`, `articles`, `search` moved under the segment;
+  `[locale]/layout.tsx` 404s an unknown prefix. Content resolves by the **localized path** via
+  `cmsContentPath(locale, segments)` — `getContentByPath` matches on `_metadata.url.default`, and the
+  `/ar` prefix in the path is the locale signal (its options type has no `locale` field, and a raw
+  Graph `_Content(where url=/ar/…)` with no locale arg resolves the item, so the path alone suffices).
+- **Verified:** `/` → 307 `/en`; `/en` + `/ar` homes and `…/burj-khalifa` detail pages all 200; `/ar`
+  renders RTL with real Arabic where translated (home) and EN fallback elsewhere.
+
+**Deferred to L2/L3** (shell renders correctly meanwhile): deep loaders (`getSectionChildren`,
+`getBreadcrumbs`, `getArticleBySlug`, `search`) aren't locale-threaded yet — listings/breadcrumbs on
+`/ar` show EN data; nav/footer/card links (`SiteHeader`/`SiteFooter`/`SectionCard`) aren't
+locale-prefixed yet, so some in-page links bounce through the `/ → /en` redirect.
+
 ## Related docs
 - `docs/ROADMAP.md` (Phase 3 — Localization), `docs/SPRINTS.md` (S4.5 Opal), `docs/OPTIMIZELY-RESEARCH.md:113–124` (Graph 28-language semantic support + `locale` recipe), `docs/OPTIMIZELY-BEST-PRACTICES.md:91` (`hreflang`), `docs/BLOG-PLAN.md` (#7, #10).

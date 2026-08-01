@@ -100,6 +100,20 @@ export function alternateHref(pathname: string, target: Locale): string {
   return withLocale(target, path);
 }
 
+/**
+ * The CMS content path (`_metadata.url.default`) for a locale + the app's slug segments.
+ * The CMS leaves the **default** locale's URLs unprefixed (`/places-to-visit/x/`) and gives
+ * every other locale its own segment (`/ar/places-to-visit/x/`) — the Optimizely
+ * master-language convention. The app always routes with a prefix (`/en/...` or `/ar/...`),
+ * so this rebuilds the CMS-side path: drop the prefix for the default locale, keep it otherwise.
+ * `segments = []` yields the home path (`/` for en, `/ar/` for ar).
+ */
+export function cmsContentPath(locale: Locale, segments: string[]): string {
+  const joined = segments.filter(Boolean).join('/');
+  const body = joined ? `${joined}/` : '';
+  return locale === DEFAULT_LOCALE ? `/${body}` : `/${locale}/${body}`;
+}
+
 /** Locale-aware date formatting. Replaces the 5 hardcoded `toLocaleDateString('en-GB')` sites. */
 export function formatDate(locale: Locale, value: string | number | Date): string {
   const date = value instanceof Date ? value : new Date(value);
