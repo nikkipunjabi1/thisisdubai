@@ -5,6 +5,9 @@ import { JsonLd } from '@/components/ui/JsonLd';
 import { DetailHero } from '@/components/media/DetailHero';
 import { Prose } from '@/components/ui/Prose';
 import { getPlacesByKeys } from '@/lib/pois';
+import { getRequestLocale } from '@/lib/server-locale';
+import { formatDate } from '@/lib/i18n';
+import { t } from '@/lib/messages';
 import { SeoMetadataContract } from './SeoMetadata';
 import { TagContentType } from './Tag';
 import { PointOfInterestContentType } from './PointOfInterest';
@@ -50,17 +53,17 @@ export const ArticlePostContentType = contentType({
   },
 });
 
-const fmtDate = (iso?: string | null) =>
-  iso ? new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : null;
-
 export default async function Article({ content }: { content: ContentProps<typeof ArticlePostContentType> }) {
+  const locale = await getRequestLocale();
+  const m = t(locale);
   const { pa } = getPreviewUtils(content);
   const { getAlt } = damAssets(content);
-  const published = fmtDate(content.publishDate);
+  const published = content.publishDate ? formatDate(locale, content.publishDate) : null;
   // A contentReference exposes only { url, item, key } — not the target's name —
   // so the labels come from a second, cached Graph read keyed on those references.
   const related = await getPlacesByKeys(
     (content.relatedPlaces ?? []).map((p) => p?.key).filter((k): k is string => Boolean(k)),
+    locale,
   );
 
   const jsonLd: Record<string, unknown> = {
@@ -84,7 +87,7 @@ export default async function Article({ content }: { content: ContentProps<typeo
         <header className="max-w-3xl">
           {published || content.author ? (
             <p className="eyebrow">
-              {[published, content.author ? `By ${content.author}` : null].filter(Boolean).join(' · ')}
+              {[published, content.author ? m.detail.by(content.author) : null].filter(Boolean).join(' · ')}
             </p>
           ) : null}
           <h1 className="mt-4 text-[clamp(2.25rem,5vw,3.75rem)]" {...pa('title')}>
@@ -103,7 +106,7 @@ export default async function Article({ content }: { content: ContentProps<typeo
 
         {related.length > 0 ? (
           <aside className="mt-16 border-t border-line pt-8">
-            <h2 className="eyebrow">Places mentioned</h2>
+            <h2 className="eyebrow">{m.detail.placesMentioned}</h2>
             <ul className="mt-4 flex flex-wrap gap-2">
               {related.map((p) => (
                 <li key={p.path}>

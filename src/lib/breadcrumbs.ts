@@ -2,6 +2,7 @@ import { cache } from 'react';
 import { getClient } from '@optimizely/cms-sdk';
 import { cachedGraphRead } from './cache';
 import { cmsContentPath, graphLocale, splitLocale, withLocale, DEFAULT_LOCALE, type Locale } from './i18n';
+import { t } from './messages';
 
 /** One breadcrumb. `url` is null for the current (last) page, which is not linked. */
 export type Crumb = { name: string; url: string | null };
@@ -27,7 +28,7 @@ export const getBreadcrumbs = cache(
   const { path } = splitLocale(currentUrl);
   const clean = path.replace(/^\/|\/$/g, '');
   const segments = clean ? clean.split('/') : [];
-  if (segments.length === 0) return [{ name: 'Home', url: null }];
+  if (segments.length === 0) return [{ name: t(locale).crumbs.home, url: null }];
 
   // Ancestor URLs to MATCH in Graph — the CMS form (default locale unprefixed, others
   // carry their segment). App LINK urls are always prefixed (withLocale) below.
@@ -54,7 +55,7 @@ export const getBreadcrumbs = cache(
 
   const titleCase = (seg: string) => seg.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 
-  const crumbs: Crumb[] = [{ name: 'Home', url: withLocale(locale, '/') }];
+  const crumbs: Crumb[] = [{ name: t(locale).crumbs.home, url: withLocale(locale, '/') }];
   segments.forEach((seg, idx) => {
     const meta = byUrl.get(cmsUrls[idx]);
     // Skip non-routable ancestors (folders never appear as breadcrumb links).

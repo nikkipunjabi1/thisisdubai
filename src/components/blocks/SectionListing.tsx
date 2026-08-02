@@ -111,6 +111,7 @@ export default async function SectionListing({ content, displaySettings }: Props
         childType={childType}
         tags={tags}
         filters={filters}
+        locale={locale}
       />
       <SectionCardGrid items={items} />
       <Pagination state={state} total={total} pageSize={pageSize} />

@@ -3,6 +3,7 @@ import { getClient } from '@optimizely/cms-sdk';
 import { cachedGraphRead } from './cache';
 import { articleHref } from './articles';
 import { graphLocale, htmlLang, toAppPath, DEFAULT_LOCALE, type Locale } from './i18n';
+import { t } from './messages';
 
 /**
  * Generic "children of a section page" queries for the listing pattern. Each
@@ -67,7 +68,8 @@ function eventMeta(node: Node, locale: Locale): string | null {
 
 type AnyChild = Node & { priceBand?: string | null; _metadata?: { url?: { default?: string | null } | null; displayName?: string | null; types?: string[] | null } | null };
 
-const priceMeta = (band?: string | null) => (band && band !== 'free' ? band : band === 'free' ? 'Free' : null);
+const priceMeta = (band: string | null | undefined, locale: Locale) =>
+  band && band !== 'free' ? band : band === 'free' ? t(locale).listing.free : null;
 
 /** Supported sorts (interface-level `_metadata` fields, so every child type sorts). */
 export type SortKey = 'name' | '-name' | 'newest';
@@ -230,7 +232,7 @@ export const getSectionChildren = cachedGraphRead(async function getSectionChild
           ? eventMeta(n, locale)
           : childType === 'ArticlePost'
             ? fmtDate(n.publishDate, locale)
-            : priceMeta(n.priceBand);
+            : priceMeta(n.priceBand, locale);
       const card = toCard({ ...n, name: n.name ?? n._metadata?.displayName ?? 'Untitled' }, meta, locale);
       // Blocks have no CMS URL — build the article href from slug + publishDate.
       if (childType === 'ArticlePost') card.path = articleHref(n.slug ?? '', n.publishDate, locale);
