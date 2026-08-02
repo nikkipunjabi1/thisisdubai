@@ -62,23 +62,35 @@ data loss"* and needs `--force`. Direction is everything:
 The CLI can't tell the two apart, so it warns on both. OFF→ON with `--force` is safe — but snapshot
 your counts before and after anyway. (I did; 101 POIs / 20 events / 19 areas, byte-identical after.)
 
-## Gotcha 3 — Visual Builder blocks localize *differently* — don't force `isLocalized` on them
+## Gotcha 3 — "block" isn't the deciding factor — *how the block is used* is
 
-Try that same `isLocalized` pass on your VB blocks (Hero, Section Heading, Rich Text) and the push
-reports a **breaking change** it won't apply. That's the CMS telling you something real: **Visual
-Builder content is localized at the *composition* level, not per field.** You create the language
-version of the *experience* and re-author its canvas; the inline component values are held
-per-language by the experience — there's no `[CultureSpecific]` flag to set on a block property.
+Blocks are `_component` types, but they split into two groups that localize completely differently.
+Getting this wrong is easy, because the intuitive rule ("blocks don't need the flag") is only *half*
+right.
 
-Proof from Graph after translating the home experience's Arabic canvas:
+**Blocks queried as their own content DO need "Unique value per language."** A shared block that Graph
+treats as a root type — here **`ArticlePost`** (articles) and **`TagTerm`** (taxonomy), both exposed
+via `compositionBehaviors` and fetched directly — has its own content item with language versions,
+exactly like a page. So its translatable fields (`title`, `excerpt`, `body`, tag `name`/`synonyms`…)
+need `isLocalized: true` — set it in code and `--force` it through, same as a page type. Verified in
+the CMS: `ArticlePost.title` and `TagTerm.name` are `isLocalized: true`.
+
+**Inline Visual Builder canvas components do NOT — and the CMS won't let you.** The blocks you *drop
+on an experience's canvas* — Hero, Section Heading, Rich Text, Section Listing — are a different
+story. Add `isLocalized` to them and `opti-push` reports a **breaking change** it refuses to apply.
+That's correct: their values live inside the **experience's composition**, which is itself
+language-versioned. You translate them by creating the language version of the *experience* and
+re-authoring its canvas — there's no per-field flag (the CMS keeps them `isLocalized: false`). Proof
+from Graph, with the block property flags still `false`:
 
 ```json
 { "_metadata": { "locale": "ar" },
   "composition": { "nodes": [ { "component": { "heading": "دبي الحقيقية، بدون تزييف." } } ] } }
 ```
 
-So: `isLocalized` on **standalone content types** (POI, Event, Article, Hotel, Tag, SEO contract);
-**nothing** on VB blocks/experiences — translate those by authoring the language version.
+So the real rule is about **retrieval, not the base type**: anything you query as its own content
+(pages *and* root-exposed shared blocks like `ArticlePost`/`TagTerm`) needs `isLocalized`; anything
+that only exists as an inline node inside an experience's composition does not.
 
 ## Gotcha 4 — The CMS gives non-default locales a URL prefix; the default gets none
 
