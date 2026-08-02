@@ -1,6 +1,8 @@
 # Localization — EN + AR (Arabic) on Optimizely SaaS + Next.js
 
-_Status: **Sprint L0 complete** (spike + foundations). Implementation sprints L1–L6 pending._
+_Status: **L0–L5 + L-mod complete** (foundations, content-model `isLocalized`, routing/RTL, data
+layer, string catalog, AR semantic search, hreflang/SEO). Only **L6** (bulk AR translation via Opal,
+user-driven in the CMS) remains._
 
 This is the plan and the record of decisions for adding Arabic alongside English. It exists
 because the routing, RTL, data, search, and SEO layers all touch each other — the map is worth
@@ -202,6 +204,36 @@ The whole search surface is now locale-aware (`src/lib/search.ts` + `src/app/[lo
 - **Verified (curl):** `/en/search?q=skyscraper` → English labels, `/en/…` cards, "Free";
   `/ar/search?q=ناطحة سحاب` → Arabic labels (أماكن للزيارة…), `/ar/…` cards, "مجاني"; AR suggestion
   chips render + point at `/ar/search`. Tests: 9 passing (3 new AR cases); `tsc` clean.
+
+## L5 — Localization SEO (hreflang + sitemap) — DONE
+
+Everything a bilingual site needs for search + social to serve the right language and NOT treat
+`/en/…` and `/ar/…` as duplicate content. All in `src/lib/seo.ts` + the page `generateMetadata`s +
+a new `src/app/sitemap.ts`:
+
+- **Per-page `hreflang` + canonical.** `buildContentMetadata(..., { locale, path })` now emits
+  `alternates` via `localeAlternates(locale, barePath)`: a self-referencing `canonical` in the current
+  locale, one `hreflang` per locale (`en-GB`, `ar-AE`), and `x-default` → the default locale. `path`
+  is locale-neutral and normalized (`barePath`: strips any locale prefix + trailing slash), so callers
+  pass a raw slug join and a CMS `/ar/…` url or app `/en/…` path both reduce to the same twin set.
+  Wired into home, `[...slug]`, and article routes. The `noindex` `/search` page passes no `route`
+  (no localized twin needed).
+- **`og:locale`.** Open Graph gets `locale: ogLocale(locale)` (`en_GB`/`ar_AE` — underscore form,
+  derived from the one `HTML_LANG` map so it never drifts) + the other locales as `alternateLocale`.
+- **`metadataBase`.** Set in the root layout from `APPLICATION_HOST` (omitted when unset — CI/local —
+  so Next emits relative URLs instead of throwing). This is what makes canonical/hreflang/OG absolute.
+- **Bilingual sitemap.** `src/app/sitemap.ts` emits one entry per content path with `hreflang`
+  alternates for every locale (Next renders them as `xhtml:link`); `url` doubles as `x-default`
+  (default locale). Paths come from `getSitemapPaths()` (pages the CMS gives a `url.default`, paged
+  through `_Content`, non-routable base types filtered) **plus** article app routes (blocks have no CMS
+  URL → synthesized from `getAllArticleParams`). Gated on `APPLICATION_HOST` (hreflang URLs must be
+  absolute); Graph client configured in-module like `robots.ts`. `robots.ts` still advertises it only
+  when indexing is allowed (demo stays blocked by default).
+- **Verified:** `/en` POI head → `canonical=/en/…`, `hreflang` en-GB/ar-AE/x-default, `og:locale
+  en_GB` + alt `ar_AE`; `/ar` twin → `canonical=/ar/…`, `og:locale ar_AE` + alt `en_GB`.
+  `/sitemap.xml` 200; the underlying url-exists Graph query returns **145 routable pages** (populates
+  fully in prod where `APPLICATION_HOST` is set; empty-but-valid locally where it isn't). Tests: 14
+  passing (5 new `localeAlternates` cases); `tsc` clean.
 
 ## Related docs
 - `docs/ROADMAP.md` (Phase 3 — Localization), `docs/SPRINTS.md` (S4.5 Opal), `docs/OPTIMIZELY-RESEARCH.md:113–124` (Graph 28-language semantic support + `locale` recipe), `docs/OPTIMIZELY-BEST-PRACTICES.md:91` (`hreflang`), `docs/BLOG-PLAN.md` (#7, #10).

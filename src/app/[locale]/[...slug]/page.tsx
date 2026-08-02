@@ -48,7 +48,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     | undefined;
   if (!node || isNonRoutable(node._metadata?.types)) return {};
   const fallback = node.name ?? node._metadata?.displayName ?? 'This is Dubai';
-  return buildContentMetadata(node, settings, fallback);
+  return buildContentMetadata(node, settings, fallback, { locale, path: `/${slug.join('/')}` });
 }
 
 export default async function Page({ params, searchParams }: Props) {

@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const locale = isLocale(raw) ? raw : DEFAULT_LOCALE;
   const [content, settings] = await Promise.all([getHome(locale), getSiteSettings()]);
   const seo = (content[0] ?? null) as PageSeo | null;
-  return buildContentMetadata(seo, settings, 'Home');
+  return buildContentMetadata(seo, settings, 'Home', { locale, path: '/' });
 }
 
 /**
