@@ -191,6 +191,66 @@ None of the day-1 items slow down a single-language launch. All of them save you
 flagged migration later. If there's one line to remember: **structure for multi-locale up front; defer
 the content.**
 
+## The recipe: turning on per-language fields (in code, one command)
+
+Because content types here are defined in **code** (the SDK's `contentType({...})`), "Unique value per
+language" is just a property flag — `isLocalized: true`. You set it on the translatable fields and
+push; there's no per-field clicking in the CMS UI, and it applies uniformly to every page type **and**
+every root-exposed shared block (`ArticlePost`, `TagTerm`). Localize the human-readable text; leave
+structure shared:
+
+```ts
+export const HotelContentType = contentType({
+  key: 'Hotel',
+  baseType: '_page',
+  extends: SeoMetadataContract,          // metaTitle/metaDescription localized ONCE, for every type
+  properties: {
+    name:       { type: 'string',   isLocalized: true, /* … */ },
+    summary:    { type: 'string',   isLocalized: true },
+    body:       { type: 'richText', isLocalized: true },
+    amenities:  { type: 'array', items: { type: 'string' }, isLocalized: true },
+    // shared — a number / reference / URL is the same in every language, maintain it once:
+    starRating: { type: 'integer' },
+    priceBand:  { type: 'string', format: 'selectOne', /* … */ },
+    latitude:   { type: 'float' },
+    longitude:  { type: 'float' },
+    area:       { type: 'contentReference', /* … */ },
+    images:     { type: 'array', items: { type: 'contentReference', /* … */ } },
+    bookingUrl: { type: 'url' },
+  },
+});
+```
+
+One command syncs the whole model to the CMS:
+
+```bash
+npm run opti-push          # → optimizely-cms-cli config push optimizely.config.mjs
+```
+
+**Starting a new (multi-site / multi-locale) project? Do this on day 1, before there's content** — the
+push is then a clean create, no warnings, and every language you enable later "just works." **Retrofitting
+onto a type that already has data** (our case) trips the data-loss guard, so add `--force` — safe here
+because OFF→ON *preserves* existing values (Gotcha 2), but snapshot your counts first:
+
+```bash
+npm run opti-push -- --force
+```
+
+**What to flag vs leave shared** — the split that saved us re-entering the same data in every language:
+
+| `isLocalized: true` (translate) | Left shared (no flag) — and why |
+|---|---|
+| name / title, summary / excerpt, body | canonicalUrl, ogImage — not language-specific |
+| SEO metaTitle / metaDescription (on the shared contract) | **slug** — the URL / filter key; forking it splits routing |
+| accolades, amenities, highlights (human text) | references (images, area, tags, related) — maintain once |
+| Tag name / description / **synonyms** (AR search needs its own) | numbers & geo (starRating, lat/long), enums (priceBand) |
+| | dates (publishDate), URLs (bookingUrl), booleans (noindex) |
+| | author (a proper noun), searchKeywords (auto-derived from tags) |
+
+Two multipliers: putting `isLocalized` on the shared **`SeoMetadata` contract** localizes the SEO
+title/description for *every* type that extends it, in one edit; and inline VB canvas blocks (Hero,
+headings) need none of this — they localize via the experience's composition (Gotcha 3).
+
 ## Result
 
 `/` → `/en`; `/en` and `/ar` both render; `<html>` is `lang="en-GB" dir="ltr"` vs
