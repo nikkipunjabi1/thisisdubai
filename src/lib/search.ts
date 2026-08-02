@@ -2,6 +2,8 @@ import { cache } from 'react';
 import { getClient } from '@optimizely/cms-sdk';
 import type { SectionCardItem } from './sections';
 import { cachedGraphRead } from './cache';
+import { graphLocale, htmlLang, toAppPath, withLocale, DEFAULT_LOCALE, type Locale } from './i18n';
+import { t } from './messages';
 
 /**
  * Semantic search over the CMS, powered by Optimizely Graph's vector ranking
@@ -16,7 +18,14 @@ import { cachedGraphRead } from './cache';
  *    heritage" and would have topped the results with an unclickable card. Querying
  *    concrete types also lets us project type-specific fields (price, event dates).
  *
- * 2. **Stop words are stripped before querying** — see `normalizeQuery`.
+ * 2. **Stop words are stripped before querying** — see `normalizeQuery`. The
+ *    stop-word set is per-locale: the English list must NOT be applied to an Arabic
+ *    query (it wouldn't match Arabic tokens anyway, but Arabic has its OWN function
+ *    words — في، من، على… — that hurt BM25 the same way "in"/"the" do in English).
+ *
+ * The query is federated PER LOCALE (`locale: en|ar` on every sub-query), so an
+ * Arabic search ranks against the Arabic index; where a document has no Arabic
+ * translation yet, Graph's English fallback keeps it findable.
  *
  * Scores are NOT comparable across types (Graph normalizes BM25 per index — the
  * same query scored an Area 13.7 and a POI 1.5), so results are returned GROUPED
@@ -54,7 +63,7 @@ const RELATIVE_SCORE_FLOOR = 0.1;
  * appears to have no effect on unfiltered queries. Removing stop words lets the
  * semantic signal decide: "swimming sea" → Jumeirah Beach + Palm Jumeirah.
  */
-const STOP_WORDS = new Set([
+const STOP_WORDS_EN = new Set([
   'a', 'about', 'all', 'am', 'an', 'and', 'any', 'are', 'as', 'at', 'be', 'been', 'but', 'by',
   'can', 'could', 'did', 'do', 'does', 'for', 'from', 'get', 'go', 'had', 'has', 'have', 'how',
   'i', 'if', 'in', 'into', 'is', 'it', 'its', 'me', 'my', 'of', 'on', 'or', 'our', 'out', 'over',
@@ -64,17 +73,36 @@ const STOP_WORDS = new Set([
 ]);
 
 /**
- * Reduce a raw user query to its content words. Falls back to the original text if
- * stripping would leave nothing (e.g. someone searches literally for "where"), so a
- * query never silently becomes a blank search.
+ * Arabic function words — prepositions, conjunctions, pronouns and interrogatives that
+ * carry no topical meaning and would skew BM25 exactly as English stop words do. The
+ * bare definite article "ال" is intentionally omitted: it's a prefix (الشاطئ = the
+ * beach), not a standalone token, so listing it here would never match and stripping
+ * it would need morphological analysis we don't do. Spelling variants with/without
+ * hamza (إلى/الى, أو/او, أن/ان) are both listed since authors and users mix them.
  */
-export function normalizeQuery(raw: string): string {
+const STOP_WORDS_AR = new Set([
+  'في', 'من', 'على', 'عن', 'إلى', 'الى', 'و', 'أو', 'او', 'ثم', 'مع', 'عند', 'حتى',
+  'هذا', 'هذه', 'ذلك', 'تلك', 'التي', 'الذي', 'الذين', 'ما', 'ماذا', 'أين', 'اين',
+  'كيف', 'متى', 'هل', 'كان', 'كانت', 'هو', 'هي', 'هم', 'نحن', 'أنا', 'انا', 'لا',
+  'أن', 'ان', 'إن', 'ان', 'قد', 'كل', 'بعض', 'غير', 'بين', 'به', 'لها', 'له',
+]);
+
+const STOP_WORDS: Record<Locale, Set<string>> = { en: STOP_WORDS_EN, ar: STOP_WORDS_AR };
+
+/**
+ * Reduce a raw user query to its content words, using the locale's stop-word set.
+ * Falls back to the original text if stripping would leave nothing (e.g. someone
+ * searches literally for "where"), so a query never silently becomes a blank search.
+ * `\p{L}` keeps Arabic letters, and `toLowerCase()` is a no-op on Arabic script.
+ */
+export function normalizeQuery(raw: string, locale: Locale = DEFAULT_LOCALE): string {
+  const stop = STOP_WORDS[locale] ?? STOP_WORDS_EN;
   const words = raw
     .toLowerCase()
     .replace(/[^\p{L}\p{N}\s-]/gu, ' ')
     .split(/\s+/)
     .filter(Boolean);
-  const kept = words.filter((w) => !STOP_WORDS.has(w));
+  const kept = words.filter((w) => !stop.has(w));
   return (kept.length > 0 ? kept : words).join(' ');
 }
 
@@ -97,11 +125,16 @@ export type SearchResults = {
   total: number;
 };
 
-const GROUP_META: Record<SearchGroupKey, { label: string; href: string }> = {
-  places: { label: 'Places to Visit', href: '/places-to-visit' },
-  events: { label: 'Events', href: '/events' },
-  neighbourhoods: { label: 'Neighbourhoods', href: '/neighbourhoods' },
+/** Section landing paths (locale-neutral); `search()` prefixes them per locale. */
+const GROUP_HREF: Record<SearchGroupKey, string> = {
+  places: '/places-to-visit',
+  events: '/events',
+  neighbourhoods: '/neighbourhoods',
 };
+
+/** Group heading — reuses the nav labels so search + menu never drift. */
+const groupLabel = (key: SearchGroupKey, m: ReturnType<typeof t>): string =>
+  key === 'places' ? m.nav.places : key === 'events' ? m.nav.events : m.nav.neighbourhoods;
 
 type ResultNode = {
   name?: string | null;
@@ -113,35 +146,41 @@ type ResultNode = {
   _metadata?: { displayName?: string | null; url?: { default?: string | null } | null } | null;
 };
 
-const fmtDate = (iso?: string | null) =>
+const fmtDate = (iso: string | null | undefined, locale: Locale) =>
   iso
-    ? new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+    ? new Date(iso).toLocaleDateString(htmlLang(locale), { day: 'numeric', month: 'short', year: 'numeric' })
     : null;
 
 /** Small contextual line per result type — an event's dates, a place's price band. */
-function metaFor(key: SearchGroupKey, node: ResultNode): string | null {
+function metaFor(key: SearchGroupKey, node: ResultNode, locale: Locale): string | null {
   if (key === 'events') {
-    const start = fmtDate(node.startDate);
+    const start = fmtDate(node.startDate, locale);
     if (!start) return null;
-    const end = fmtDate(node.endDate);
+    const end = fmtDate(node.endDate, locale);
     return end && end !== start ? `${start} – ${end}` : start;
   }
   if (key === 'places') {
     const band = node.priceBand;
     if (!band) return null;
-    return band === 'free' ? 'Free' : band;
+    return band === 'free' ? t(locale).listing.free : band;
   }
   return null;
 }
 
-const SEARCH_QUERY = `query($q: String!, $w: Float!, $limit: Int!) {
-  places: PointOfInterest(where: { _fulltext: { match: $q } }, orderBy: { _ranking: SEMANTIC, _semanticWeight: $w }, limit: $limit) {
+/**
+ * Federated semantic query, built per locale. The `locale:` arg on each sub-query
+ * ranks against that language's index (Arabic content where translated, English
+ * fallback otherwise). `graphLocale` yields the bare Graph enum (en/ar), so it's
+ * interpolated — a GraphQL enum can't be passed as a String variable.
+ */
+const searchQuery = (locale: Locale) => `query($q: String!, $w: Float!, $limit: Int!) {
+  places: PointOfInterest(locale: ${graphLocale(locale)}, where: { _fulltext: { match: $q } }, orderBy: { _ranking: SEMANTIC, _semanticWeight: $w }, limit: $limit) {
     items { name summary priceBand _score _metadata { displayName url { default } } }
   }
-  events: Event(where: { _fulltext: { match: $q } }, orderBy: { _ranking: SEMANTIC, _semanticWeight: $w }, limit: $limit) {
+  events: Event(locale: ${graphLocale(locale)}, where: { _fulltext: { match: $q } }, orderBy: { _ranking: SEMANTIC, _semanticWeight: $w }, limit: $limit) {
     items { name summary startDate endDate _score _metadata { displayName url { default } } }
   }
-  neighbourhoods: Area(where: { _fulltext: { match: $q } }, orderBy: { _ranking: SEMANTIC, _semanticWeight: $w }, limit: $limit) {
+  neighbourhoods: Area(locale: ${graphLocale(locale)}, where: { _fulltext: { match: $q } }, orderBy: { _ranking: SEMANTIC, _semanticWeight: $w }, limit: $limit) {
     items { name summary _score _metadata { displayName url { default } } }
   }
 }`;
@@ -162,45 +201,55 @@ function dropWeakMatches(nodes: ResultNode[]): ResultNode[] {
  * Cached per request so metadata + page share one call.
  */
 export const search = cache(
-  cachedGraphRead(async (rawQuery: string, limit: number = DEFAULT_LIMIT): Promise<SearchResults> => {
-    const query = rawQuery.trim();
-    const normalizedQuery = normalizeQuery(query);
-    const empty: SearchResults = { query, normalizedQuery, groups: [], total: 0 };
-    if (!normalizedQuery) return empty;
+  cachedGraphRead(
+    async (
+      rawQuery: string,
+      locale: Locale = DEFAULT_LOCALE,
+      limit: number = DEFAULT_LIMIT,
+    ): Promise<SearchResults> => {
+      const query = rawQuery.trim();
+      const normalizedQuery = normalizeQuery(query, locale);
+      const empty: SearchResults = { query, normalizedQuery, groups: [], total: 0 };
+      if (!normalizedQuery) return empty;
 
-    try {
-      const data = (await getClient().request(SEARCH_QUERY, {
-        q: normalizedQuery,
-        w: SEMANTIC_WEIGHT,
-        limit,
-      })) as Record<SearchGroupKey, { items?: ResultNode[] } | undefined>;
+      const m = t(locale);
+      try {
+        const data = (await getClient().request(searchQuery(locale), {
+          q: normalizedQuery,
+          w: SEMANTIC_WEIGHT,
+          limit,
+        })) as Record<SearchGroupKey, { items?: ResultNode[] } | undefined>;
 
-      const groups = (Object.keys(GROUP_META) as SearchGroupKey[])
-        .map((key) => {
-          // A result with no URL can't be navigated to — drop it rather than render
-          // a dead card. Filter that BEFORE thresholding so an unroutable top hit
-          // can't set the bar for everything else.
-          const routable = (data?.[key]?.items ?? []).filter(
-            (node) => node._metadata?.url?.default,
-          );
-          const items = dropWeakMatches(routable).map((node) => ({
-            name: node.name ?? node._metadata?.displayName ?? 'Untitled',
-            summary: node.summary ?? null,
-            path: node._metadata!.url!.default!,
-            meta: metaFor(key, node),
-          }));
-          return { key, ...GROUP_META[key], items };
-        })
-        .filter((group) => group.items.length > 0);
+        const groups = (Object.keys(GROUP_HREF) as SearchGroupKey[])
+          .map((key) => {
+            // A result with no URL can't be navigated to — drop it rather than render
+            // a dead card. Filter that BEFORE thresholding so an unroutable top hit
+            // can't set the bar for everything else.
+            const routable = (data?.[key]?.items ?? []).filter(
+              (node) => node._metadata?.url?.default,
+            );
+            const items = dropWeakMatches(routable).map((node) => ({
+              name: node.name ?? node._metadata?.displayName ?? 'Untitled',
+              summary: node.summary ?? null,
+              // CMS URLs are master-locale (unprefixed); prefix per locale so an
+              // Arabic result links to /ar/… not the English page.
+              path: toAppPath(locale, node._metadata!.url!.default!),
+              meta: metaFor(key, node, locale),
+            }));
+            return { key, label: groupLabel(key, m), href: withLocale(locale, GROUP_HREF[key]), items };
+          })
+          .filter((group) => group.items.length > 0);
 
-      return {
-        query,
-        normalizedQuery,
-        groups,
-        total: groups.reduce((sum, group) => sum + group.items.length, 0),
-      };
-    } catch {
-      return empty;
-    }
-  }, ['semantic-search']),
+        return {
+          query,
+          normalizedQuery,
+          groups,
+          total: groups.reduce((sum, group) => sum + group.items.length, 0),
+        };
+      } catch {
+        return empty;
+      }
+    },
+    ['semantic-search'],
+  ),
 );

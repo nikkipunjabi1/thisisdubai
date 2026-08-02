@@ -13,8 +13,8 @@ import { t } from '@/lib/messages';
  * /<locale>/search — semantic search results, server-rendered and URL-driven (`?q=`).
  * Matching runs on Optimizely Graph's vector ranking (matches on MEANING). Results are
  * grouped by section (Graph scores aren't comparable across types) and are `noindex`.
- * Locale-aware AR search (the query's `locale` arg + AR stop-words) is L4; for now the
- * ranking runs in the default index and the chrome is locale-prefixed.
+ * Search is locale-aware (L4): the query federates against the locale's Graph index,
+ * uses the locale's stop-word set, and result cards/labels are locale-prefixed.
  */
 
 type Props = {
@@ -24,9 +24,6 @@ type Props = {
 
 const readQuery = (q: string | string[] | undefined) =>
   (Array.isArray(q) ? q[0] : q ?? '').trim();
-
-/** Queries that show off semantic matching against the seeded content. */
-const SUGGESTIONS = ['skyscraper', 'fish tank', 'traditional heritage', 'swimming sea'];
 
 export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
   const { locale: raw } = await params;
@@ -48,7 +45,7 @@ export default async function SearchPage({ params, searchParams }: Props) {
   const locale = isLocale(raw) ? raw : DEFAULT_LOCALE;
   const m = t(locale);
   const query = readQuery((await searchParams).q);
-  const results = query ? await search(query) : null;
+  const results = query ? await search(query, locale) : null;
   const searchHref = (q: string) => `${withLocale(locale, '/search')}?q=${encodeURIComponent(q)}`;
 
   return (
@@ -77,7 +74,7 @@ export default async function SearchPage({ params, searchParams }: Props) {
           <div className="mt-10 max-w-3xl">
             <p className="text-sm text-muted">{m.search.tryThese}</p>
             <ul className="mt-4 flex flex-wrap gap-3">
-              {SUGGESTIONS.map((s) => (
+              {m.search.suggestions.map((s) => (
                 <li key={s}>
                   <Link
                     href={searchHref(s)}

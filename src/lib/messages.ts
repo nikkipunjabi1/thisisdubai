@@ -36,6 +36,8 @@ const en = {
     poweredBy:
       'Powered by Optimizely Graph’s semantic search — it matches on meaning, not just keywords.',
     tryThese: 'Try one of these:',
+    /** Example queries that show off semantic (meaning-based) matching. */
+    suggestions: ['skyscraper', 'fish tank', 'traditional heritage', 'swimming sea'],
     noMatchesPre: 'No matches for',
     browseHint: 'Try fewer or more general words — or browse',
     and: 'and',
@@ -99,6 +101,7 @@ const ar: Messages = {
     results: 'النتائج',
     poweredBy: 'مدعوم بالبحث الدلالي من Optimizely Graph — يطابق المعنى لا الكلمات فقط.',
     tryThese: 'جرّب أحد هذه:',
+    suggestions: ['ناطحة سحاب', 'حوض أسماك', 'التراث التقليدي', 'السباحة في البحر'],
     noMatchesPre: 'لا نتائج لـ',
     browseHint: 'جرّب كلمات أقل أو أعمّ — أو تصفّح',
     and: 'و',
