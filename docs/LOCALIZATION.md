@@ -161,5 +161,25 @@ locale-prefixed yet, so some in-page links bounce through the `/ → /en` redire
   English regardless of locale (L3). `src/components/content/Article.tsx` (rare composed-block path)
   still defaults to EN for related places.
 
+## L3 — UI string catalog — DONE
+
+The chrome the app renders itself (not CMS content) is now localized via a lightweight,
+dependency-free catalog: **`src/lib/messages.ts`** — `en` is the source-of-truth shape,
+`ar: Messages` forces every key, and `t(locale)` returns the whole dictionary
+(`const m = t(locale); m.nav.home`; interpolated strings are functions,
+`m.footer.copyright(year)`).
+
+Localized: `SiteHeader` nav + Search + home aria; `SiteFooter` nav + tagline + disclaimer +
+copyright; the `/search` page (eyebrow, prompt, powered-by, "no matches", browse links,
+result count) + `SearchBox` (placeholder, button, locale-aware action); `ListingControls`
+(result count, Sort, Price, Tags, Clear-all, sort labels, "Free"); breadcrumb "Home"; and
+detail micro-labels on POI/Event/Area/Article (Price, Opening hours, Location, View on map,
+Tickets, Places mentioned, "By …"). Detail components read the locale via `getRequestLocale()`
+(they render via `OptimizelyComponent`, so no prop to thread). Dates on Event/Article now use
+`formatDate(locale, …)`. Verified: `/ar` chrome renders Arabic, `/en` unchanged, build green.
+
+**Deferred:** the `/search` example-query chips (tied to AR search behaviour → L4); AR strings
+are a solid first pass — refine in-editor / via Opal.
+
 ## Related docs
 - `docs/ROADMAP.md` (Phase 3 — Localization), `docs/SPRINTS.md` (S4.5 Opal), `docs/OPTIMIZELY-RESEARCH.md:113–124` (Graph 28-language semantic support + `locale` recipe), `docs/OPTIMIZELY-BEST-PRACTICES.md:91` (`hreflang`), `docs/BLOG-PLAN.md` (#7, #10).

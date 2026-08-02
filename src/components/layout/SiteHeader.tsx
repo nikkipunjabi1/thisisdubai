@@ -2,29 +2,30 @@ import Link from 'next/link';
 import { Wordmark } from '@/components/ui/Wordmark';
 import { LocaleSwitcher } from '@/components/layout/LocaleSwitcher';
 import { withLocale, type Locale } from '@/lib/i18n';
+import { t } from '@/lib/messages';
 
 /**
  * SiteHeader — sticky top chrome: the (original) This is Dubai wordmark + primary
  * nav. Nav is data-driven so new sections (Events, Areas…) slot in as they ship.
  * Links are locale-prefixed (`withLocale`) so navigation stays within the active
  * locale — a cross-locale jump only happens via the LocaleSwitcher (full reload).
- * Labels are localized in L3; for now they're English regardless of locale.
+ * Labels come from the per-locale string catalog (`t`).
  */
-const NAV: { href: string; label: string }[] = [
-  { href: '/', label: 'Home' },
-  { href: '/places-to-visit', label: 'Places to Visit' },
-  { href: '/neighbourhoods', label: 'Neighbourhoods' },
-  { href: '/events', label: 'Events' },
-  { href: '/articles', label: 'Articles' },
-];
-
 export function SiteHeader({ locale, pathname }: { locale: Locale; pathname: string }) {
+  const m = t(locale);
+  const NAV: { href: string; label: string }[] = [
+    { href: '/', label: m.nav.home },
+    { href: '/places-to-visit', label: m.nav.places },
+    { href: '/neighbourhoods', label: m.nav.neighbourhoods },
+    { href: '/events', label: m.nav.events },
+    { href: '/articles', label: m.nav.articles },
+  ];
   return (
     <header className="sticky top-0 z-50 border-b border-line bg-bg/80 backdrop-blur">
       <div className="mx-auto flex max-w-page items-center justify-between px-6 py-4 md:px-10 lg:px-16">
         <Link
           href={withLocale(locale, '/')}
-          aria-label="This is Dubai — home"
+          aria-label={m.nav.homeAria}
           className="transition hover:opacity-80"
         >
           <Wordmark />
@@ -56,7 +57,7 @@ export function SiteHeader({ locale, pathname }: { locale: Locale; pathname: str
                   <path d="m13.5 13.5 3.5 3.5" strokeLinecap="round" />
                 </svg>
                 {/* Icon-only on narrow screens — the header nav is already tight there. */}
-                <span className="sr-only sm:not-sr-only">Search</span>
+                <span className="sr-only sm:not-sr-only">{m.nav.search}</span>
               </Link>
             </li>
             <li>

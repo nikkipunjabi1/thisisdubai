@@ -7,6 +7,7 @@ import { Breadcrumbs } from '@/components/ui/Breadcrumbs';
 import { search } from '@/lib/search';
 import { getSiteSettings, buildPageTitle } from '@/lib/seo';
 import { isLocale, withLocale, DEFAULT_LOCALE } from '@/lib/i18n';
+import { t } from '@/lib/messages';
 
 /**
  * /<locale>/search — semantic search results, server-rendered and URL-driven (`?q=`).
@@ -27,14 +28,17 @@ const readQuery = (q: string | string[] | undefined) =>
 /** Queries that show off semantic matching against the seeded content. */
 const SUGGESTIONS = ['skyscraper', 'fish tank', 'traditional heritage', 'swimming sea'];
 
-export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
+  const { locale: raw } = await params;
+  const locale = isLocale(raw) ? raw : DEFAULT_LOCALE;
+  const m = t(locale);
   const query = readQuery((await searchParams).q);
   const settings = await getSiteSettings();
   return {
     title: {
-      absolute: buildPageTitle(settings, query ? `Search: ${query}` : 'Search'),
+      absolute: buildPageTitle(settings, query ? `${m.search.eyebrow}: ${query}` : m.search.eyebrow),
     },
-    description: 'Search places to visit, events and neighbourhoods across This is Dubai.',
+    description: m.search.metaDescription,
     robots: { index: false, follow: true },
   };
 }
@@ -42,6 +46,7 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
 export default async function SearchPage({ params, searchParams }: Props) {
   const { locale: raw } = await params;
   const locale = isLocale(raw) ? raw : DEFAULT_LOCALE;
+  const m = t(locale);
   const query = readQuery((await searchParams).q);
   const results = query ? await search(query) : null;
   const searchHref = (q: string) => `${withLocale(locale, '/search')}?q=${encodeURIComponent(q)}`;
@@ -50,30 +55,27 @@ export default async function SearchPage({ params, searchParams }: Props) {
     <>
       <Breadcrumbs
         crumbs={[
-          { name: 'Home', url: withLocale(locale, '/') },
-          { name: 'Search', url: null },
+          { name: m.crumbs.home, url: withLocale(locale, '/') },
+          { name: m.crumbs.search, url: null },
         ]}
       />
       <SectionShell theme="dark" spacing="spacious">
         <header className="max-w-3xl">
-          <p className="eyebrow">Search</p>
+          <p className="eyebrow">{m.search.eyebrow}</p>
           <h1 className="mt-4 text-[clamp(2.5rem,6vw,4.5rem)]">
-            {query ? 'Results' : 'What are you looking for?'}
+            {query ? m.search.results : m.search.prompt}
           </h1>
-          <p className="mt-6 text-xl text-muted">
-            Powered by Optimizely Graph&rsquo;s semantic search — it matches on meaning, not just
-            keywords.
-          </p>
+          <p className="mt-6 text-xl text-muted">{m.search.poweredBy}</p>
         </header>
 
         <div className="mt-10 max-w-3xl">
-          <SearchBox defaultValue={query} autoFocus={!query} />
+          <SearchBox defaultValue={query} autoFocus={!query} locale={locale} />
         </div>
 
         {/* No query yet — invite the user in with queries that demonstrate semantics. */}
         {!results ? (
           <div className="mt-10 max-w-3xl">
-            <p className="text-sm text-muted">Try one of these:</p>
+            <p className="text-sm text-muted">{m.search.tryThese}</p>
             <ul className="mt-4 flex flex-wrap gap-3">
               {SUGGESTIONS.map((s) => (
                 <li key={s}>
@@ -92,20 +94,20 @@ export default async function SearchPage({ params, searchParams }: Props) {
         {results && results.total === 0 ? (
           <div className="mt-12 max-w-3xl border-t border-line pt-10">
             <p className="text-2xl">
-              No matches for <span className="text-accent">&ldquo;{results.query}&rdquo;</span>.
+              {m.search.noMatchesPre} <span className="text-accent">&ldquo;{results.query}&rdquo;</span>.
             </p>
             <p className="mt-4 text-muted">
-              Try fewer or more general words — or browse{' '}
+              {m.search.browseHint}{' '}
               <Link href={withLocale(locale, '/places-to-visit')} className="text-accent hover:underline">
-                Places to Visit
+                {m.nav.places}
               </Link>
               ,{' '}
               <Link href={withLocale(locale, '/events')} className="text-accent hover:underline">
-                Events
+                {m.nav.events}
               </Link>{' '}
-              and{' '}
+              {m.search.and}{' '}
               <Link href={withLocale(locale, '/neighbourhoods')} className="text-accent hover:underline">
-                Neighbourhoods
+                {m.nav.neighbourhoods}
               </Link>
               .
             </p>
@@ -115,7 +117,7 @@ export default async function SearchPage({ params, searchParams }: Props) {
         {results && results.total > 0 ? (
           <div className="mt-12 space-y-16">
             <p className="text-sm text-muted">
-              {results.total} {results.total === 1 ? 'result' : 'results'} for{' '}
+              {m.search.resultsFor(results.total)}{' '}
               <span className="text-fg">&ldquo;{results.query}&rdquo;</span>
             </p>
             {results.groups.map((group) => (
@@ -131,7 +133,7 @@ export default async function SearchPage({ params, searchParams }: Props) {
                     href={group.href}
                     className="text-sm font-medium text-accent transition hover:translate-x-0.5"
                   >
-                    Browse all {group.label} →
+                    {m.search.browseAll(group.label)} →
                   </Link>
                 </div>
                 <SectionCardGrid items={group.items} />

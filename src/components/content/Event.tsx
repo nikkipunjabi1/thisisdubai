@@ -7,6 +7,9 @@ import { Prose } from '@/components/ui/Prose';
 import { SeoMetadataContract } from './SeoMetadata';
 import { AreaContentType } from './Area';
 import { TagContentType } from './Tag';
+import { getRequestLocale } from '@/lib/server-locale';
+import { formatDate } from '@/lib/i18n';
+import { t } from '@/lib/messages';
 
 /** Event — a dated "what's on" happening (festival, exhibition, concert, dining event). */
 export const EventContentType = contentType({
@@ -30,10 +33,10 @@ export const EventContentType = contentType({
   },
 });
 
-const fmt = (iso?: string | null) =>
-  iso ? new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : null;
-
-export default function Event({ content }: { content: ContentProps<typeof EventContentType> }) {
+export default async function Event({ content }: { content: ContentProps<typeof EventContentType> }) {
+  const locale = await getRequestLocale();
+  const m = t(locale);
+  const fmt = (iso?: string | null) => (iso ? formatDate(locale, iso) : null);
   const { pa } = getPreviewUtils(content);
   // getAlt prefers the AltText authored on the DAM asset, falling back to the name.
   const { getAlt } = damAssets(content);
@@ -79,7 +82,7 @@ export default function Event({ content }: { content: ContentProps<typeof EventC
               rel="noopener noreferrer"
               className="inline-block rounded-full bg-champagne px-7 py-3 text-sm font-semibold text-obsidian transition hover:bg-champagne-hi"
             >
-              Tickets &amp; info →
+              {m.detail.tickets}
             </a>
           </div>
         ) : null}

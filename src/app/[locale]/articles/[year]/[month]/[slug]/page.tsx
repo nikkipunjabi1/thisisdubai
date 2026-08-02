@@ -9,7 +9,8 @@ import { JsonLd } from '@/components/ui/JsonLd';
 import { DetailHero } from '@/components/media/DetailHero';
 import { Prose } from '@/components/ui/Prose';
 import { Breadcrumbs } from '@/components/ui/Breadcrumbs';
-import { isLocale, withLocale, DEFAULT_LOCALE, LOCALES } from '@/lib/i18n';
+import { isLocale, withLocale, formatDate, DEFAULT_LOCALE, LOCALES } from '@/lib/i18n';
+import { t } from '@/lib/messages';
 
 /**
  * Article detail — `/<locale>/articles/<year>/<month>/<slug>`.
@@ -31,8 +32,6 @@ export async function generateStaticParams() {
   return LOCALES.flatMap((locale) => params.map((p) => ({ locale, ...p })));
 }
 
-const fmtDate = (iso?: string | null) =>
-  iso ? new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : null;
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale: raw, slug } = await params;
@@ -58,12 +57,13 @@ export default async function ArticlePage({ params }: Props) {
   const article = await getArticleBySlug(slug, locale);
   if (!article) notFound();
 
+  const m = t(locale);
   const related = await getPlacesByKeys(article.relatedPlaceKeys, locale);
-  const published = fmtDate(article.publishDate);
+  const published = article.publishDate ? formatDate(locale, article.publishDate) : null;
 
   const crumbs = [
-    { name: 'Home', url: withLocale(locale, '/') },
-    { name: 'Articles', url: withLocale(locale, '/articles') },
+    { name: m.crumbs.home, url: withLocale(locale, '/') },
+    { name: m.crumbs.articles, url: withLocale(locale, '/articles') },
     { name: article.title, url: null },
   ];
 
@@ -87,7 +87,7 @@ export default async function ArticlePage({ params }: Props) {
           <header className="max-w-3xl">
             {published || article.author ? (
               <p className="eyebrow">
-                {[published, article.author ? `By ${article.author}` : null].filter(Boolean).join(' · ')}
+                {[published, article.author ? m.detail.by(article.author) : null].filter(Boolean).join(' · ')}
               </p>
             ) : null}
             <h1 className="mt-4 text-[clamp(2.25rem,5vw,3.75rem)]">{article.title}</h1>
@@ -100,7 +100,7 @@ export default async function ArticlePage({ params }: Props) {
 
           {related.length > 0 ? (
             <aside className="mt-16 border-t border-line pt-8">
-              <h2 className="eyebrow">Places mentioned</h2>
+              <h2 className="eyebrow">{m.detail.placesMentioned}</h2>
               <ul className="mt-4 flex flex-wrap gap-2">
                 {related.map((p) => (
                   <li key={p.path}>

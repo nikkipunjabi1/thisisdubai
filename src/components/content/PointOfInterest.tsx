@@ -8,6 +8,8 @@ import { priceLabel } from '@/lib/pois';
 import { SeoMetadataContract } from './SeoMetadata';
 import { AreaContentType } from './Area';
 import { TagContentType } from './Tag';
+import { getRequestLocale } from '@/lib/server-locale';
+import { t } from '@/lib/messages';
 
 /**
  * PointOfInterest — a place to visit / thing to do (the "Places to visit" type).
@@ -130,16 +132,17 @@ export const PointOfInterestContentType = contentType({
   },
 });
 
-export default function PointOfInterest({
+export default async function PointOfInterest({
   content,
 }: {
   content: ContentProps<typeof PointOfInterestContentType>;
 }) {
+  const m = t(await getRequestLocale());
   const { pa } = getPreviewUtils(content);
   // getAlt prefers the AltText authored on the DAM asset, falling back to the name.
   const { getAlt } = damAssets(content);
   const hero = content.images?.[0];
-  const price = priceLabel(content.priceBand ?? null);
+  const price = content.priceBand === 'free' ? m.listing.free : priceLabel(content.priceBand ?? null);
   const accolades = (content.accolades ?? []).filter((a): a is string => Boolean(a));
   const hasGeo = content.latitude != null && content.longitude != null;
   const mapUrl = hasGeo
@@ -189,19 +192,19 @@ export default function PointOfInterest({
         <dl className="mt-10 grid max-w-xl grid-cols-1 gap-x-8 gap-y-4 border-t border-line pt-8 sm:grid-cols-2">
           {price ? (
             <div>
-              <dt className="eyebrow">Price</dt>
+              <dt className="eyebrow">{m.detail.price}</dt>
               <dd className="mt-1 text-lg">{price}</dd>
             </div>
           ) : null}
           {content.openingHours ? (
             <div>
-              <dt className="eyebrow">Opening hours</dt>
+              <dt className="eyebrow">{m.detail.openingHours}</dt>
               <dd className="mt-1 text-lg">{content.openingHours}</dd>
             </div>
           ) : null}
           {mapUrl ? (
             <div>
-              <dt className="eyebrow">Location</dt>
+              <dt className="eyebrow">{m.detail.location}</dt>
               <dd className="mt-1 text-lg">
                 <a
                   href={mapUrl}
@@ -209,7 +212,7 @@ export default function PointOfInterest({
                   rel="noopener noreferrer"
                   className="text-accent hover:underline"
                 >
-                  View on map →
+                  {m.detail.viewOnMap}
                 </a>
               </dd>
             </div>

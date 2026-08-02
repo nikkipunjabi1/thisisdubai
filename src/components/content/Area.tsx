@@ -4,6 +4,8 @@ import { SectionShell } from '@/components/ui/SectionShell';
 import { JsonLd } from '@/components/ui/JsonLd';
 import { DetailHero } from '@/components/media/DetailHero';
 import { Prose } from '@/components/ui/Prose';
+import { getRequestLocale } from '@/lib/server-locale';
+import { t } from '@/lib/messages';
 import { SeoMetadataContract } from './SeoMetadata';
 
 /**
@@ -66,7 +68,8 @@ export const AreaContentType = contentType({
   },
 });
 
-export default function Area({ content }: { content: ContentProps<typeof AreaContentType> }) {
+export default async function Area({ content }: { content: ContentProps<typeof AreaContentType> }) {
+  const m = t(await getRequestLocale());
   const { pa } = getPreviewUtils(content);
   // getAlt prefers the AltText authored on the DAM asset, falling back to the name.
   const { getAlt } = damAssets(content);
@@ -108,10 +111,10 @@ export default function Area({ content }: { content: ContentProps<typeof AreaCon
 
         {mapUrl ? (
           <dl className="mt-10 border-t border-line pt-8">
-            <dt className="eyebrow">Location</dt>
+            <dt className="eyebrow">{m.detail.location}</dt>
             <dd className="mt-1 text-lg">
               <a href={mapUrl} target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">
-                View on map →
+                {m.detail.viewOnMap}
               </a>
             </dd>
           </dl>
