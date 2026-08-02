@@ -62,23 +62,35 @@ data loss"* and needs `--force`. Direction is everything:
 The CLI can't tell the two apart, so it warns on both. OFF→ON with `--force` is safe — but snapshot
 your counts before and after anyway. (I did; 101 POIs / 20 events / 19 areas, byte-identical after.)
 
-## Gotcha 3 — Visual Builder blocks localize *differently* — don't force `isLocalized` on them
+## Gotcha 3 — "block" isn't the deciding factor — *how the block is used* is
 
-Try that same `isLocalized` pass on your VB blocks (Hero, Section Heading, Rich Text) and the push
-reports a **breaking change** it won't apply. That's the CMS telling you something real: **Visual
-Builder content is localized at the *composition* level, not per field.** You create the language
-version of the *experience* and re-author its canvas; the inline component values are held
-per-language by the experience — there's no `[CultureSpecific]` flag to set on a block property.
+Blocks are `_component` types, but they split into two groups that localize completely differently.
+Getting this wrong is easy, because the intuitive rule ("blocks don't need the flag") is only *half*
+right.
 
-Proof from Graph after translating the home experience's Arabic canvas:
+**Blocks queried as their own content DO need "Unique value per language."** A shared block that Graph
+treats as a root type — here **`ArticlePost`** (articles) and **`TagTerm`** (taxonomy), both exposed
+via `compositionBehaviors` and fetched directly — has its own content item with language versions,
+exactly like a page. So its translatable fields (`title`, `excerpt`, `body`, tag `name`/`synonyms`…)
+need `isLocalized: true` — set it in code and `--force` it through, same as a page type. Verified in
+the CMS: `ArticlePost.title` and `TagTerm.name` are `isLocalized: true`.
+
+**Inline Visual Builder canvas components do NOT — and the CMS won't let you.** The blocks you *drop
+on an experience's canvas* — Hero, Section Heading, Rich Text, Section Listing — are a different
+story. Add `isLocalized` to them and `opti-push` reports a **breaking change** it refuses to apply.
+That's correct: their values live inside the **experience's composition**, which is itself
+language-versioned. You translate them by creating the language version of the *experience* and
+re-authoring its canvas — there's no per-field flag (the CMS keeps them `isLocalized: false`). Proof
+from Graph, with the block property flags still `false`:
 
 ```json
 { "_metadata": { "locale": "ar" },
   "composition": { "nodes": [ { "component": { "heading": "دبي الحقيقية، بدون تزييف." } } ] } }
 ```
 
-So: `isLocalized` on **standalone content types** (POI, Event, Article, Hotel, Tag, SEO contract);
-**nothing** on VB blocks/experiences — translate those by authoring the language version.
+So the real rule is about **retrieval, not the base type**: anything you query as its own content
+(pages *and* root-exposed shared blocks like `ArticlePost`/`TagTerm`) needs `isLocalized`; anything
+that only exists as an inline node inside an experience's composition does not.
 
 ## Gotcha 4 — The CMS gives non-default locales a URL prefix; the default gets none
 
@@ -178,6 +190,66 @@ translations, configuring fallback, semantic search in the new language.
 None of the day-1 items slow down a single-language launch. All of them save you a forced, data-loss-
 flagged migration later. If there's one line to remember: **structure for multi-locale up front; defer
 the content.**
+
+## The recipe: turning on per-language fields (in code, one command)
+
+Because content types here are defined in **code** (the SDK's `contentType({...})`), "Unique value per
+language" is just a property flag — `isLocalized: true`. You set it on the translatable fields and
+push; there's no per-field clicking in the CMS UI, and it applies uniformly to every page type **and**
+every root-exposed shared block (`ArticlePost`, `TagTerm`). Localize the human-readable text; leave
+structure shared:
+
+```ts
+export const HotelContentType = contentType({
+  key: 'Hotel',
+  baseType: '_page',
+  extends: SeoMetadataContract,          // metaTitle/metaDescription localized ONCE, for every type
+  properties: {
+    name:       { type: 'string',   isLocalized: true, /* … */ },
+    summary:    { type: 'string',   isLocalized: true },
+    body:       { type: 'richText', isLocalized: true },
+    amenities:  { type: 'array', items: { type: 'string' }, isLocalized: true },
+    // shared — a number / reference / URL is the same in every language, maintain it once:
+    starRating: { type: 'integer' },
+    priceBand:  { type: 'string', format: 'selectOne', /* … */ },
+    latitude:   { type: 'float' },
+    longitude:  { type: 'float' },
+    area:       { type: 'contentReference', /* … */ },
+    images:     { type: 'array', items: { type: 'contentReference', /* … */ } },
+    bookingUrl: { type: 'url' },
+  },
+});
+```
+
+One command syncs the whole model to the CMS:
+
+```bash
+npm run opti-push          # → optimizely-cms-cli config push optimizely.config.mjs
+```
+
+**Starting a new (multi-site / multi-locale) project? Do this on day 1, before there's content** — the
+push is then a clean create, no warnings, and every language you enable later "just works." **Retrofitting
+onto a type that already has data** (our case) trips the data-loss guard, so add `--force` — safe here
+because OFF→ON *preserves* existing values (Gotcha 2), but snapshot your counts first:
+
+```bash
+npm run opti-push -- --force
+```
+
+**What to flag vs leave shared** — the split that saved us re-entering the same data in every language:
+
+| `isLocalized: true` (translate) | Left shared (no flag) — and why |
+|---|---|
+| name / title, summary / excerpt, body | canonicalUrl, ogImage — not language-specific |
+| SEO metaTitle / metaDescription (on the shared contract) | **slug** — the URL / filter key; forking it splits routing |
+| accolades, amenities, highlights (human text) | references (images, area, tags, related) — maintain once |
+| Tag name / description / **synonyms** (AR search needs its own) | numbers & geo (starRating, lat/long), enums (priceBand) |
+| | dates (publishDate), URLs (bookingUrl), booleans (noindex) |
+| | author (a proper noun), searchKeywords (auto-derived from tags) |
+
+Two multipliers: putting `isLocalized` on the shared **`SeoMetadata` contract** localizes the SEO
+title/description for *every* type that extends it, in one edit; and inline VB canvas blocks (Hero,
+headings) need none of this — they localize via the experience's composition (Gotcha 3).
 
 ## Result
 

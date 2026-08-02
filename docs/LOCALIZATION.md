@@ -109,9 +109,13 @@ Confirmed against Graph with the single key:
 - **Only the home experience is actually translated so far** — `HomePage` returns a real `locale: ar`
   version with Arabic composition (`heading: "دبي الحقيقية، بدون تزييف."`). **0 of 101 POIs** have a
   real AR version yet (all fall back to EN). Bulk translation is L6.
-- **VB composition localization confirmed (Wave B mechanism).** The home page's Arabic block text
-  proves VB experiences localize by authoring the language version of the *experience* — no per-field
-  `isLocalized` on blocks needed (which is why forcing it was breaking). See [[#22]].
+- **`isLocalized` is decided by RETRIEVAL, not base type (verified in the CMS).** Anything queried as
+  its own content needs the flag — that includes the root-exposed shared `_component` blocks
+  `ArticlePost` (title/excerpt/body = `isLocalized: true`) and `TagTerm` (name/description/synonyms =
+  `true`), same as page types. **Inline VB canvas components** (`HeroBanner`, `SectionHeading`,
+  `RichTextBlock`, `SectionListing`) are `isLocalized: false` and `opti-push` refuses to change that
+  (breaking) — they localize via the *experience's* composition language version (the home page's
+  Arabic block text proves it). So there is **no drift**: code and CMS agree on every type.
 
 ## L1 — routing + RTL shell — DONE
 
