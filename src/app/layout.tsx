@@ -133,7 +133,12 @@ const bodyFontArabic = Noto_Sans_Arabic({
  */
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getSiteSettings();
+  // `metadataBase` makes every relative canonical/hreflang/OG URL absolute — a hard
+  // requirement for hreflang alternates (L5). Sourced from APPLICATION_HOST; omitted
+  // when unset (CI/local) so Next just uses relative URLs instead of throwing.
+  const base = process.env.APPLICATION_HOST?.replace(/\/$/, '');
   return {
+    ...(base ? { metadataBase: new URL(base) } : {}),
     title: {
       template: buildTitleTemplate(settings),
       default: buildTitleDefault(settings),

@@ -34,7 +34,7 @@ export async function generateStaticParams() {
 
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { locale: raw, slug } = await params;
+  const { locale: raw, year, month, slug } = await params;
   const locale = isLocale(raw) ? raw : DEFAULT_LOCALE;
   const [article, settings] = await Promise.all([getArticleBySlug(slug, locale), getSiteSettings()]);
   if (!article) return {};
@@ -48,6 +48,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     },
     settings,
     article.title,
+    { locale, path: `/articles/${year}/${month}/${slug}` },
   );
 }
 

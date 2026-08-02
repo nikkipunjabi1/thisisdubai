@@ -49,6 +49,15 @@ export function htmlLang(locale: Locale): string {
 }
 
 /**
+ * Open Graph locale (`og:locale`) — same BCP-47 language as `htmlLang`, but OG uses
+ * an UNDERSCORE (`en_GB`, `ar_AE`), not a hyphen. Derived from the one `HTML_LANG`
+ * map so the two never drift.
+ */
+export function ogLocale(locale: Locale): string {
+  return htmlLang(locale).replace('-', '_');
+}
+
+/**
  * The value passed to Graph / the SDK's `locale` option. Graph's `Locales` enum
  * for this instance must expose the exact language enabled in the CMS — update
  * this map if the CMS uses `ar-AE`/`ar_AE` rather than plain `ar` (confirm via the
