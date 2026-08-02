@@ -33,4 +33,20 @@ describe('normalizeQuery', () => {
   it('returns an empty string for empty input', () => {
     expect(normalizeQuery('   ')).toBe('');
   });
+
+  it('does not strip Arabic content words when defaulting to the English set', () => {
+    // English stop words never match Arabic tokens, so an AR query is safe even
+    // without passing the locale — nothing is lost.
+    expect(normalizeQuery('السباحة في البحر')).toBe('السباحة في البحر');
+  });
+
+  it('strips Arabic function words when the AR locale is passed', () => {
+    // "في" (in) is an Arabic stop word; the content words survive.
+    expect(normalizeQuery('السباحة في البحر', 'ar')).toBe('السباحة البحر');
+    expect(normalizeQuery('أين المطاعم على السطح', 'ar')).toBe('المطاعم السطح');
+  });
+
+  it('falls back to the original words when an AR query is ALL stop words', () => {
+    expect(normalizeQuery('في من على', 'ar')).toBe('في من على');
+  });
 });

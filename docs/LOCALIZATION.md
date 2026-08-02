@@ -181,5 +181,27 @@ Tickets, Places mentioned, "By …"). Detail components read the locale via `get
 **Deferred:** the `/search` example-query chips (tied to AR search behaviour → L4); AR strings
 are a solid first pass — refine in-editor / via Opal.
 
+## L4 — AR semantic search — DONE
+
+The whole search surface is now locale-aware (`src/lib/search.ts` + `src/app/[locale]/search/page.tsx`):
+
+- **Federated query per locale.** Each sub-query (PointOfInterest / Event / Area) now carries
+  `locale: en|ar`, so ranking runs against that language's Graph index; untranslated docs still
+  surface via the fallback language. `locale` is a GraphQL **enum**, so it's interpolated
+  (`graphLocale(locale)`), not bound as a variable. `locale` is also folded into the
+  `cachedGraphRead` key (a runtime arg), so EN and AR results cache separately.
+- **Per-locale stop words.** `normalizeQuery(raw, locale)` strips `STOP_WORDS[locale]`. The English
+  set no-ops on Arabic (so AR *looked* handled while noise words passed through) — Arabic gets its own
+  function-word set (`في، من، على، إلى…`). The bare definite article `ال` is intentionally omitted:
+  it's a **prefix** (`الشاطئ`), never a standalone token, so listing it would never match. Default arg
+  is EN, so the existing `normalizeQuery` tests + callers are untouched.
+- **Locale-correct output.** Result cards go through `toAppPath(locale, url)` (so an AR hit links to
+  `/ar/…`, not the English page), group headings reuse the nav labels via `t(locale)` (search + menu
+  never drift), the price-band "Free" meta uses `t(locale).listing.free`, dates use `htmlLang(locale)`,
+  and the example-query chips are per-locale (`m.search.suggestions`).
+- **Verified (curl):** `/en/search?q=skyscraper` → English labels, `/en/…` cards, "Free";
+  `/ar/search?q=ناطحة سحاب` → Arabic labels (أماكن للزيارة…), `/ar/…` cards, "مجاني"; AR suggestion
+  chips render + point at `/ar/search`. Tests: 9 passing (3 new AR cases); `tsc` clean.
+
 ## Related docs
 - `docs/ROADMAP.md` (Phase 3 — Localization), `docs/SPRINTS.md` (S4.5 Opal), `docs/OPTIMIZELY-RESEARCH.md:113–124` (Graph 28-language semantic support + `locale` recipe), `docs/OPTIMIZELY-BEST-PRACTICES.md:91` (`hreflang`), `docs/BLOG-PLAN.md` (#7, #10).
