@@ -1,13 +1,14 @@
 ---
-title: "Localizing an Optimizely SaaS + Next.js site to Arabic: the five gotchas nobody warns you about"
+title: "Localizing an Optimizely SaaS + Next.js site to Arabic: the six gotchas nobody warns you about"
 status: draft
 audience: Optimizely community / dev.to / LinkedIn (long-form)
 author: Nikki Punjabi
 tags: [optimizely, saas-cms, optimizely-graph, nextjs, localization, i18n, arabic, rtl, app-router]
 ---
 
-> **Draft for review.** The sequel (**#7b**) covers Arabic *semantic search* once that ships;
-> this post is the foundation — enabling the language, modelling for translation, and routing/RTL.
+> **Draft for review.** This post is the full localization foundation — enabling the language,
+> modelling for translation, routing/RTL, and locale-aware Arabic *semantic search*. Bulk
+> translation via Opal (#10) is the one follow-up still to come.
 
 > ⚠️ _Independent, unofficial learning project — not affiliated with any tourism authority or brand.
 > Original wordmark and royalty-free assets only (Unsplash / Pexels), credited._
@@ -160,6 +161,39 @@ One more, free of charge: a big App Router route move (deleting `app/page.tsx`, 
 can panic Turbopack's HMR (*"AppPageLoaderTree no longer exists"*). It's a stale-cache bug — `rm -rf
 .next` and restart, not a code error.
 
+## Gotcha 6 — Localized *semantic search* is a per-locale query **and** a per-locale stop-word list
+
+Two separate things have to be localized for search, and it's easy to do only the first.
+
+**1. Query the locale's index.** Optimizely Graph keeps a per-language vector index, so the fix is
+just the `locale:` arg on each federated sub-query — untranslated documents still surface via the
+fallback language, so Arabic search works before every item is translated:
+
+```graphql
+places: PointOfInterest(locale: ar, where: { _fulltext: { match: $q } },
+                        orderBy: { _ranking: SEMANTIC, _semanticWeight: 0.5 }, limit: $limit) { … }
+```
+
+(`locale` is a GraphQL **enum**, not a `String` — you interpolate `en`/`ar`, you can't bind it as a
+variable.)
+
+**2. Give each language its own stop-word list.** This is the part that bites. We strip stop words
+before querying because BM25 scores on `في`/`the` dwarf the semantic signal (*"swimming in the sea"*
+once ranked a historical district above every beach). But an **English** stop-word set does nothing
+for Arabic — it silently no-ops, so AR queries look "handled" while the noise words sail through.
+Arabic needs its own function words (`في، من، على، إلى…`), keyed by locale:
+
+```ts
+const STOP_WORDS: Record<Locale, Set<string>> = { en: STOP_WORDS_EN, ar: STOP_WORDS_AR };
+export function normalizeQuery(raw: string, locale: Locale = DEFAULT_LOCALE) { /* strip STOP_WORDS[locale] */ }
+```
+
+One Arabic subtlety: the definite article **`ال`** ("the") is a *prefix* (`الشاطئ` = "the beach"),
+not a standalone token — so it never appears as its own word to strip, and removing it would need
+real morphology. Leave it out of the list; don't fake it. Finally, remember to locale-prefix the
+result cards (`toAppPath(locale, url)`) and localize the group labels + example chips, or an Arabic
+search page links back into English.
+
 ## The bigger lesson: start i18n-ready even if you launch in one language
 
 Everything above was a **retrofit** — bolting Arabic onto a site already ~50% built in English.
@@ -256,10 +290,13 @@ headings) need none of this — they localize via the experience's composition (
 `/` → `/en`; `/en` and `/ar` both render; `<html>` is `lang="en-GB" dir="ltr"` vs
 `lang="ar-AE" dir="rtl"`; Arabic pages show real Arabic where translated and **fall back to English**
 (Graph delivery honours the fallback language) everywhere else — so the site is shippable long before
-every item is translated. Bulk translation (via Opal) and Arabic *semantic search* are the next posts.
+every item is translated. Arabic *semantic search* ships too — the whole search surface (federated
+query, stop words, result links, labels) is locale-aware (Gotcha 6). Bulk translation via Opal is the
+one piece still to come.
 
 ## Links
 - Repo: _(this project)_
-- Related: `src/proxy.ts`, `src/app/[locale]/`, `src/lib/i18n.ts`, `docs/LOCALIZATION.md`
-- Companion posts: **#8** Core Web Vitals (caching + AVIF), **#6** semantic search, **#7b** Arabic
-  semantic search (coming with L4)
+- Related: `src/proxy.ts`, `src/app/[locale]/`, `src/lib/i18n.ts`, `src/lib/search.ts`,
+  `src/lib/messages.ts`, `docs/LOCALIZATION.md`
+- Companion posts: **#8** Core Web Vitals (caching + AVIF), **#6** semantic search, **#10** bulk AR
+  translation via Opal (coming)
