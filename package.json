@@ -20,7 +20,8 @@
     "create-section": "node --env-file=.env scripts/create-section.mjs",
     "migrate:experiences": "node --env-file=.env scripts/migrate-experiences.mjs",
     "attach-assets": "node --env-file=.env scripts/attach-assets.mjs",
-    "source-images": "node --env-file=.env scripts/source-images.mjs"
+    "source-images": "node --env-file=.env scripts/source-images.mjs",
+    "seo:fill": "node --env-file=.env scripts/seo-fill.mjs"
   },
   "dependencies": {
     "@opentelemetry/api": "^1.9.0",
