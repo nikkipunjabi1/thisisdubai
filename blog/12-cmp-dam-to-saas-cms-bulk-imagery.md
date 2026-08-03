@@ -1,169 +1,183 @@
 ---
-title: "From CMP/DAM to Optimizely SaaS CMS: a bulk imagery pipeline (source → upload → attach)"
+title: "From CMP/DAM to Optimizely SaaS CMS: a Bulk Imagery Pipeline (source → upload → attach)"
 status: draft
 audience: Optimizely community / dev.to / LinkedIn (long-form)
 author: Nikki Punjabi
-tags: [optimizely, saas-cms, cmp, dam, optimizely-graph, nextjs, automation, digital-asset-management]
+tags: [optimizely, saas-cms, cmp, dam, optimizely-graph, headless, automation, digital-asset-management]
 ---
 
-> **Draft for your review.** Edit the voice/details freely before publishing. A LinkedIn variant
-> can be spun off from the intro + the two gotcha boxes.
+> **Draft for review.** Screenshot placeholders are marked 📷, so swap in real captures from your own
+> Optimizely SaaS / CMP instance before publishing.
 
-> ⚠️ _Independent, unofficial learning project — not affiliated with any tourism authority or brand.
-> Original wordmark and **royalty-free assets only** (Unsplash / Pexels), credited._
+## The real-world scenario
 
-## What I set out to do
+Picture a site that has scaled to a few hundred content items, a mix of listing entries, events,
+sections, and articles, and only a handful of them have a photo. Every other card and hero is a
+monogram placeholder. Attaching hundreds of images by hand in the CMS UI (find the item, open the media
+picker, upload, publish, repeat) is not a task any human should do twice.
 
-The demo had scaled up to **150 content items** — 101 points of interest, 20 events, 19
-neighbourhoods, 10 articles — and roughly **ten of them had a photo**. Every other card and hero was
-a monogram placeholder. Attaching 150 images by hand in the CMS UI (find the item, open the media
-picker, upload, publish, repeat) is not a task a human should do twice.
+So the goal is a **repeatable pipeline**: point it at the content, and every item ends up with a
+relevant, correctly-licensed image, attached and published, with attribution recorded. This post is
+that pipeline, including the bug that silently stranded a batch of images as unpublished drafts while
+cheerfully reporting success.
 
-So I wanted a **repeatable pipeline**: point it at the content, and every item ends up with a
-relevant, correctly-licensed image — attached and published — with attribution recorded. Here's the
-whole thing, including the bug that silently stranded 20 images as unpublished drafts while reporting
-success.
+## Why this is trickier than it looks on Optimizely SaaS
 
-## The mental model: three stages, and only two are automatable the way you'd guess
-
-An image on a SaaS CMS content item is the end of a chain:
+An image on a SaaS CMS content item is the end of a three-link chain:
 
 ```
 SOURCE (find a licensed photo)  →  UPLOAD (put the binary in the DAM)  →  ATTACH (point the CMS field at it)
 ```
 
-The trap is assuming the CMS Management API (CMA) does the whole thing. It doesn't:
+The trap almost everyone falls into is assuming the CMS Management API (CMA) does the whole thing. It
+doesn't, and the reason is the single most important thing to understand about imagery on this
+platform:
 
 | Stage | Who does it | Notes |
 |---|---|---|
-| **Source** | Unsplash / Pexels API | Free keys. Search terms derive from each item's name + tags. |
-| **Upload** the binary | **CMP (the DAM)** — *not* the CMA | The CMA's media endpoint is **GET-only** (`put?: never; post?: never` in its OpenAPI). You cannot create an image binary through it. CMP can, via a 3-step presigned upload. |
-| **Attach** to a content item | CMA property write | Just a string: `cms://content/DamImageSource/<CMP_ASSET_ID>`. |
+| **Source** | An external stock/image API | Search terms derive from each item's name and taxonomy tags. |
+| **Upload** the binary | **CMP (the DAM)**, *not* the CMA | The CMA's media endpoint is effectively read-only for binaries: you cannot create an image binary through it. CMP can, via a presigned upload. |
+| **Attach** to a content item | CMA property write | Just a reference string pointing at the CMP asset. |
 
 That middle row is the whole insight. **Optimizely CMP (the Content Marketing Platform / DAM) is a
-separate product with its own API and its own OAuth** — the CMS CLI credentials are not valid for it
-(nor for Graph). Once you accept that binaries live in CMP and the CMS only ever holds a *reference*,
-the pipeline falls out cleanly.
+separate product with its own API and its own OAuth**: your CMS CLI credentials are not valid for it
+(nor for Graph). Once you accept that binaries live in CMP and the CMS only ever holds a *reference* to
+them, the entire pipeline falls out cleanly.
 
-## Stage 1 — Source (name + tags → a landscape photo)
+📷 **[Screenshot: the media/asset picker on an Optimizely SaaS content item, showing an image reference field waiting to be filled.]**
 
-Each item already carries a name and taxonomy tags, which is all a search needs. `Burj Khalifa`
-+ tags `[landmarks, views, architecture]` → query `"Burj Khalifa Dubai"`. Unsplash first (nice
-editorial travel shots, but a **50 requests/hour** demo tier), Pexels as fallback (higher volume).
-Both are royalty-free.
+## Stage 1: source, turning a name and some tags into a photo
 
-Two things worth building in from the start:
+Each content item already carries a name and taxonomy tags, which is all a search needs. An item called
+"Riverside Market" tagged `[food, outdoor, landmark]` becomes a sensible image query with no manual
+effort. Use a royalty-free source with an API; if it has a low rate limit, keep a higher-volume source
+as a fallback.
 
-- **De-duplicate.** Without it, two items that both search well for "Dubai skyline" get the *same*
-  photo. Keep a `Set` of chosen photo IDs and skip ones already used this run.
-- **Bias away from people** — but know its limit. The licence permits people; my own taste rule was
-  "no prominent identifiable faces." I can't see the photo, only its caption, so I skip candidates
-  whose caption names a person. This is imperfect by construction: a playground shot captioned
-  "colorful outdoor play area" sailed through with a small child in frame. Caption filtering is a
-  bias, not a guarantee — a human eyeball pass on the dry-run table is still the real gate.
+Two things are worth building in from the very start:
 
-## Stage 2 — Upload to CMP (the part the CMA can't do)
+- **De-duplicate.** Without it, two items that both search well for the same term get the *identical*
+  photo. Keep a running set of chosen photo IDs and skip any already used in this run.
+- **Bias away from prominent faces, but know the limit.** I can't see the candidate photos, only their
+  captions, so the best I can do is skip candidates whose caption names a person. This is imperfect by
+  construction: a shot captioned "colorful outdoor play area" once sailed straight through with a child
+  in frame. **Caption filtering is a bias, not a guarantee**, and a human eyeball pass over the dry-run
+  table remains the real gate.
 
-CMP upload is **three calls**, and it's a presigned **POST** to Google Cloud Storage (not a PUT):
+That dry-run table, incidentally, is the most important design decision in the whole project. More on
+that at the end.
 
-```js
-// 1) Ask CMP for a presigned upload target
-GET /v3/upload-url?file_name=burj-khalifa-1.jpg&content_type=image/jpeg
-// → { url, upload_meta_fields: { key, policy, "Content-Type", x-amz-algorithm, x-amz-credential, x-amz-date, x-amz-signature } }
+## Stage 2: upload to CMP, the part the CMA can't do
 
-// 2) POST the binary to GCS as multipart/form-data:
-//    every upload_meta_fields entry as a form field FIRST, then the file field LAST.
-const form = new FormData();
-for (const [k, v] of Object.entries(upload_meta_fields)) form.append(k, v);
-form.append('file', new Blob([bytes], { type: 'image/jpeg' }), 'burj-khalifa-1.jpg');
-await fetch(url, { method: 'POST', body: form });   // 204 on success
+This is the stage the CMA can't touch, and it's a **presigned upload** rather than a simple file POST
+to the CMS. Conceptually it's three steps:
 
-// 3) Register the uploaded object as a CMP asset
-POST /v3/assets { key: upload_meta_fields.key, title: 'burj-khalifa-1.jpg', folder_id }
-// → { id, ... }   ← this id IS the DamImageSource key
-```
+1. **Ask CMP for a presigned upload target** for a given filename and content type. CMP hands back a
+   URL plus a bundle of required form fields (a key, a policy, and a set of signature fields).
+2. **POST the binary to that target as multipart form data.** The order matters: every one of those
+   returned form fields goes in *first*, and the file field goes *last*. Get the order wrong and the
+   upload is rejected.
+3. **Register the uploaded object as a CMP asset.** The ID you get back from this step is the key you'll
+   attach to the CMS content item.
 
-The **join key is the folder**, not the filename. My attach step (stage 3) matches a content item to
-a DAM asset by comparing the item's display name to the asset's **folder leaf**. So I upload each
-item's photo into a CMP folder named after the item (`This is Dubai / Places to Visit / Burj Khalifa`)
-— which mirrors the seed data, so it can't drift.
+The detail that saves you later is the **join key**. My attach step (Stage 3) matches each content item
+to its DAM asset by comparing the item's display name to the asset's **folder**, not its filename. So I
+upload each item's photo into a CMP folder named after the item, mirroring the content structure, which
+means the join can't silently drift as filenames change.
 
-### 🧩 Gotcha 1 — a GET to CMP with `Content-Type: application/json` returns 400
+📷 **[Screenshot: the CMP asset library showing uploaded images organised into per-item folders.]**
 
-Every `GET` I sent with the JSON content-type header came back:
+### 🧩 Gotcha: a bodyless GET with a JSON content-type header returns 400
 
-> `The browser (or proxy) sent a request that this server could not understand.`
+Every `GET` I sent to CMP with a `Content-Type: application/json` header came back with a generic
+"the server could not understand this request." A bodyless GET must not declare a JSON body. The rule
+is simple once you've been bitten: send **only the `Authorization` header** on GETs, and add
+`Content-Type: application/json` *only* when there's genuinely a JSON body (the token call, and the
+register-asset POST). Obvious in hindsight; twenty minutes of "but the token works?!" in practice.
 
-A bodyless GET must not declare a JSON body. Send **`Authorization` only** on GETs; add
-`Content-Type: application/json` only when there's actually a JSON body (the token call, `POST
-/v3/assets`). Obvious in hindsight, 20 minutes of "but the token works?!" in practice.
+## Stage 3: attach, a one-line write and the bug that ate a batch of images
 
-## Stage 3 — Attach (a one-line property write) … and the bug that ate 20 images
+Attaching is genuinely trivial: you write a reference into the item's image field and publish a new
+version. A single-image field takes one reference; a gallery field takes a list of them. There's no
+binary in sight at this stage; it's just a string pointing at the CMP asset.
 
-Attaching is genuinely trivial — write a reference into the field and publish a new version:
+The wrinkle is that the CMA is **read-merge-write**: you POST a *new version* carrying the item's
+existing properties *plus* your image field, then publish that new version. My first run reported a
+clean "133 filled, 0 failed", and yet Graph showed a chunk of items still image-less. This wasn't
+propagation lag. The **published** version genuinely lacked the image, while a freshly created **draft**
+version had it.
 
-```jsonc
-// PointOfInterest / Event — a list          // Area / Article — a single reference
-"images":    { "value": ["cms://content/DamImageSource/<id>"] }
-"heroImage": { "value":  "cms://content/DamImageSource/<id>"  }
-```
+### 🧩 Gotcha: "publish the latest version" is not "publish the first item in the list"
 
-The CMA is read-**merge**-write: you POST a *new version* carrying the existing properties plus your
-image field, then publish that version. My first run reported a clean **"133 filled, 0 failed"** — and
-yet Graph showed 20 items still image-less. Not propagation lag: the CMA's **published** version genuinely
-lacked the image, while a **draft** version had it.
+The buggy sequence was: create the new version, re-list the item's versions, publish the first entry in
+that list, on the assumption that the first entry is the newest.
 
-### 🧩 Gotcha 2 — "publish the latest version" is not "publish `items[0]`"
+That assumption is false. For any item that already had an *unrelated* existing draft, the version list
+didn't come back newest-first: the first entry could be the *already-published* version. So the publish
+call ran against something already published, returned a successful no-op, and my freshly written image
+sat forever as an unpublished draft. The casualties were exactly the items that happened to have a
+pre-existing extra draft. "0 failed" was true and completely useless.
 
-The buggy sequence was: create the new version → re-list versions → publish `items[0].version`.
+The fix is to publish a **deterministic** target instead of trusting list order. Version numbers are
+monotonic, so the version you just created is always the maximum: capture the version number the create
+call returns (or compute the max explicitly), and publish *that*. A clean re-run then filled exactly the
+stragglers, skipped everything already done (the run is idempotent), and a final pass reported nothing
+left to fill.
 
-The assumption `items[0]` = newest is false. For any item that already had an **unrelated draft**, the
-version list didn't come back newest-first — `items[0]` could be the *already-published* version. So
-the publish call ran against an already-published version, returned **200 (a no-op)**, and my freshly
-written image sat forever as an unpublished draft. The 20 casualties were exactly the items with a
-pre-existing extra draft. "0 failed" was true and useless.
+### 🧩 Gotcha: an unset reference is *truthy*
 
-The fix is to publish a **deterministic** target. Version numbers are monotonic, so the version you
-just created is always the maximum:
+To let a re-run skip items that are already filled, you need an "is this field set?" check, and the
+naive truthiness check marks *everything* as filled. An **unset** content reference doesn't come back as
+`null` from Graph; it comes back as an object with null fields inside it, which is still a truthy object.
+Only a non-null **key** inside that object means the field is genuinely filled. This same bug had also
+been quietly hiding every blank social-share image on the site until I started checking the key rather
+than the reference itself.
 
-```js
-const created = await cma('POST', `/content/${key}/versions`, body);
-const list = (await cma('GET', `/content/${key}/versions`)).json.items;
-const v = created.json?.version ?? Math.max(...list.map((x) => Number(x.version)));
-await cma('POST', `/content/${key}/versions/${v}:publish`, {});   // publishes the write, every time
-```
+## Lessons: a cheat-sheet
 
-A clean re-run then filled exactly the 20 stragglers, skipped the 133 already done (idempotent), and a
-final pass reported **0 to fill** — nothing stranded.
+| If you're doing this | Do this | Because |
+|---|---|---|
+| Getting binaries into the CMS | Upload to **CMP**, attach a **reference** in the CMS | The CMA can't create image binaries; it only stores references |
+| Authenticating | Treat CMP, CMS/CMA, and Graph as **three separate credentials** | They don't share OAuth |
+| Uploading to CMP | Presigned target, multipart POST (**fields first, file last**), register | It's a presigned upload, not a plain CMS file POST |
+| Matching photos to items | Join on a **stable folder**, not the filename | Filenames drift; a structural folder doesn't |
+| Publishing a write | Publish the **deterministic max version**, never list position | List order isn't guaranteed newest-first |
+| Checking if a field is filled | Test the reference's **key**, not the object | An unset reference is a truthy object |
+| Running anything at scale | **Dry-run first**, apply second | Turns "did I wreck 150 live pages?" into a table you can read |
 
-### 🧩 Gotcha 3 — an unset reference is *truthy*
+## The result
 
-Deciding whether a field is already filled (so a re-run skips it), the naive check `Boolean(field)`
-marks everything filled. An **unset** content reference doesn't come back `null` from Graph — it's
-`{ key: null, url: { default: null } }`, a truthy object. Only a non-null **`key`** means filled:
+Zero to a few hundred items imaged. Every item now has its own photo, sourced, uploaded to CMP,
+attached, and published, rendering on listings and detail pages (served from CMP through the frontend's
+image optimizer), with a photographer credit recorded for each one to an auto-generated attribution
+table. The whole thing lives as a couple of small, idempotent scripts: one to source and upload, one to
+match, attach, and publish, each defaulting to a dry run.
 
-```js
-const isFilled = (v, multiple) => multiple ? (v ?? []).some((x) => x?.key) : Boolean(v?.key);
-```
+That dry-run-first design mattered more than any single line of code. It turned the terrifying question,
+*did the automation just put something wrong on hundreds of live pages?*, into a table I could read and
+sign off on *before* anything was written. On any bulk content operation, that's the decision I'd make
+first, every time.
 
-This one had also been quietly hiding every blank "Social share image" until I checked `key`.
+## Closing thoughts
 
-## Result
+The conceptual hurdle here isn't the code; it's accepting that imagery on Optimizely SaaS is a
+*three-product* dance (the stock source, CMP for the binary, the CMS for the reference), each with its
+own auth and its own rules. Once that clicks, a "bulk imagery" problem stops being scary and becomes a
+tidy little pipeline you can re-point at any content set.
 
-`0 → 150` items imaged. Every point of interest, event, neighbourhood and article now has its own
-photo, attached and published, rendering on listings and detail pages (served from CMP through
-Next.js's image optimizer), with **150 photographer credits** recorded to an auto-generated
-attribution table. Two reusable scripts:
+I'd love to hear how other teams have automated getting assets into CMP at scale, especially how you
+handle the "is this photo actually appropriate?" gate when a script can't see the image. What's worked
+for you?
 
-- `source-images.mjs` — source + upload (dry-run pick table by default; `--apply`, `--type`, `--force`,
-  `--limit`).
-- `attach-assets.mjs` — match + attach + publish (dry-run by default; idempotent; `--type`, `--force`).
+## Related reading
 
-The dry-run-first design mattered more than any single line of code: it turned "did the automation put
-something wrong on 150 live pages?" into a table I could read before anything was written.
+- **Fast and fresh on Optimizely SaaS + a headless frontend**: once the images are attached, how they
+  get delivered as tiny device-sized files with a Core Web Vitals budget in mind.
+- **A reusable, server-rendered listing engine**: where all those newly-imaged cards end up rendering.
+- **Semantic search with Optimizely Graph**: a practical guide.
+- For the exact, current CMP and CMA endpoints behind the upload-and-attach flow described here, see the
+  official Optimizely SaaS CMS documentation.
 
-## Links
+---
 
-- Repo: _(this project)_
-- Related docs: `ASSETS.md` (sourcing sheet + attribution + what's automatable), `docs/CONTENT-ARCHITECTURE.md`
-- Companion posts: **#15** articles-as-blocks, **#14** the listing engine, **#06** semantic search
+_Have a correction or a better way to frame any of this? Reach out, I keep these posts updated as the
+platform evolves._

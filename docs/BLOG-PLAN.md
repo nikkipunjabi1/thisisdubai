@@ -33,6 +33,9 @@ Every post follows the same standards. This is the contract.
   naming the *challenge* and the *decision*.)
 - **Skimmable:** short-to-medium paragraphs, bullets, comparison tables, and a cheat-sheet where it
   helps.
+- **No em-dashes.** Do not use the `—` character anywhere in a post. Use commas, colons, parentheses,
+  or plain hyphens instead, whichever reads best. This is a firm rule: grep each post for `—` before
+  publishing and confirm zero remain.
 - **Close** with a sign-off that invites discussion ("I'd love to hear how other teams have handled…").
 - **Assets:** only original wordmarks and royalty-free imagery; no third-party brand assets.
 
