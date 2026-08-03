@@ -1,62 +1,99 @@
-# Blog & Community Plan — toward Optimizely MVP
+# Blog & Community Plan — Optimizely SaaS, written for the community
 
-_Goal: consistent, genuinely useful community content that documents building This is Dubai.
-I (Claude) will nudge you to blog at the trigger points below — especially anything **new**, a
-**challenge solved**, or a **reusable module** created._
+_Goal: a body of **standalone, genuinely useful articles** on building modern sites with Optimizely
+SaaS CMS + a headless (Next.js) frontend. Each post solves a general problem a reader can hit on any
+project — not a diary of one demo build. Consistent voice, professional, screenshot-rich._
 
-## Why blogging matters here
-Optimizely MVP is awarded for community contribution — content, code, and helping others.
-A public build-in-the-open project is one of the strongest, most sustainable ways to earn it.
+## Why this matters
+
+Optimizely MVP recognition is earned through community contribution — content, code, and helping
+others. Well-written, reusable articles that rank in search and get shared do that better than a
+build log, because they keep helping people long after they're published. Every post here should read
+as advice you could hand to another team facing the same problem.
+
+## Voice & editorial standards
+
+Every post follows the same standards. This is the contract.
+
+- **Audience:** technical managers, solution architects, tech leads — and often a non-specialist
+  (a delivery manager, a hiring manager) skimming to understand the shape of a problem. Open
+  accessibly; go deep in the middle.
+- **Voice:** professional but human — a practitioner sharing hard-won experience, not documentation.
+  First person ("I", "we") to establish credibility. Warm, plain language over jargon.
+- **Generic, not project-specific.** Do **not** reference or link the demo/build project. Frame every
+  problem so *anyone* on *any* Optimizely SaaS project benefits. Use neutral examples.
+- **Structure (the arc):** real-world scenario → why it's tricky → the approach / architecture →
+  what broke and how it was fixed → lessons → closing thoughts with a genuine community invitation.
+- **Screenshots do the heavy lifting.** Mark intended captures with a `📷 [Screenshot: …]`
+  placeholder; the author swaps in real Optimizely SaaS screens before publishing. More real
+  screenshots = a stronger post.
+- **Code stays high-level.** Snippets are welcome when they make a concept concrete, but keep them
+  short and illustrative — no full files, no step-by-step CLI dumps. Prefer a diagram or a one-line
+  snippet over a wall of code. (Any AI tool can hand a developer the implementation; the value here is
+  naming the *challenge* and the *decision*.)
+- **Skimmable:** short-to-medium paragraphs, bullets, comparison tables, and a cheat-sheet where it
+  helps.
+- **Close** with a sign-off that invites discussion ("I'd love to hear how other teams have handled…").
+- **Assets:** only original wordmarks and royalty-free imagery; no third-party brand assets.
 
 ## Where to publish
-- **Optimizely community / World** — primary (counts most toward MVP).
-- **dev.to** and/or personal blog — reach + SEO.
-- **LinkedIn** — short posts linking to the long-form; visibility with the Opti ecosystem.
-- **GitHub repo** — the code + README is itself a contribution (template/module).
 
-## Blogging trigger checklist (Claude will flag these)
-Blog when we hit any of:
-- 🆕 **Something new** — a feature/API we used that isn't well documented publicly.
-- 🧩 **A challenge solved** — a setup gotcha, an integration quirk, a workaround.
-- 🔧 **A reusable module** — anything extractable others could use.
-- 🎯 **A phase completed** — natural milestone recap.
-- 📊 **A measurable result** — perf win, search relevance improvement, experiment outcome.
+- **Optimizely community / World** — primary; counts most toward MVP.
+- **Personal blog + dev.to** — reach and SEO (long-form home for each article).
+- **LinkedIn** — a short teaser linking to the long-form; visibility in the Opti ecosystem.
 
-## Planned posts (mapped to roadmap)
-| # | Working title | Trigger | Phase |
-|---|---------------|---------|-------|
-| 1 | Why I'm building This is Dubai on Optimizely SaaS (in the open) | Kickoff | 0 |
-| 2 | Optimizely SaaS CMS + Visual Builder on Vercel with Next.js — setup & gotchas _(draft: blog/02-optimizely-saas-visual-builder-nextjs-vercel-setup.md)_ | Challenge | 1 |
-| 2b | **Connecting a Next.js app to Optimizely CMS SaaS for live Visual Builder preview** — Application + preview tokens, local HTTPS (mkcert), and the registry-must-mirror-the-model gotcha (`13 errors in the GraphQL query` / `GraphMissingContentTypeError`) _(draft: blog/02b-live-visual-builder-preview-nextjs.md)_ | 🧩 Challenge solved | 2 |
-| 3 | Content modeling for Visual Builder: pages vs experiences vs components _(draft: blog/03-content-modeling-pages-experiences-components.md)_ | New/learning | 2 |
-| 4 | Server-rendered SEO + JSON-LD for every Optimizely SaaS page (Next.js) _(draft: blog/04-server-rendered-seo-jsonld.md)_ | New/learning | 2 |
-| 5 | **Shareable stakeholder previews for Optimizely SaaS + Next.js** (preview-before-publish) | New (headline) | 3 |
-| 6 | **Semantic search with Optimizely Graph — a practical guide** — the four-line switch (`_ranking: SEMANTIC`), proving it's really semantic with a `RELEVANCE` control, and 3 undocumented gotchas (stop words drown the semantic signal + make `_semanticWeight` look broken; `_Content` surfaces non-routable taxonomy blocks; scores aren't comparable across types) + why a relevance floor must be relative, not absolute. _(draft: blog/06-semantic-search-optimizely-graph.md)_ | New (headline) | 3 |
-| 7 | **Localizing an Optimizely SaaS + Next.js site to Arabic** — the five gotchas: a new language isn't backfilled into Graph (Apply Changes, not the content-sync job); fields are shared until `isLocalized` (OFF→ON safe, ON→OFF deletes); VB blocks localize at the composition level, not per-field; the CMS prefixes non-default locales' URLs (master unprefixed); and the App Router root layout can't read `[locale]` → `x-locale` header + Next 16 `proxy`. _(draft: blog/07-en-ar-localization-optimizely-saas-nextjs.md)_ | 🧩 Challenge / New | 3 |
-| 7b | EN + AR **semantic search** on Optimizely Graph (RTL) — the `locale` arg selects the search language; AR stop-words; localized result chrome | New/learning | 3 |
-| 8 | **Fast AND fresh on Optimizely SaaS + Next.js** — Core Web Vitals via three levers: caching Graph reads across requests (`unstable_cache` + tags), on-demand revalidation with a Graph publish webhook (`revalidateTag(_, 'max')`, secret-gated), and responsive AVIF image delivery (CMP JPEG → `next/image` resize+re-encode per device; 342 KB → 32 KB on a phone). Includes the Next 16 single-arg `revalidateTag` gotcha + the unset-reference-is-truthy trap. _(draft: blog/08-core-web-vitals-graph-caching-revalidation-images.md)_ | 🎯 Result / 🧩 Challenge | 3 |
-| 9 | Building an AI Trip Planner on Optimizely Graph + Claude | New (headline) | 4 |
-| 9b | Building an Optimizely Graph **MCP server** (content as tools for any AI) | New (headline) | 4 |
-| 10 | Using Optimizely Opal for Arabic translation | New/learning | 4 |
-| 11 | I open-sourced a stakeholder-preview module for Optimizely SaaS — here's how | Module | 5 |
-| 12 | **From CMP/DAM to Optimizely SaaS CMS: a bulk imagery pipeline (source → upload → attach)** — the CMP↔CMS asset flow end to end: why the CMA can't upload binaries but CMP's 3-step presigned POST can, attach as a `cms://content/DamImageSource/<id>` property write, and 3 gotchas (GET-with-JSON-content-type 400s; "publish latest" ≠ publish `items[0]` → 20 images stranded as drafts; an unset reference is truthy). _(draft: blog/12-cmp-dam-to-saas-cms-bulk-imagery.md)_ | 🧩 Challenge solved / New | 3 |
-| 14 | **A Reusable, Server-Rendered Listing Engine on Optimizely SaaS + Visual Builder** — section pages as experiences, the grid as a `SectionListing` block, request-scoped state via React `cache()`, server-side pagination/sort/faceted filters, and 3 hard-won gotchas (cascade-delete on parent delete, `limit`≤100, `indexingType`/reference-`key` filtering). _(draft: blog/14-listing-engine-visual-builder.md)_ | 🎯 Phase + 🧩 Challenge | 3 |
-| 13 | **The Page That Shouldn't Have a URL: Best-Practice Site Settings in Optimizely SaaS CMS** — where global settings belong in the content tree, how to keep them off the public web (non-routable / router-excluded), the placement + security guardrails, and the multisite-safe GraphQL query (scope by Start Page key). Includes the options considered + the test queries proving no public URL. _(draft: blog/13-non-routable-site-settings.md)_ | 🧩 Challenge / New | 2 |
-| 15 | **Thousands of Articles in Optimizely SaaS CMS: model them as blocks, not pages** — why folders can't live in the SaaS Pages tree, why a flat page-per-article doesn't scale, and the fix: articles as shared blocks foldered by year/month in the Assets panel, with the Next.js app owning `/articles/<year>/<month>/<slug>` routing (resolve by `slug`, URL from `publishDate`). The two failed attempts, the doc quotes that settle it, and how the listing detects a block-backed section. _(draft: blog/15-articles-as-blocks-not-pages.md)_ | 🧩 Challenge solved + 🎯 Phase | 3 |
-| 16 | **From Content Areas to the Visual Builder canvas: what changes moving to Optimizely SaaS** — the mental-model shift for CMS 11/12 devs: an `_experience` has no `ContentArea` property, its layout *is* a **composition** (a node tree: Section → Row → Column → Element); you drop **components** on a grid, not blocks in a content area; the **Outline** panel is that node tree (no classic equivalent); components opt in via `compositionBehaviors` (not `AllowedTypes`); layout moved to display templates + `displaySettings`. Grounded in `composition.nodes` → `OptimizelyComposition`. Includes a side-by-side cheat-sheet. _(draft: blog/16-cms12-contentarea-vs-saas-visual-builder-outline.md)_ | 🧩 New / learning | 2 |
+## Publishing status
+
+| Status | Meaning |
+|---|---|
+| ✅ Published | Live on the personal blog / community |
+| 📝 Draft ready | Written and reviewed; awaiting publish |
+| ✍️ Drafting | In progress |
+| 💡 Planned | Outlined / on the backlog |
+
+## Articles
+
+Reframed as standalone problem/solution pieces. Each title is generic; none references a specific
+build.
+
+| # | Article (generic angle) | The problem it solves | Status |
+|---|---|---|---|
+| 1 | **From Content Areas to the Visual Builder canvas** — rethinking page composition in Optimizely SaaS | Classic CMS 11/12 developers can't find the ContentArea; the composition/Outline model is unfamiliar | 📝 Draft ready |
+| 2 | **Content modeling for Visual Builder** — pages vs experiences vs components (and when to use each) | Choosing the wrong base type is expensive to undo; teams need a clear decision heuristic | 📝 Draft ready |
+| 3 | **Modeling high-volume content as blocks, not pages** in Optimizely SaaS | The Pages tree doesn't scale to thousands of items; folders don't live there | 📝 Draft ready |
+| 4 | **Best-practice global site settings with no public URL** in Optimizely SaaS | Where global config belongs in the tree, and how to keep it off the public web | 📝 Draft ready |
+| 5 | **Server-rendered SEO + JSON-LD on every Optimizely SaaS page** (headless) | Getting title/meta/OG + structured data into the initial HTML with a headless frontend | 📝 Draft ready |
+| 6 | **Semantic search with Optimizely Graph** — a practical guide | Turning on real semantic search, proving it works, and avoiding the common relevance traps | ✅ Published |
+| 7 | **Localizing an Optimizely SaaS site to a new language** — the gotchas nobody warns you about | Adding a second language end-to-end: indexing, field localization, URL/SEO decisions | ✅ Published |
+| 8 | **Fast *and* fresh on Optimizely SaaS + a headless frontend** — Core Web Vitals in practice | Caching content reads, on-demand revalidation on publish, and responsive image delivery | 📝 Draft ready |
+| 9 | **Diagnosing Optimizely Graph performance** — the three-second page (and the build that lied) | Slow navigations and a build that passes while every page 500s in production | ✍️ Drafting |
+| 10 | **A reusable, server-rendered listing engine** on Optimizely SaaS + Visual Builder | Section/listing pages with server-side pagination, sort, and faceted filters | 📝 Draft ready |
+| 11 | **From CMP/DAM to Optimizely SaaS CMS** — a bulk imagery pipeline (source → upload → attach) | Getting binaries into the CMS at scale when the content API can't upload them | 📝 Draft ready |
+| 12 | **Automating content translation in Optimizely SaaS** — what "Translate with AI" (Opal) actually does, and how to script the rest | Bulk-translating a site to a second language when there's no translate-item API | 💡 Planned |
+| 13 | **Shareable stakeholder previews** for Optimizely SaaS + a headless frontend | Durable, login-free preview-before-publish links for reviewers | 💡 Planned |
+| 14 | **Building an AI content assistant on Optimizely Graph** (content as tools for an LLM) | Grounding an AI feature — search, a planner, an MCP server — in your live content | 💡 Planned |
+
+## Backlog / candidate angles
+
+- Live Visual Builder preview wiring for a headless app (tokens, local HTTPS, the registry-mirror gotcha).
+- Building in the open: what a public Optimizely SaaS reference project taught me (a reflective piece).
+- Migrating a classic Optimizely site to SaaS: a decision checklist for architects.
 
 ## Post skeleton (reuse for each)
-1. The problem / what I set out to do
-2. Context (Optimizely SaaS + the specific feature)
-3. How I did it — code, config, screenshots
-4. What broke and how I fixed it (the most valuable part)
-5. Result + what's next
-6. Links: repo, live demo, related docs
+
+1. The real-world scenario / the problem
+2. Why it's trickier than it looks on Optimizely SaaS
+3. The approach — architecture, the key decision, a high-level snippet or diagram
+4. What broke and how it was fixed (usually the most valuable section)
+5. Lessons + a cheat-sheet or checklist
+6. Closing thoughts + a genuine invitation to discuss
 
 ## Cadence
-Aim for **1 post per completed phase** minimum; capture drafts/outlines *as we build* (not
-after) so nothing is lost. Keep a `blog/` folder of drafts in the repo.
+
+Aim for **one solid article per completed piece of work**. Capture the outline *while building* (the
+challenge is freshest then), then write it up to standard. Keep drafts in the `blog/` folder.
 
 ## Assets for posts
-Screenshots, short screen-recordings (the `gif_creator` browser tool is handy), and
-before/after perf numbers. Keep them in `blog/assets/`.
+
+Real Optimizely SaaS screenshots first (they make or break these posts), short screen-recordings, and
+before/after numbers for anything performance-related. Keep them in `blog/assets/`.
