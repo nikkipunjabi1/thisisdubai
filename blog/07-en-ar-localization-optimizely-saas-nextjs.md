@@ -28,9 +28,9 @@ You enable Arabic in **Settings → Languages**, publish an Arabic version of a 
 { _Content(locale: ar) { total } }   # → 0
 ```
 
-Zero. The *schema* updated (Graph's `Locales` enum now lists `ar`), but **no Arabic content is
-indexed**. The reason: CMS (SaaS) syncs to Graph with an **hourly delta** plus a **manual full sync**,
-and a newly-enabled language is **not** backfilled by the delta. Per Optimizely's docs you must
+Zero. The *schema* updated (Graph's `Locales` enum now lists `ar`), but **Graph has indexed none of
+it**. The reason: CMS (SaaS) syncs to Graph with an **hourly delta** plus a **manual full sync**,
+and **the delta doesn't backfill** a newly-enabled language. Per Optimizely's docs you must
 *"re-run the Content Synchronization job to resynchronize contents in the language that has just been
 enabled."* The trigger that actually does it is **Apply Changes** on the Languages page (and/or a
 **Smooth Rebuild** → *Promote*). The content-sync job alone won't touch a language-config change.
@@ -171,7 +171,7 @@ export function normalizeQuery(raw: string, locale: Locale = DEFAULT_LOCALE) { /
 
 One Arabic subtlety: the definite article **`ال`** ("the") is a *prefix* (`الشاطئ` = "the beach"),
 not a standalone token — so it never appears as its own word to strip, and removing it would need
-real morphology. Leave it out of the list; don't fake it. Finally, remember to locale-prefix the
+real morphology. In short, leave it out of the list; don't fake it. Finally, remember to locale-prefix the
 result cards (`toAppPath(locale, url)`) and localize the group labels + example chips, or an Arabic
 search page links back into English.
 
@@ -183,7 +183,7 @@ sync). What's expensive is retrofitting the **structure** onto populated data an
 
 So the split that matters, when you start any new Optimizely SaaS + Next.js project:
 
-**Structure on day 1 — painful to retrofit (do it even with one active locale):**
+### Structure on day 1 — painful to retrofit (even with one active locale)
 
 1. **Mark translatable fields `isLocalized: true` in the content model.** Retrofitting is a schema
    migration the CLI flags as *data loss* and forces across every populated item (Gotcha 2). Setting
@@ -199,8 +199,10 @@ So the split that matters, when you start any new Optimizely SaaS + Next.js proj
    `text-align: start`), not `left`/`right`. Otherwise RTL is an audit later, not a flag flip.
 6. **Locale-aware `Intl` date/number formatting** (not hardcoded `en-GB`), and **locale in cache keys.**
 
-**Cheap to defer — it's content, not structure:** enabling the second language, authoring the
-translations, configuring fallback, semantic search in the new language.
+### Cheap to defer — it's content, not structure
+
+Enabling the second language, authoring the translations, configuring fallback, and localized search
+— all of it waits.
 
 None of the day-1 items slow down a single-language launch. All of them save you a forced, data-loss-
 flagged migration later. If there's one line to remember: **structure for multi-locale up front; defer
@@ -267,7 +269,7 @@ npm run opti-push -- --force
 `/` → `/en`; `/en` and `/ar` both render; `<html>` is `lang="en-GB" dir="ltr"` vs
 `lang="ar-AE" dir="rtl"`; Arabic pages show real Arabic where translated and **fall back to English**
 (Graph delivery honours the fallback language) everywhere else — so the site is shippable long before
-every item is translated. Arabic *semantic search* ships too — the whole search surface (federated
+every item is translated. In addition, Arabic *semantic search* ships too — the whole search surface (federated
 query, stop words, result links, labels) is locale-aware (Gotcha 5). Bulk translation via Opal is the
 one piece still to come.
 
