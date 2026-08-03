@@ -75,11 +75,11 @@ build.
 | 12 | **Automating content translation in Optimizely SaaS** — what "Translate with AI" (Opal) actually does, and how to script the rest | Bulk-translating a site to a second language when there's no translate-item API | 💡 Planned |
 | 13 | **Shareable stakeholder previews** for Optimizely SaaS + a headless frontend | Durable, login-free preview-before-publish links for reviewers | 💡 Planned |
 | 14 | **Building an AI content assistant on Optimizely Graph** (content as tools for an LLM) | Grounding an AI feature — search, a planner, an MCP server — in your live content | 💡 Planned |
+| 15 | **Live Visual Builder preview for a headless app** on Optimizely SaaS | Wiring on-page/live preview end to end: preview tokens, local HTTPS, and the registry-must-mirror-the-model drift | 📝 Draft ready |
+| 16 | **Building a reference project on Optimizely SaaS in the open** | How and why to run a public learning project: the official-tooling decision, responsible-assets guardrails, and a sprint/PR/blogging workflow | 📝 Draft ready |
 
 ## Backlog / candidate angles
 
-- Live Visual Builder preview wiring for a headless app (tokens, local HTTPS, the registry-mirror gotcha).
-- Building in the open: what a public Optimizely SaaS reference project taught me (a reflective piece).
 - Migrating a classic Optimizely site to SaaS: a decision checklist for architects.
 
 ## Post skeleton (reuse for each)
