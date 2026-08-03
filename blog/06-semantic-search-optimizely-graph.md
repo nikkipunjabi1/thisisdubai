@@ -1,24 +1,24 @@
 ---
-title: "Semantic Search with Optimizely Graph — a Practical Guide"
+title: "Semantic Search with Optimizely Graph: a Practical Guide"
 status: draft
 audience: Optimizely community / dev.to / LinkedIn (long-form)
 author: Nikki Punjabi
 tags: [optimizely, saas-cms, optimizely-graph, semantic-search, vector-search, nextjs, search-relevance]
 metaTitle: "Semantic Search with Optimizely Graph: A Practical Guide"
-metaDescription: "Optimizely Graph has semantic (vector) search built in — no vector DB. Turn it on in four lines of GraphQL, plus the four gotchas the docs never mention."
+metaDescription: "Optimizely Graph has semantic (vector) search built in, no vector DB. Turn it on in four lines of GraphQL, plus the four gotchas the docs never mention."
 ---
 
 > **Draft for your review.** Edit the voice/details freely before publishing. A LinkedIn variant
-> can be spun off from the intro + the "swimming in the sea" gotcha alone — it's the one that
+> can be spun off from the intro + the "swimming in the sea" gotcha alone; it's the one that
 > makes people go "wait, really?"
 
-> ⚠️ _Independent, unofficial learning project — not affiliated with any tourism authority or brand.
+> ⚠️ _Independent, unofficial learning project, not affiliated with any tourism authority or brand.
 > Original wordmark and royalty-free assets only._
 
 ## What I set out to build
 
 Optimizely Graph ships with **semantic search** built in. No vector database, no embedding
-pipeline, no second index to keep in sync — you add one argument to a GraphQL query and you get
+pipeline, no second index to keep in sync; you add one argument to a GraphQL query and you get
 vector search over your CMS content.
 
 That's a genuinely big deal, and it's why I didn't reach for pgvector on this project. So I built
@@ -46,33 +46,33 @@ query($q: String!) {
 ```
 
 `_ranking: SEMANTIC` is the switch. `_semanticWeight` blends meaning against keyword matching
-(default 0.2; higher favours meaning). That's it — that's the feature.
+(default 0.2; higher favours meaning). That's it; that's the feature.
 
 ## Proving it actually works (harder than it sounds)
 
 My first test looked great. I searched *"somewhere to take the kids"* and got back The Dubai
 Fountain, The Dubai Mall, and Museum of the Future. Semantic search, clearly working!
 
-Except — look at those three names again. They all contain **"the"**. I hadn't proven anything;
+Except, look at those three names again. They all contain **"the"**. I hadn't proven anything;
 I'd just watched BM25 match a stop word.
 
 To actually prove semantic matching, you need queries with **zero lexical overlap** with the
 target content, and you need to compare against keyword ranking as a control. So I ran every
-query twice — once with `_ranking: RELEVANCE` (BM25), once with `SEMANTIC`:
+query twice, once with `_ranking: RELEVANCE` (BM25), once with `SEMANTIC`:
 
 | Query | `RELEVANCE` (keyword) | `SEMANTIC` |
 |-------|----------------------|-----------|
-| "skyscraper" | **0 results** | **Burj Khalifa** — summary says "tallest building" |
-| "fish tank" | **0 results** | **The Dubai Mall** — summary says "aquarium" |
+| "skyscraper" | **0 results** | **Burj Khalifa**, summary says "tallest building" |
+| "fish tank" | **0 results** | **The Dubai Mall**, summary says "aquarium" |
 
 *That's* the proof. The word "skyscraper" appears nowhere in my content. Neither does "fish tank".
 Keyword search finds nothing; semantic search finds exactly the right page. No embedding
-infrastructure, no vector DB — just an `orderBy` argument.
+infrastructure, no vector DB, just an `orderBy` argument.
 
 Lesson before we go further: **always test relevance with a control ranking.** It is very easy to
 demo a semantic search that is quietly just keyword matching.
 
-## Gotcha #1 — stop words sabotage semantic ranking
+## Gotcha #1: stop words sabotage semantic ranking
 
 This is the big one, and it cost me the most time.
 
@@ -80,8 +80,8 @@ I searched *"swimming in the sea"* on a site whose content includes **Jumeirah B
 **Palm Jumeirah**. The top result was a **historical district**. Not a beach in sight.
 
 Here's why. `_fulltext` is BM25-scored, and that score is computed *before* the semantic blend.
-The stop words `in` and `the` matched all over my content and generated enormous BM25 scores —
-the historical district scored **7.5** — while the genuine semantic matches scored around **0.09**.
+The stop words `in` and `the` matched all over my content and generated enormous BM25 scores
+(the historical district scored **7.5**) while the genuine semantic matches scored around **0.09**.
 The semantic signal wasn't wrong. It was just two orders of magnitude too small to matter.
 
 The fix is embarrassingly simple: **strip stop words before you query.**
@@ -112,16 +112,16 @@ re-weighting the blend changes nothing you can see. Strip the stop words and `_s
 starts behaving exactly as documented. If you're tuning semantic weight and seeing no effect,
 **this is almost certainly why.**
 
-## Gotcha #2 — don't run site search against the `_Content` interface
+## Gotcha #2: don't run site search against the `_Content` interface
 
 The obvious way to search across every content type at once is Graph's generic `_Content`
 interface. One query, everything in it, one ranked list. I tried it first.
 
-The top result for *"traditional culture and heritage"* came back with a score of **115** — about
+The top result for *"traditional culture and heritage"* came back with a score of **115**, about
 eight times the next result. It was a `TagTerm`: a **taxonomy term**, one of my shared blocks. Not
 a page. Not something a user can visit. It doesn't even have a URL to link to.
 
-Of course it scored highly — a taxonomy term literally named "Culture & Heritage" is a *perfect*
+Of course it scored highly, a taxonomy term literally named "Culture & Heritage" is a *perfect*
 lexical match. It's just not a search result.
 
 `_Content` matches **everything in your model**, including config singletons, taxonomy terms, and
@@ -142,45 +142,45 @@ query($q: String!, $w: Float!, $limit: Int!) {
 ```
 
 GraphQL **aliases work on Graph root fields**, so this is still a single round trip. You also get
-type-specific fields for free — price bands for places, dates for events — which the generic
+type-specific fields for free (price bands for places, dates for events) which the generic
 interface can't give you.
 
-## Gotcha #3 — scores are not comparable across content types
+## Gotcha #3: scores are not comparable across content types
 
 Having got three result sets back, I naturally wanted to merge them into one relevance-ranked
 list. Don't.
 
 One query returned an `Area` scoring **13.73** and a `PointOfInterest` scoring **1.51**. The Area
-is not "nine times more relevant" — Graph normalizes BM25 **per index**, so the two numbers are
+is not "nine times more relevant": Graph normalizes BM25 **per index**, so the two numbers are
 measured on different scales. Sorting them against each other produces a ranking that looks
 authoritative and means nothing.
 
-So I **group results by type** — Places to Visit, Events, Neighbourhoods — each ranked within
+So I **group results by type** (Places to Visit, Events, Neighbourhoods), each ranked within
 itself. It's more honest, and it's also better UX: people scanning a travel site usually know
 whether they want a place or an event.
 
-## Gotcha #4 — your taxonomy's synonyms aren't in search until you put them there
+## Gotcha #4: your taxonomy's synonyms aren't in search until you put them there
 
 Stripping stop words got *"swimming sea"* to surface beaches. But a blunter query exposed a deeper
 gap: **"swimming"** on its own ranked three waterparks first, then a fountain, an aquarium and a
-dolphinarium — and the actual **beaches** sat below them.
+dolphinarium, and the actual **beaches** sat below them.
 
-That's not *wrong*, exactly — a waterpark genuinely is about swimming. The real problem is what
+That's not *wrong*, exactly: a waterpark genuinely is about swimming. The real problem is what
 *didn't* rank: a **beach**, the most obvious place a human means by "swimming." Semantic ranking
 scores the **text each place carries**, and my beach summaries talk about "boardwalks, beach clubs,
-sunset" — never swimming. **The engine has no world-knowledge that a beach is where you swim.**
+sunset", never swimming. **The engine has no world-knowledge that a beach is where you swim.**
 
-I *had* modelled that knowledge — my `Beaches` taxonomy term carries a `synonyms` list of exactly
+I *had* modelled that knowledge: my `Beaches` taxonomy term carries a `synonyms` list of exactly
 `sea, coast, swimming, shore`. The trouble:
 
 > **Optimizely Graph's `_fulltext` only searches a type's OWN fields.** It does **not** follow a
 > `contentReference` to search the referenced Tag's `synonyms`. So all that carefully-authored
-> synonym vocabulary was completely invisible to search — a beach tagged "Beaches (swimming)" gained
+> synonym vocabulary was completely invisible to search: a beach tagged "Beaches (swimming)" gained
 > nothing from it.
 
 The fix is **denormalization**: bake each item's tag vocabulary into a **searchable field on the
 item itself**. I added a `searchKeywords` string (indexed `searchable`) to `PointOfInterest` and
-`Event`; the seed populates it from the item's tags — name + synonyms:
+`Event`; the seed populates it from the item's tags (name + synonyms):
 
 ```ts
 // seed: tag slug → "Name synonym1 synonym2 …", joined across an item's tags
@@ -191,25 +191,25 @@ const searchKeywords = item.tags.map((slug) => tagVocab.get(slug)).join(' ');
 
 Now the beach's own index literally contains "swimming", so `_fulltext` matches it **and** the
 semantic embedding shifts toward the concept. Because `_fulltext` automatically covers every
-searchable field, **the search query didn't change at all** — the whole fix lives in the model + seed.
+searchable field, **the search query didn't change at all**; the whole fix lives in the model + seed.
 
 The before/after, measured live on the same query:
 
-| `swimming` — before | `swimming` — after |
+| `swimming` (before) | `swimming` (after) |
 |---------------------|--------------------|
 | Legoland, Wild Wadi, Aquaventure (waterparks), then **Dubai Fountain, Dubai Aquarium, Dolphinarium** | Jumeirah Corniche, Bluewaters Beach, Sunset Beach, Palm Jumeirah, Marina Beach, **Jumeirah Beach** … |
 
 Every "after" result is a **beach**, and **none of them contain the word "swim" in their own name or
-summary** — they surface purely through the denormalized tag vocabulary. The water-*themed* noise
+summary**: they surface purely through the denormalized tag vocabulary. The water-*themed* noise
 (fountain, aquarium, dolphinarium) drops out entirely, because it isn't tagged with a swimming
 concept and so never gains the keyword.
 
 Three things worth knowing:
 - **It enriches BM25 *and* the vector.** The denormalized text is part of what Graph embeds, so this
-  isn't keyword stuffing — it moves the semantic representation too.
+  isn't keyword stuffing; it moves the semantic representation too.
 - **Denormalization amplifies your taxonomy, so curate it.** My first pass also added `swim`/`swimming`
   to the *Waterparks* tag ("a waterpark is a swimming place, right?"). Every waterpark inherited it and,
-  being short keyword-dense pages, they shot **back above the beaches** — the exact thing I was fixing.
+  being short keyword-dense pages, they shot **back above the beaches**, the exact thing I was fixing.
   A synonym you add propagates to *every* item carrying that tag and can outrank what you actually
   meant. Keep synonyms tight and intent-aligned; put a concept on the one tag it most belongs to.
 - **It's denormalized, so it can go stale.** Edit a tag's synonyms and the places carrying it won't
@@ -217,13 +217,13 @@ Three things worth knowing:
   repopulate from the publish webhook.
 
 The broader lesson: **semantic search matches what your content *says*, not what you *know*.** When
-there's a real-world association the prose doesn't state — beach ⇒ swimming — you have to hand the
+there's a real-world association the prose doesn't state (beach ⇒ swimming), you have to hand the
 model that signal, and your taxonomy is where it already lives. You just have to get it into the
 searchable index.
 
 ## The part nobody warns you about: vector search always returns *something*
 
-Keyword search has a natural empty state — no keyword, no match. **Vector search doesn't.** It
+Keyword search has a natural empty state: no keyword, no match. **Vector search doesn't.** It
 returns nearest neighbours, and *something* is always nearest.
 
 Real example. Searching "traditional heritage" returned four places scoring:
@@ -237,7 +237,7 @@ Real example. Searching "traditional heritage" returned four places scoring:
 
 Two real results and two pieces of padding presented with exactly the same visual weight.
 
-So you need a **relevance floor**. My instinct was an absolute threshold — "drop anything under
+So you need a **relevance floor**. My instinct was an absolute threshold: "drop anything under
 0.15". That instinct is wrong, for two reasons:
 
 1. **The scale moves enormously.** Across my test queries, top scores ranged from **0.185** to
@@ -246,7 +246,7 @@ So you need a **relevance floor**. My instinct was an absolute threshold — "dr
    high enough to suppress noise would have thrown away the two results I'd just spent an hour
    getting to surface.
 
-A **relative** floor solves both — keep results scoring at least 10% of *their own group's* top hit:
+A **relative** floor solves both: keep results scoring at least 10% of *their own group's* top hit:
 
 ```ts
 function dropWeakMatches(nodes: ResultNode[]): ResultNode[] {
@@ -261,7 +261,7 @@ now returns two places instead of four, and "tallest tower" drops from five to t
 
 **Being honest about the limit:** this trims tails, it does **not** detect nonsense. Most gibberish
 ("asdfgh", "quantum blockchain accounting") returns zero results all by itself. But a near-miss
-token like "zzzzqqq" comes back with a *flat* spread of low scores — 0.136, 0.112, 0.107, 0.087 —
+token like "zzzzqqq" comes back with a *flat* spread of low scores (0.136, 0.112, 0.107, 0.087)
 and no relative floor can separate a flat spread from a real one. I could have tuned a magic
 constant that happens to kill "zzzzqqq", but fitting a threshold to a single test string isn't
 tuning, it's overfitting. It's documented as a known limitation and I'll revisit it with more
@@ -270,7 +270,7 @@ content.
 ## What it looks like
 
 The whole thing is a Next.js server component. A plain GET `<form>` posts to `/search?q=…`, the
-server queries Graph and renders — no `useState`, no client fetching, no loading spinner. The URL
+server queries Graph and renders: no `useState`, no client fetching, no loading spinner. The URL
 is the entire state, so every search is shareable and cacheable.
 
 Search results pages are `noindex` (thin, near-duplicate content), which is worth doing from day
@@ -285,12 +285,12 @@ the mall with the aquarium.
 If you take five things from this:
 
 1. **Test relevance against a control ranking** (`RELEVANCE` vs `SEMANTIC`), with zero-overlap
-   queries — or you'll ship keyword search believing it's semantic.
-2. **Strip stop words**, or BM25 will drown the semantic signal — and `_semanticWeight` will look
+   queries, or you'll ship keyword search believing it's semantic.
+2. **Strip stop words**, or BM25 will drown the semantic signal, and `_semanticWeight` will look
    broken.
 3. **Query concrete types, not `_Content`**, and never merge scores across types.
 4. **Use a relative relevance floor**, because vector search always returns something.
-5. **Get your taxonomy into the index.** `_fulltext` can't see a referenced tag's `synonyms` —
+5. **Get your taxonomy into the index.** `_fulltext` can't see a referenced tag's `synonyms`:
    denormalize them onto the item, or your carefully-modelled vocabulary does nothing for search.
 
-_Repo: github.com/nikkipunjabi1/thisisdubai — built in the open toward Optimizely MVP._
+_Repo: github.com/nikkipunjabi1/thisisdubai, built in the open toward Optimizely MVP._
