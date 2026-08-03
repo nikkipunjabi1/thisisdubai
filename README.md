@@ -1,11 +1,9 @@
 # This is Dubai — Optimizely SaaS CMS + Next.js Demo
 
-> ⚠️ **Unofficial, independent demo project — for learning and showcase purposes only. Not
-> affiliated with, sponsored by, or endorsed by any official tourism authority, destination
-> brand, or government entity.** Built on **Optimizely SaaS CMS**, **Optimizely Graph**, and
-> **Optimizely Visual Builder** with a **Next.js** frontend on Vercel. All branding here is
-> **original**; imagery is **royalty-free** only (see `ASSETS.md`). Real place names/facts are
-> used descriptively.
+> ⚠️ **Unofficial, independent demo project — for learning and showcase purposes only.** Built on
+> **Optimizely SaaS CMS**, **Optimizely Graph**, and **Optimizely Visual Builder** with a
+> **Next.js** frontend on Vercel. All branding here is **original**; imagery is **royalty-free**
+> only (see `ASSETS.md`). Real place names/facts are used descriptively.
 
 Repo: https://github.com/nikkipunjabi1/thisisdubai · Hosting: Vercel (Hobby/free tier).
 
@@ -20,16 +18,18 @@ Repo: https://github.com/nikkipunjabi1/thisisdubai · Hosting: Vercel (Hobby/fre
 
 ## What we're showcasing
 
-- ✅ Optimizely **Graph** — GraphQL content delivery + **semantic search**
+- ✅ Optimizely **Graph** — GraphQL content delivery + **bilingual (EN/AR) semantic search**
 - ✅ Optimizely **Visual Builder** — on-page editing, experiences, sections, components
-- ✅ **Multisite + localization** on SaaS CMS
-- ✅ **Next.js** App Router best practices (RSC, ISR/on-demand revalidation, Core Web Vitals)
+- ✅ A reusable, server-rendered **listing engine** (section pages as experiences + `SectionListing` block)
+- ✅ **CMP/DAM → SaaS CMS** bulk imagery pipeline (source → upload → attach, responsive AVIF)
+- ✅ **Next.js** App Router best practices (RSC, Graph-read caching, on-demand revalidation, Core Web Vitals)
 - ✅ A distinctive **sleek-modern-luxury** design system (not a generic AI-looking template)
-- ✅ **Stakeholder preview-before-publish** — durable, shareable, login-free preview links
 - ✅ **SEO on every page, server-rendered** — title/meta/OG + JSON-LD in the initial HTML
+- ✅ **EN + AR localization** — `[locale]` routing, RTL shell, locale-aware data + strings, **hreflang/sitemap SEO**
+- 🔜 **Full AR translation** — CMA-driven bulk translate utility (translation engine TBD) + Blog #10
+- 🔜 **Stakeholder preview-before-publish** — durable, shareable, login-free preview links
 - 🔜 **AI Search** (Claude-powered) over Events / Articles / Tours / Hotels / Places
-- 🔜 **AI Trip Planner** (outputs an `Itinerary`)
-- 🔜 **Opal** for Arabic (AR) translation + a reusable **community module/plugin**
+- 🔜 **AI Trip Planner** (outputs an `Itinerary`) + a reusable **community module/plugin**
 
 ## Docs
 
@@ -54,8 +54,27 @@ Repo: https://github.com/nikkipunjabi1/thisisdubai · Hosting: Vercel (Hobby/fre
 
 ## Status
 
-🟡 **Phase 0 — Brainstorming & planning.** Planning docs written and grounded in the official
-Optimizely docs + reference repos. **Baseline: official `@optimizely/cms-sdk`** (scaffolded via
-`create-app`; the `@remkoj` demo is a reference only). Next (Phase 1): add the CMS Skills, create
-the GitHub repo, scaffold the app, and get it running against the dev CMS. See
-[docs/SPRINTS.md](docs/SPRINTS.md).
+🟢 **Phase 3 — a live, content-rich site on Optimizely SaaS + Next.js.** Built on the official
+`@optimizely/cms-sdk`, running on Vercel against the SaaS CMS.
+
+**Shipped so far:**
+- **Content model + Visual Builder** — pages / experiences / components, a shared display-template
+  system, and non-routable site settings.
+- **Listing engine** — section pages as experiences with a droppable `SectionListing` block
+  (server-side pagination, sort, faceted filters); high-volume articles modeled as blocks, not pages.
+- **Imagery pipeline** — CMP/DAM sourcing → upload → attach, delivered as responsive AVIF via `next/image`.
+- **Semantic search** on Optimizely Graph (`_ranking: SEMANTIC`), now **bilingual EN/AR**.
+- **Performance** — cross-request Graph-read caching + a publish webhook for on-demand revalidation.
+- **Server-rendered SEO** — title/meta/OG + JSON-LD on every page, plus **hreflang alternates and a
+  bilingual sitemap**.
+- **Localization (EN + AR)** — `[locale]` routing, RTL shell, locale-aware data layer, a UI string
+  catalog, Arabic search, and localization SEO. (**L0–L5 complete**; `isLocalized` content-model pass done.)
+
+**In progress / next:**
+- **L6 · Full AR content translation** — a reviewable, dry-run-first CMA bulk-translate utility
+  (translation engine still to be chosen).
+- **Stakeholder preview-before-publish** — shareable, login-free preview links.
+- **AI features** — Claude-powered search + trip planner, and a reusable community module.
+
+The build is documented in the open — see [docs/BLOG-PLAN.md](docs/BLOG-PLAN.md) for the post series
+and [docs/SPRINTS.md](docs/SPRINTS.md) for the sprint history.
