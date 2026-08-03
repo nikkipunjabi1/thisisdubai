@@ -1,5 +1,5 @@
 ---
-title: "Localizing an Optimizely SaaS + Next.js site to Arabic: the six gotchas nobody warns you about"
+title: "Localizing an Optimizely SaaS + Next.js site to Arabic: the five gotchas nobody warns you about"
 status: draft
 audience: Optimizely community / dev.to / LinkedIn (long-form)
 author: Nikki Punjabi
@@ -120,48 +120,29 @@ Bonus: `getContentByPath(path)` matches on `url.default` and takes **no locale a
 in the path *is* the locale signal. A raw `_Content(where: { url: { default: { eq: "/ar/…" } } })`
 with no `locale:` arg resolves the item, so the localized path alone is enough.
 
-## Gotcha 5 — The App Router root layout can't read `[locale]` (and Next 16 renamed middleware)
+### Decide the prefix strategy on day one — it's an SEO decision, not a routing detail
 
-You want `<html lang dir>` to flip per locale. But the **root `app/layout.tsx` sits above the
-`[locale]` segment**, so it never receives the param. The clean fix: let the request-time hook detect
-the locale from the path and pass it down as a header the root layout reads.
+This is the one to get right *before* you have traffic. If you launch single-language with
+**unprefixed** URLs (`/places-to-visit/burj-khalifa`) and later decide you want a prefix on every
+language for consistency (`/en/places-to-visit/burj-khalifa`), then **every URL on the site changes**.
+Your app can 301-redirect old → new, but you've now run a full URL migration on a live, indexed site:
+301s pass most link equity, yet mass moves still cause real disruption — ranking volatility while
+Google reprocesses, external backlinks stuck pointing through redirects forever, redirect-chain and
+crawl-budget risk. That's a self-inflicted wound you can avoid entirely by choosing up front. Two
+safe strategies:
 
-```ts
-// src/proxy.ts  — Next 16 renamed the `middleware` file convention to `proxy`
-export function proxy(req: NextRequest) {
-  const first = req.nextUrl.pathname.split('/')[1];
-  if (isLocale(first)) {
-    const headers = new Headers(req.headers);
-    headers.set('x-locale', first);               // hand the locale to the root layout
-    return NextResponse.next({ request: { headers } });
-  }
-  const url = req.nextUrl.clone();
-  url.pathname = `/${DEFAULT_LOCALE}${req.nextUrl.pathname === '/' ? '' : req.nextUrl.pathname}`;
-  return NextResponse.redirect(url);              // `/` → `/en`, `/x` → `/en/x`
-}
-```
+- **Prefix every locale from day one** (what this project does — `/en` *and* `/ar`). Ship the `/en`
+  prefix even while you're still single-language, so the day you add Arabic *no existing URL moves*.
+- **Keep the default locale permanently unprefixed** and only prefix additional locales (`/about` +
+  `/ar/about`). This is the CMS's own default (master is unprefixed), and it *also* means adding a
+  language never touches your existing URLs.
 
-```tsx
-// app/layout.tsx (now async)
-const locale = isLocale((await headers()).get('x-locale')) ? … : DEFAULT_LOCALE;
-return <html lang={htmlLang(locale)} dir={dir(locale)} …>
-```
+Both are fine; **switching between them after launch is the expensive path.** The only wrong move is
+"unprefixed now, prefix-everything later." So: if there's any chance the site goes multilingual,
+lock the URL shape before you're indexed — decide it with the `[locale]` route segment up front, not
+once the redirects are already hurting.
 
-RTL font switching is then a **one-attribute** trick — re-point the font tokens under `dir=rtl`
-instead of touching every component:
-
-```css
-:root[dir='rtl'] {
-  --font-display: var(--font-arabic-display), var(--font-fraunces), serif;
-  --font-body: var(--font-arabic-body), var(--font-hanken), sans-serif;
-}
-```
-
-One more, free of charge: a big App Router route move (deleting `app/page.tsx`, adding `app/[locale]/`)
-can panic Turbopack's HMR (*"AppPageLoaderTree no longer exists"*). It's a stale-cache bug — `rm -rf
-.next` and restart, not a code error.
-
-## Gotcha 6 — Localized *semantic search* is a per-locale query **and** a per-locale stop-word list
+## Gotcha 5 — Localized *semantic search* is a per-locale query **and** a per-locale stop-word list
 
 Two separate things have to be localized for search, and it's easy to do only the first.
 
@@ -281,22 +262,18 @@ npm run opti-push -- --force
 | | dates (publishDate), URLs (bookingUrl), booleans (noindex) |
 | | author (a proper noun), searchKeywords (auto-derived from tags) |
 
-Two multipliers: putting `isLocalized` on the shared **`SeoMetadata` contract** localizes the SEO
-title/description for *every* type that extends it, in one edit; and inline VB canvas blocks (Hero,
-headings) need none of this — they localize via the experience's composition (Gotcha 3).
-
 ## Result
 
 `/` → `/en`; `/en` and `/ar` both render; `<html>` is `lang="en-GB" dir="ltr"` vs
 `lang="ar-AE" dir="rtl"`; Arabic pages show real Arabic where translated and **fall back to English**
 (Graph delivery honours the fallback language) everywhere else — so the site is shippable long before
 every item is translated. Arabic *semantic search* ships too — the whole search surface (federated
-query, stop words, result links, labels) is locale-aware (Gotcha 6). Bulk translation via Opal is the
+query, stop words, result links, labels) is locale-aware (Gotcha 5). Bulk translation via Opal is the
 one piece still to come.
 
 ## Links
 - Repo: _(this project)_
-- Related: `src/proxy.ts`, `src/app/[locale]/`, `src/lib/i18n.ts`, `src/lib/search.ts`,
-  `src/lib/messages.ts`, `docs/LOCALIZATION.md`
+- Related: `src/app/[locale]/`, `src/lib/i18n.ts`, `src/lib/search.ts`, `src/lib/messages.ts`,
+  `docs/LOCALIZATION.md`
 - Companion posts: **#8** Core Web Vitals (caching + AVIF), **#6** semantic search, **#10** bulk AR
   translation via Opal (coming)
