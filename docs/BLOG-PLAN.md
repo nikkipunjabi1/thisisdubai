@@ -77,6 +77,7 @@ build.
 | 14 | **Building an AI content assistant on Optimizely Graph** (content as tools for an LLM) | Grounding an AI feature — search, a planner, an MCP server — in your live content | 💡 Planned |
 | 15 | **Live Visual Builder preview for a headless app** on Optimizely SaaS | Wiring on-page/live preview end to end: preview tokens, local HTTPS, and the registry-must-mirror-the-model drift | 📝 Draft ready |
 | 16 | **Building a reference project on Optimizely SaaS in the open** | How and why to run a public learning project: the official-tooling decision, responsible-assets guardrails, and a sprint/PR/blogging workflow | 📝 Draft ready |
+| 17 | **Security best practices with Optimizely SaaS CMS** | Securing a SaaS CMS + headless build: API keys and secrets handling, preview/token scope, webhook and revalidation auth, least-privilege access, and safe content-write scripts | 💡 Planned |
 
 ## Backlog / candidate angles
 
