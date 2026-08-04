@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import type { ComponentProps } from 'react';
 import { notFound } from 'next/navigation';
-import { getArticleBySlug, getAllArticleParams } from '@/lib/articles';
+import { getArticleForRoute, getAllArticleParams } from '@/lib/articles';
 import { getSiteSettings, buildContentMetadata } from '@/lib/seo';
 import { getPlacesByKeys } from '@/lib/pois';
 import { SectionShell } from '@/components/ui/SectionShell';
@@ -36,7 +36,7 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale: raw, year, month, slug } = await params;
   const locale = isLocale(raw) ? raw : DEFAULT_LOCALE;
-  const [article, settings] = await Promise.all([getArticleBySlug(slug, locale), getSiteSettings()]);
+  const [article, settings] = await Promise.all([getArticleForRoute(slug, locale), getSiteSettings()]);
   if (!article) return {};
   return buildContentMetadata(
     {
@@ -55,7 +55,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function ArticlePage({ params }: Props) {
   const { locale: raw, slug } = await params;
   const locale = isLocale(raw) ? raw : DEFAULT_LOCALE;
-  const article = await getArticleBySlug(slug, locale);
+  const article = await getArticleForRoute(slug, locale);
   if (!article) notFound();
 
   const m = t(locale);

@@ -109,7 +109,18 @@ downstream (semantic search tuning, AI retrieval, the MCP server) needs a realis
 - 🏁 Phase-2.5 done = ~250 published items, every image field filled, facets meaningful.
 
 ## 🚦 Phase 3 — Optimizely superpowers  _(ask before starting)_
-- [ ] **S3.1 — Stakeholder preview-link module** (the headline feature) 🔴
+- [x] **S3.1 — Stakeholder preview-link module** (the headline feature) 🔴
+  ✅ **Shipped** (branch `feat/stakeholder-preview`). Phase 1 signed tokens
+  (`src/lib/preview-token.ts`); Phase 2 share routes + Draft Mode + localized banner + noindex;
+  Phase 3 real draft reads (`src/lib/draft.ts`, App key + Secret over HTTP Basic, uncached,
+  scoped to one item); Phase 4 **"Share with a stakeholder" button in the CMS preview pane**
+  (`src/app/preview/StakeholderLinkPanel.tsx`), authenticated by the CMS `preview_token`
+  (`src/lib/cms-preview-token.ts`) so authors never handle a secret.
+  Gotchas that cost real time, all written up in `docs/PREVIEW-WORKFLOW.md`: drafts can carry a
+  LOWER version number than the published version; version locale metadata is unreliable so
+  scope/locale must be matched on `url.default` **per row**; SaaS CMS has no UI extensibility,
+  so the preview pane is the only in-CMS surface. Blog drafted
+  (`blog/shareable-stakeholder-previews-optimizely-saas.md`), needs screenshots.
 - [~] **S3.2 — Semantic search** (autocomplete, synonyms, boosting, facets) 🔴
   ✅ **Core shipped:** `/search` — server-rendered, URL-driven (`?q=`), one federated Graph query
   across POI/Event/Area with `_ranking: SEMANTIC`, results grouped by type, `noindex`, breadcrumbs,

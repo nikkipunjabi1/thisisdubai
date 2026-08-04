@@ -8,14 +8,28 @@ import { getBreadcrumbs } from '@/lib/breadcrumbs';
 import { Breadcrumbs } from '@/components/ui/Breadcrumbs';
 import { seedListingState } from '@/lib/listing-context';
 import { cachedGraphRead } from '@/lib/cache';
+import { getDraftContentByPath } from '@/lib/draft';
 import { cmsContentPath, isLocale, withLocale, DEFAULT_LOCALE } from '@/lib/i18n';
 
 // Fetch a path's content once per request (React `cache`), reused across requests
 // (`cachedGraphRead`). The localized path itself is the locale signal — `/ar/...` vs
 // `/...` differ, so keying on path alone keeps EN and AR responses distinct in cache.
-const getByPath = cache(
+const getPublishedByPath = cache(
   cachedGraphRead((path: string) => getClient().getContentByPath(path), ['content-by-path']),
 );
+
+/**
+ * The page's content, honouring a stakeholder preview link.
+ *
+ * In Draft Mode with a valid, in-scope share token this returns the UNPUBLISHED version
+ * read straight from Graph (uncached, super-user credential, server-side only). In every
+ * other case — including a preview link scoped to a different page, or an item with no
+ * pending edits — it falls through to the normal cached published read, so the public
+ * site is untouched. The path carries the locale, so no separate locale argument is
+ * needed. See src/lib/draft.ts and docs/PREVIEW-WORKFLOW.md.
+ */
+const getByPath = async (path: string) =>
+  (await getDraftContentByPath(path)) ?? (await getPublishedByPath(path));
 
 // Content that must NEVER be served as a public page — shared blocks (Site Settings,
 // Tag taxonomy terms) and any organizational folder, caught by BASE TYPE.

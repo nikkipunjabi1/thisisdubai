@@ -26,7 +26,14 @@ export function proxy(req: NextRequest) {
     // The current path, so the root layout can build the language switcher's target
     // (the same page in the other locale) and per-page hreflang alternates (L5).
     headers.set('x-pathname', pathname);
-    return NextResponse.next({ request: { headers } });
+    const res = NextResponse.next({ request: { headers } });
+    // Belt-and-braces: while a stakeholder is in Draft Mode (the signed-preview cookie
+    // is set), force `noindex` on every page so unpublished content can never be
+    // crawled — even if the site is otherwise indexable (SITE_INDEXABLE=true).
+    if (req.cookies.has('__prerender_bypass')) {
+      res.headers.set('X-Robots-Tag', 'noindex, nofollow');
+    }
+    return res;
   }
 
   const url = req.nextUrl.clone();

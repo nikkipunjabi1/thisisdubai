@@ -45,9 +45,13 @@ _Phased plan. Each phase ends with a working, deployable state and (usually) a b
 - See **SPRINTS.md §Phase 2.5** for the sprint breakdown.
 
 ## Phase 3 — Optimizely superpowers
-- [ ] **Stakeholder preview links** — durable, shareable, login-free preview-before-publish
-      (signed token → Next Draft Mode → Graph HMAC draft render) + "PREVIEW" banner + noindex.
-      See PREVIEW-WORKFLOW.md. **(Primary module/blog candidate.)**
+- [x] **Stakeholder preview links** — durable, shareable, login-free preview-before-publish.
+      Signed token → Next Draft Mode → draft read from Graph with the App key + Secret over
+      **HTTP Basic** (not HMAC: the SDK supports neither, and Basic needs no request signing),
+      + "PREVIEW" banner + noindex. Authors generate links from a **"Share with a stakeholder"
+      button in the CMS preview pane**, authenticated by the CMS's own `preview_token`, so there
+      is no admin page and no secret in the author's hands. See PREVIEW-WORKFLOW.md.
+      **(Primary module/blog candidate — blog drafted.)**
 - [x] **Semantic search** page (autocomplete, synonyms, faceting) — the headline feature
       (shipped S3.2; taxonomy synonyms denormalized into `searchKeywords`. See docs/AI-SEARCH.md.)
 - [ ] **Localization**: EN + **AR semantic search** on showcase pages (RTL); Opal AR translation
