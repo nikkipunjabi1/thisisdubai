@@ -27,7 +27,10 @@ export const CuratedContentRailContentType = contentType({
   key: 'CuratedContentRail',
   displayName: 'Curated Content Rail',
   baseType: '_component',
-  compositionBehaviors: ['sectionEnabled', 'elementEnabled'],
+  // Section-only (NOT elementEnabled): element-enabled components may not have an
+  // array / content-list property, and the hand-picked `picks` list is exactly that.
+  // A full-width curated rail is a section anyway, not an inline element.
+  compositionBehaviors: ['sectionEnabled'],
   properties: {
     heading: { type: 'string', displayName: 'Heading', group: 'content', sortOrder: 1, isLocalized: true },
     intro: {
