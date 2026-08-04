@@ -253,3 +253,31 @@ export const search = cache(
     ['semantic-search'],
   ),
 );
+
+/** Type guard for a search group key — validates the `?in=` facet param from the URL. */
+export function isGroupKey(value: string | undefined | null): value is SearchGroupKey {
+  return value === 'places' || value === 'events' || value === 'neighbourhoods';
+}
+
+/** One entry in the result type-filter bar: a section, its label, and its result count. */
+export type SearchFacet = { key: SearchGroupKey; label: string; count: number };
+
+/**
+ * Per-type result counts for the facet bar. Read this from the FULL results (before
+ * `filterByType`), so each chip shows how many results that section has regardless of
+ * which facet is currently selected.
+ */
+export function searchFacets(results: SearchResults): SearchFacet[] {
+  return results.groups.map((group) => ({ key: group.key, label: group.label, count: group.items.length }));
+}
+
+/**
+ * Narrow results to a single section type when a valid `?in=` facet is selected;
+ * recomputes `total` for the narrowed set. An unset or invalid key returns the results
+ * unchanged, so the default view still shows every group.
+ */
+export function filterByType(results: SearchResults, inKey: string | undefined | null): SearchResults {
+  if (!isGroupKey(inKey)) return results;
+  const groups = results.groups.filter((group) => group.key === inKey);
+  return { ...results, groups, total: groups.reduce((sum, group) => sum + group.items.length, 0) };
+}

@@ -4,7 +4,7 @@ import { SectionShell } from '@/components/ui/SectionShell';
 import { SectionCardGrid } from '@/components/content/SectionCard';
 import { SearchBox } from '@/components/ui/SearchBox';
 import { Breadcrumbs } from '@/components/ui/Breadcrumbs';
-import { search } from '@/lib/search';
+import { search, searchFacets, filterByType, isGroupKey, type SearchGroupKey } from '@/lib/search';
 import { getSiteSettings, buildPageTitle } from '@/lib/seo';
 import { isLocale, withLocale, DEFAULT_LOCALE } from '@/lib/i18n';
 import { t } from '@/lib/messages';
@@ -19,7 +19,7 @@ import { t } from '@/lib/messages';
 
 type Props = {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ q?: string | string[] }>;
+  searchParams: Promise<{ q?: string | string[]; in?: string | string[] }>;
 };
 
 const readQuery = (q: string | string[] | undefined) =>
@@ -44,9 +44,19 @@ export default async function SearchPage({ params, searchParams }: Props) {
   const { locale: raw } = await params;
   const locale = isLocale(raw) ? raw : DEFAULT_LOCALE;
   const m = t(locale);
-  const query = readQuery((await searchParams).q);
-  const results = query ? await search(query, locale) : null;
+  const sp = await searchParams;
+  const query = readQuery(sp.q);
+  // Run the full federated search once; facet COUNTS come from the full set, then we
+  // narrow the displayed groups to the selected `?in=` type (if any). Both are pure,
+  // URL-driven, and add no client JavaScript.
+  const full = query ? await search(query, locale) : null;
+  const facets = full ? searchFacets(full) : [];
+  const inValue = readQuery(sp.in).toLowerCase();
+  const inKey = isGroupKey(inValue) ? inValue : undefined;
+  const results = full ? filterByType(full, inKey) : null;
   const searchHref = (q: string) => `${withLocale(locale, '/search')}?q=${encodeURIComponent(q)}`;
+  const facetHref = (key?: SearchGroupKey) =>
+    `${withLocale(locale, '/search')}?q=${encodeURIComponent(query)}${key ? `&in=${key}` : ''}`;
 
   return (
     <>
@@ -113,10 +123,44 @@ export default async function SearchPage({ params, searchParams }: Props) {
 
         {results && results.total > 0 ? (
           <div className="mt-12 space-y-16">
-            <p className="text-sm text-muted">
-              {m.search.resultsFor(results.total)}{' '}
-              <span className="text-fg">&ldquo;{results.query}&rdquo;</span>
-            </p>
+            <div className="space-y-6">
+              <p className="text-sm text-muted">
+                {m.search.resultsFor(results.total)}{' '}
+                <span className="text-fg">&ldquo;{results.query}&rdquo;</span>
+              </p>
+              {/* Type facets — narrow to one section. Counts are from the full result
+                  set, so each chip is stable regardless of the current filter. Pure
+                  links (`?in=`), no client JS. Only shown when more than one type matched. */}
+              {facets.length > 1 ? (
+                <nav aria-label={m.search.filterByType} className="flex flex-wrap gap-3">
+                  <Link
+                    href={facetHref()}
+                    aria-current={!inKey ? 'true' : undefined}
+                    className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm transition ${
+                      !inKey ? 'border-accent text-accent' : 'border-line text-fg hover:border-accent hover:text-accent'
+                    }`}
+                  >
+                    {m.search.filterAll}
+                    <span className="text-muted">{full!.total}</span>
+                  </Link>
+                  {facets.map((f) => (
+                    <Link
+                      key={f.key}
+                      href={facetHref(f.key)}
+                      aria-current={inKey === f.key ? 'true' : undefined}
+                      className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm transition ${
+                        inKey === f.key
+                          ? 'border-accent text-accent'
+                          : 'border-line text-fg hover:border-accent hover:text-accent'
+                      }`}
+                    >
+                      {f.label}
+                      <span className="text-muted">{f.count}</span>
+                    </Link>
+                  ))}
+                </nav>
+              ) : null}
+            </div>
             {results.groups.map((group) => (
               <section key={group.key} aria-labelledby={`results-${group.key}`}>
                 <div className="mb-8 flex flex-wrap items-baseline justify-between gap-4 border-t border-line pt-8">
