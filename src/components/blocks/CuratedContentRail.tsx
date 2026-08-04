@@ -71,7 +71,9 @@ export const CuratedContentRailContentType = contentType({
       group: 'content',
       sortOrder: 5,
     },
-    items: {
+    // NOTE: must NOT be named `items` — that key is reserved on element-enabled
+    // components (they use `items` for composition), so the CMS rejects it.
+    picks: {
       type: 'array',
       displayName: 'Hand-picked items (when “Hand-picked”)',
       description: 'Pick the exact items, in order. Ignored for Latest / By tag.',
@@ -114,7 +116,7 @@ export default async function CuratedContentRail({ content, displaySettings }: P
   const source = (content.source ?? 'latest') as CuratedSource;
   const count = content.count ?? 4;
   const tagKey = (content.tag as { key?: string } | undefined)?.key ?? null;
-  const keys = ((content.items ?? []) as Array<{ key?: string }>)
+  const keys = ((content.picks ?? []) as Array<{ key?: string }>)
     .map((i) => i?.key)
     .filter((k): k is string => Boolean(k));
 
