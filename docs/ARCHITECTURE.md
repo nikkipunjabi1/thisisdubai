@@ -108,16 +108,26 @@ public/
 ## 8. Environment & secrets
 - CMS URL + credentials in `.env` (exact names at scaffold) — includes a public **Graph single
   key** (frontend-safe) and server-only **app key + secret**.
-- Additional: `PREVIEW_SIGNING_SECRET` (§9), later `ANTHROPIC_API_KEY` (Phase 4) — server scope
-  only, never `NEXT_PUBLIC_*`.
+- Additional: `PREVIEW_SIGNING_SECRET` and `PREVIEW_ADMIN_SECRET` (§9), `REVALIDATE_SECRET` (§11),
+  later `ANTHROPIC_API_KEY` — server scope only, never `NEXT_PUBLIC_*`.
 
 ## 9. Stakeholder preview-before-publish (see PREVIEW-WORKFLOW.md)
-- **Layer 1:** the SDK's built-in live preview for the author (short-lived token).
-- **Layer 2 (we build):** durable, login-free, shareable links. `/api/preview/share` mints an
-  HMAC/JWT-signed token (`PREVIEW_SIGNING_SECRET`) scoped to `{contentKey, locale, exp}`; opening
-  `/preview/share?token=…` verifies it, enables **Next Draft Mode**, and renders the draft version
-  via **Graph app-key/HMAC** (server-side super-user). Draft pages are `force-dynamic` +
-  `robots: noindex` with a "PREVIEW" banner. Publish → webhook → `revalidatePath` → live.
+**Built and shipped** (S3.1). Full design + gotchas: `docs/PREVIEW-WORKFLOW.md`.
+- **Layer 1:** the SDK's built-in live preview for the author (short-lived token, ~5 min).
+- **Layer 2 (we built):** durable, login-free, shareable links. A signed token
+  (`PREVIEW_SIGNING_SECRET`, `src/lib/preview-token.ts`) scoped to `{key, locale, version, path,
+  exp}`; opening `/preview/share?token=…` verifies it, enables **Next Draft Mode**, stores the
+  token in a companion cookie for scoping, and redirects. `src/lib/draft.ts` then reads the draft
+  with the **Graph App key + Secret over HTTP Basic** (server-side super-user; the SDK supports
+  neither HMAC nor a preview-mode credential, so `DraftGraphClient` overrides only `request()`).
+  Draft reads bypass `cachedGraphRead` entirely — `unstable_cache` is keyed on path and shared
+  across visitors, so caching one would leak it publicly. Draft pages are `force-dynamic` +
+  `noindex` with a "PREVIEW" banner. Publish → webhook → `revalidateTag` → live catches up.
+- **Author UX:** a "Share with a stakeholder" button rendered in the CMS preview pane
+  (`src/app/preview/StakeholderLinkPanel.tsx`), authenticated by the CMS's own `preview_token`
+  validated against Graph (`src/lib/cms-preview-token.ts`). SaaS CMS has no UI extensibility, so
+  the preview pane is the only in-CMS surface; the CMS login is the only login.
+  `/api/preview/share` (Bearer `PREVIEW_ADMIN_SECRET`) remains for CI/scripts only.
 
 ## 10. SEO rendering (see SEO.md)
 - Every route: server-side `generateMetadata()` via a shared `buildMetadata(content, fallbacks)`

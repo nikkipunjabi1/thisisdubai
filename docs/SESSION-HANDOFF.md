@@ -87,11 +87,31 @@ which needs a CMS login and a ~5-min token (that's "Layer 1"; this is "Layer 2")
   words, TPM voice, generic, zero em-dashes, 4 `📷` placeholders to capture. Status in
   `BLOG-PLAN.md` moved to "Draft ready". **Needs the user's review + screenshots before publishing.**
 
-### NEXT — the preview module is complete (Phases 1-4 + blog draft). Open follow-ups:
-- Capture the 4 screenshots and review the blog draft, then publish.
-- Rendering a **brand-new page that has no URL yet** (needs a render-by-key route).
-- Hardening gaps named in `PREVIEW-WORKFLOW.md`: single shared secret rather than per-user
-  accounts, no sign-in rate limit, no link revocation before expiry.
+- **Copy button fix.** `navigator.clipboard` silently fails inside the CMS iframe: the async
+  Clipboard API needs `allow="clipboard-write"` on the iframe, which the CMS owns and we cannot
+  set. Now falls back to select + `document.execCommand('copy')`, and if both fail it selects the
+  text and tells the user to press Ctrl/Cmd+C.
+
+### NEXT — the preview module is complete (Phases 1-4 + blog draft + packaging plan).
+**PR is open against `main`; the USER merges.** Open follow-ups, in rough priority order:
+1. **Capture the 4 `📷` screenshots** and review `blog/shareable-stakeholder-previews-optimizely-saas.md`,
+   then publish. Zero em-dashes verified; do not introduce any.
+2. **Package the module for other teams** — full plan in `docs/PREVIEW-MODULE-PACKAGING.md`.
+   Verdict: possible; ~60% ships as a framework-free npm core, ~25% as a Next.js adapter, ~15% is
+   always host-app integration. Recommended: npm package **plus** a public reference repo, with a
+   Claude Code skill as a fast follow. Six open questions listed there (ownership/scope, whether
+   Optimizely will ship UI extensibility, per-user attribution, link revocation storage, other
+   framework adapters, licensing). Nothing built yet.
+3. Rendering a **brand-new page that has no URL yet** (needs a render-by-key route).
+4. Hardening gaps in `PREVIEW-WORKFLOW.md`: no per-user attribution (the CMS preview token
+   identifies a session, not a person), no link revocation before expiry.
+
+### Gotcha for the next session: stale Turbopack cache
+`/en/search` started throwing `ReferenceError: require is not defined` from a Next internal
+chunk. **Not a code bug** — the dev server had run for hours across many edits including
+directory deletions. `npm run build` passed cleanly, which is the quickest way to tell.
+Fix: stop the dev server, `rm -rf .next/dev`, restart. Suspect this whenever an error's frames
+are all ignore-listed Next internals.
 
 ### Generating a link
 Normally: open the page in the **CMS editor** and click **"Share with a stakeholder"** in the

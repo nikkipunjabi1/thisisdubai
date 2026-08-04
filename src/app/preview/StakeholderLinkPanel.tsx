@@ -1,7 +1,42 @@
 'use client';
 
-import { useActionState, useState } from 'react';
+import { useActionState, useRef, useState } from 'react';
 import { createShareLink, type ShareLinkState } from './actions';
+
+/**
+ * Copy `value`, working inside the CMS's iframe.
+ *
+ * `navigator.clipboard` is not enough here. The async Clipboard API needs the embedding
+ * iframe to carry `allow="clipboard-write"`, and that iframe belongs to the CMS, so we
+ * cannot add it. In that situation `writeText` rejects (or silently no-ops), which is why
+ * the button appeared to do nothing.
+ *
+ * So: try the modern API, and fall back to selecting the input and using the legacy
+ * `execCommand('copy')`, which is not subject to that permission. Returns false only when
+ * both fail, and the caller then tells the user to press the keyboard shortcut, with the
+ * text already selected for them.
+ */
+async function copyToClipboard(value: string, input: HTMLInputElement | null): Promise<boolean> {
+  try {
+    if (window.isSecureContext && navigator.clipboard) {
+      await navigator.clipboard.writeText(value);
+      return true;
+    }
+  } catch {
+    // Permissions-Policy or a non-focused document. Fall through.
+  }
+
+  if (!input) return false;
+  try {
+    input.focus();
+    input.select();
+    input.setSelectionRange(0, value.length);
+    // Deprecated, but the only clipboard write available in a third-party iframe.
+    return document.execCommand('copy');
+  } catch {
+    return false;
+  }
+}
 
 /**
  * "Share with a stakeholder" control, rendered inside the CMS preview pane.
@@ -41,7 +76,8 @@ export function StakeholderLinkPanel({
   displayName,
 }: Props) {
   const [open, setOpen] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [copyState, setCopyState] = useState<'idle' | 'copied' | 'manual'>('idle');
+  const urlInputRef = useRef<HTMLInputElement>(null);
   const [state, formAction, pending] = useActionState<ShareLinkState, FormData>(
     createShareLink,
     {},
@@ -145,6 +181,7 @@ export function StakeholderLinkPanel({
             </label>
             <input
               id="sp-url"
+              ref={urlInputRef}
               readOnly
               value={state.url}
               onFocus={(e) => e.currentTarget.select()}
@@ -153,21 +190,21 @@ export function StakeholderLinkPanel({
             <button
               type="button"
               onClick={async () => {
-                try {
-                  await navigator.clipboard.writeText(state.url!);
-                  setCopied(true);
-                  setTimeout(() => setCopied(false), 2000);
-                } catch {
-                  // Clipboard access can be blocked inside an iframe; the field stays
-                  // selectable so a manual copy always works.
-                  setCopied(false);
-                }
+                const ok = await copyToClipboard(state.url!, urlInputRef.current);
+                setCopyState(ok ? 'copied' : 'manual');
+                if (ok) setTimeout(() => setCopyState('idle'), 2000);
               }}
               className="shrink-0 rounded-full border border-white/30 px-3 text-xs transition hover:border-white"
             >
-              {copied ? 'Copied' : 'Copy'}
+              {copyState === 'copied' ? 'Copied' : 'Copy'}
             </button>
           </div>
+          {copyState === 'manual' && (
+            <p role="status" className="mt-2 text-[11px] text-amber-300">
+              The browser blocked clipboard access here. The link is selected, so press
+              Ctrl/Cmd + C to copy it.
+            </p>
+          )}
           {state.expiresAt && (
             <p className="mt-2 text-[11px] text-white/50">
               Expires {new Date(state.expiresAt).toLocaleString()}
