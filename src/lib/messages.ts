@@ -50,6 +50,10 @@ const en = {
     filterByType: 'Filter by type',
     filterAll: 'All',
   },
+  preview: {
+    banner: 'Preview: you are viewing unpublished draft content.',
+    exit: 'Exit preview',
+  },
   listing: {
     result: 'result',
     results: 'results',
@@ -115,6 +119,10 @@ const ar: Messages = {
     metaDescription: 'ابحث في أماكن الزيارة والفعاليات والأحياء عبر This is Dubai.',
     filterByType: 'تصفية حسب النوع',
     filterAll: 'الكل',
+  },
+  preview: {
+    banner: 'معاينة: أنت تشاهد محتوى مسودة غير منشور.',
+    exit: 'إنهاء المعاينة',
   },
   listing: {
     result: 'نتيجة',

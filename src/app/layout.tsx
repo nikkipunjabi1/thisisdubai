@@ -47,6 +47,7 @@ import type { Metadata } from 'next';
 import { getSiteSettings, buildTitleTemplate, buildTitleDefault } from '@/lib/seo';
 import { SiteHeader } from '@/components/layout/SiteHeader';
 import { SiteFooter } from '@/components/layout/SiteFooter';
+import { PreviewBanner } from '@/components/preview/PreviewBanner';
 
 config({
   apiKey: process.env.OPTIMIZELY_GRAPH_SINGLE_KEY || "your api key here",
@@ -177,6 +178,7 @@ export default async function RootLayout({
       ].join(' ')}
     >
       <body className='flex min-h-dvh flex-col bg-bg text-fg'>
+        <PreviewBanner locale={locale} />
         <SiteHeader locale={locale} pathname={pathname} />
         <main className='flex-1'>{children}</main>
         <SiteFooter locale={locale} />
