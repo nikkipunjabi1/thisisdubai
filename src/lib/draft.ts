@@ -265,6 +265,38 @@ async function fetchVersions(key: string): Promise<VersionRow[]> {
   });
 }
 
+/**
+ * The draft content for whatever the share link is scoped to, regardless of whether that
+ * item has a CMS URL.
+ *
+ * `getDraftContentByPath` matches on `url.default`, which only works for content the CMS
+ * gives a URL. High-volume content modelled as shared BLOCKS (articles here, see
+ * docs/CONTENT-ARCHITECTURE.md) has no CMS URL at all: the app owns their routing. For
+ * those, the URL cannot be the scope check, so this returns the scoped draft and leaves
+ * the caller to confirm it is the item being rendered (by slug, say). The caller MUST do
+ * that check: without it, one article's link would preview every article.
+ *
+ * Locale is narrowed with the token's own locale where the rows agree, and left alone when
+ * they do not, since version locale metadata is not reliable (see `rowsOnPath`).
+ */
+export const getScopedDraftContent = cache(async (): Promise<Record<string, unknown> | null> => {
+  const scope = await getDraftScope();
+  if (!scope) return null;
+
+  try {
+    const rows = await fetchVersions(scope.key);
+    const forLocale = rows.filter((r) => r.locale === scope.locale);
+    const chosen = selectDraftVersion(forLocale.length > 0 ? forLocale : rows, scope.version);
+    if (!chosen) return null;
+
+    const content = await getDraftClient().getContent({ key: scope.key, version: chosen.version });
+    return (content as Record<string, unknown>) ?? null;
+  } catch (error) {
+    console.error('[preview] scoped draft read failed, falling back to published content:', error);
+    return null;
+  }
+});
+
 /** A routable item with unpublished edits — one row in the admin UI's picker. */
 export type DraftItem = {
   key: string;

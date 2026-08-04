@@ -1,6 +1,7 @@
 import { cache } from 'react';
 import { getClient } from '@optimizely/cms-sdk';
 import { cachedGraphRead } from './cache';
+import { getScopedDraftContent } from './draft';
 import { graphLocale, withLocale, DEFAULT_LOCALE, type Locale } from './i18n';
 
 /**
@@ -57,26 +58,49 @@ export const getArticleBySlug = cache(
       )) as any;
       const it = data?.ArticlePost?.items?.[0];
       if (!it) return null;
-      return {
-        slug: it.slug,
-        title: it.title ?? 'Article',
-        excerpt: it.excerpt ?? null,
-        bodyJson: it.body?.json ?? null,
-        author: it.author ?? null,
-        publishDate: it.publishDate ?? null,
-        heroUrl: it.heroImage?.url?.default ?? null,
-        heroAlt: it.title ?? 'Article',
-        relatedPlaceKeys: (it.relatedPlaces ?? []).map((p: any) => p?.key).filter((k: unknown): k is string => Boolean(k)),
-        metaTitle: it.metaTitle ?? null,
-        metaDescription: it.metaDescription ?? null,
-        noindex: it.noindex ?? null,
-        nofollow: it.nofollow ?? null,
-      };
+      return toArticleDetail(it);
     } catch {
       return null;
     }
   }, ['article-by-slug']),
 );
+
+/** Shape a raw `ArticlePost` (delivery query or draft read) into what the route needs. */
+function toArticleDetail(it: any): ArticleDetail {
+  return {
+    slug: it.slug,
+    title: it.title ?? 'Article',
+    excerpt: it.excerpt ?? null,
+    bodyJson: it.body?.json ?? null,
+    author: it.author ?? null,
+    publishDate: it.publishDate ?? null,
+    heroUrl: it.heroImage?.url?.default ?? null,
+    heroAlt: it.title ?? 'Article',
+    relatedPlaceKeys: (it.relatedPlaces ?? []).map((p: any) => p?.key).filter((k: unknown): k is string => Boolean(k)),
+    metaTitle: it.metaTitle ?? null,
+    metaDescription: it.metaDescription ?? null,
+    noindex: it.noindex ?? null,
+    nofollow: it.nofollow ?? null,
+  };
+}
+
+/**
+ * The article for this route, honouring a stakeholder preview link.
+ *
+ * Articles are shared blocks with no CMS URL, so the draft layer cannot match them by
+ * path. It hands back whatever the link is scoped to and we confirm here that it really
+ * is this article, by slug. Without that check one article's link would preview them all.
+ *
+ * Falls through to the normal cached published read in every other case.
+ */
+export async function getArticleForRoute(
+  slug: string,
+  locale: Locale = DEFAULT_LOCALE,
+): Promise<ArticleDetail | null> {
+  const draft = (await getScopedDraftContent()) as any;
+  if (draft?.slug === slug) return toArticleDetail(draft);
+  return getArticleBySlug(slug, locale);
+}
 
 /** All articles as {year, month, slug} — for the detail route's generateStaticParams. */
 export const getAllArticleParams = cachedGraphRead(async (): Promise<Array<{ year: string; month: string; slug: string }>> => {
