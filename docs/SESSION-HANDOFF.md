@@ -37,31 +37,30 @@ which needs a CMS login and a ~5-min token (that's "Layer 1"; this is "Layer 2")
 - **Verified:** typecheck/lint clean; token tests pass; in-browser the route mounts, rejects bad
   tokens (401/404), header auth enforced, no regression to the normal site.
 
-### NEXT — Phase 3: real draft reads (NOT started; needs the HMAC keys, which are set)
-**Goal:** when Draft Mode is on, render the **unpublished** version instead of published content.
+- **Phase 3 — real draft reads. DONE.** `src/lib/draft.ts` (+ `.test.ts`, 8 tests).
+  - The spike overturned the plan's assumptions: `@optimizely/cms-sdk` v2 has **no HMAC support
+    and no `enablePreview()`** — `request()` only sends `epi-single <key>` or `Bearer
+    <previewToken>`. But Graph accepts **`Authorization: Basic base64(APP_KEY:SECRET)`**, which
+    returns unpublished versions. So `DraftGraphClient` subclasses `GraphClient` and overrides
+    only `request()`; all SDK query generation is reused.
+  - **Pick the draft by `_metadata.status`, never by version number** — live Burj Khalifa has
+    Draft **1377** next to Published **1378**. And the `locale` query *argument* does NOT filter
+    versions under super-user auth; locale must go in the `where` clause.
+  - The signed token is also stored in an httpOnly `__preview_share` cookie (Draft Mode's own
+    cookie has no payload), re-verified per request, so a link previews **one item only**.
+  - Wired into `src/app/[locale]/[...slug]/page.tsx` and `src/app/[locale]/page.tsx`; falls back
+    to the cached published read whenever a draft isn't available. Listings stay published.
+  - **Verified end to end:** share link → banner + the draft's `metaDescription` (published
+    `…Dubai.` vs draft `…Dubai....`); a different page under the same cookie shows published;
+    exit clears both cookies; AR (no draft) falls back cleanly; tampered token 404;
+    `X-Robots-Tag: noindex, nofollow` present only in Draft Mode; `/en` `/ar` and section pages
+    all still 200. Typecheck + lint clean, 39 tests pass.
 
-- **Unknown to resolve first (do a READ-ONLY spike):** the exact `@optimizely/cms-sdk` call to fetch
-  a draft/specific version using the **Graph HMAC App key + Secret** server-side. Candidates:
-  `client.getPreviewContent(...)` (see the existing Layer-1 route `src/app/preview/page.tsx` for the
-  shape) and/or a preview-enabled client (`enablePreview()` / passing the HMAC creds to `config()`).
-  Confirm against the live CMS before wiring anything. `docs/PREVIEW-WORKFLOW.md` §"To validate"
-  lists this explicitly.
-- **Then wire the data layer** to branch on `draftMode().isEnabled`: in the content reads used by
-  the section/detail/experience pages and `getContentByPath` (see `src/lib/seo.ts`, `src/lib/cache.ts`,
-  `src/lib/sections.ts`, `src/lib/articles.ts`, and the `[locale]` route pages), when Draft Mode is
-  enabled, read the **draft via HMAC, uncached** (`force-dynamic`, bypass `cachedGraphRead`) instead
-  of the single-key published read. The signed token's `key` targets the item; `version` may pin a
-  version or be `'latest'`.
-- **Keep the guardrails:** draft responses stay `noindex` (proxy already does this); HMAC creds
-  **server-side only, never in the browser**; publish stays in the CMS (login-free links are
-  read-only — no publish action). The publish → `/api/revalidate` webhook makes live catch up.
-- **Verify:** open a generated link (see test command) → the page shows draft edits that are not
-  yet published, with the banner; a normal `/en` page is unchanged and still cached.
-
-### Phase 4 (later): a proper authenticated admin UI to generate links (replaces the curl), mark
+### NEXT — Phase 4: a proper authenticated admin UI to generate links (replaces the curl), mark
 `PREVIEW-WORKFLOW.md` done, draft blog #13 (Shareable stakeholder previews).
+Also still open: rendering a **brand-new page that has no URL yet** (needs a render-by-key route).
 
-### Test command (Phase 2, works now)
+### Test command (works now, end to end)
 Real Burj Khalifa POI key included so it's meaningful:
 ```bash
 curl -sk "https://localhost:3000/api/preview/share?key=78ba1519705591c08d21e02b45793831&locale=en&path=/places-to-visit/burj-khalifa" \
@@ -74,15 +73,21 @@ Returns `{url, expiresInSeconds}`; open `url` → redirect to the page + preview
   write) OAuth. Server-side.
 - `OPTIMIZELY_GRAPH_SINGLE_KEY` — public, read-only, published-only. The **only** browser-safe key.
 - `OPTIMIZELY_GRAPH_GATEWAY` — Graph endpoint.
-- `OPTIMIZELY_GRAPH_APP_KEY` + `OPTIMIZELY_GRAPH_SECRET` — Graph **HMAC**, super-user (reads drafts +
-  writes). SERVER-SIDE ONLY. **Used by Phase 3.** (User has added these.)
+- `OPTIMIZELY_GRAPH_APP_KEY` + `OPTIMIZELY_GRAPH_SECRET` — Graph super-user (reads drafts + writes).
+  SERVER-SIDE ONLY. Used by `src/lib/draft.ts` as **HTTP Basic**, not HMAC (Basic is accepted and
+  needs no request signing).
 - `PREVIEW_SIGNING_SECRET` — signs the share links (HMAC). Server-side.
 - `PREVIEW_ADMIN_SECRET` — Bearer token guarding the link generator.
 - `APPLICATION_HOST`, `GRAPH_CACHE_SECONDS`, `SITE_INDEXABLE`, `REVALIDATE_SECRET` — see `.env.example`.
 
 ## Key facts / gotchas
-- **Single key vs HMAC:** single key = published/public only (browser-safe). HMAC App key+Secret =
-  super-user, reads unpublished + writes; server-side only. (This is also blog #17's subject.)
+- **Single key vs App key+Secret:** single key = published/public only (browser-safe). App
+  key + Secret = super-user, reads unpublished + writes; server-side only. Graph accepts it as
+  either HTTP **Basic** or HMAC — Basic needs no request signing, so that's what we use. (This is
+  also blog #17's subject.)
+- **Version numbers don't order by status or recency.** A `Draft` can have a LOWER version number
+  than the `Published` one (live example: Burj Khalifa Draft 1377 / Published 1378). Always select
+  on `_metadata.status`, and break ties on `lastModified`.
 - **The app is already dynamically rendered** (root layout reads request headers for locale), so
   adding `draftMode()` reads adds no caching regression; speed comes from `cachedGraphRead`
   (`unstable_cache`), not static generation.

@@ -3,15 +3,23 @@ import type { Metadata } from 'next';
 import { getClient } from '@optimizely/cms-sdk';
 import { OptimizelyComponent } from '@optimizely/cms-sdk/react/server';
 import { getSiteSettings, buildContentMetadata, type PageSeo } from '@/lib/seo';
+import { getDraftContentByPath } from '@/lib/draft';
 import { cmsContentPath, isLocale, DEFAULT_LOCALE, type Locale } from '@/lib/i18n';
 
-// Fetch the published Home experience for a locale once per request; `generateMetadata`
-// and the page both need it, and `cache()` dedupes the Graph call. The home path is
+// Fetch the Home experience for a locale once per request; `generateMetadata` and the
+// page both need it, and `cache()` dedupes the Graph call. The home path is
 // locale-derived: `/` for the default locale, `/ar/` for Arabic (the CMS convention) —
 // and the path itself is the locale signal, so no separate `locale` arg is needed.
+//
+// A stakeholder preview link scoped to the Home experience swaps in its UNPUBLISHED
+// version (uncached, server-side credential); everything else reads published content
+// exactly as before. See src/lib/draft.ts.
 const getHome = cache(async (locale: Locale) => {
+  const path = cmsContentPath(locale, []);
+  const draft = await getDraftContentByPath(path, locale);
+  if (draft) return draft;
   try {
-    return await getClient().getContentByPath(cmsContentPath(locale, []));
+    return await getClient().getContentByPath(path);
   } catch {
     return [];
   }
