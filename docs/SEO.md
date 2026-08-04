@@ -9,7 +9,8 @@ SEO-critical may be injected only on the client or skipped for any page type._
 - ✅ Canonical URL, `og:*` + `twitter:*`, `robots` directives.
 - ✅ **JSON-LD** (`<script type="application/ld+json">`) present in the **initial HTML** (RSC),
   not added by client JS.
-- ✅ `hreflang` alternates once localization is on (EN now, AR later).
+- ✅ `hreflang` alternates once localization is on — **done** (EN + AR, per-page alternates + a
+  bilingual sitemap).
 - ✅ `sitemap.xml` + `robots.txt` (baseline already has `sitemap.ts` / `robots.ts`).
 - ✅ No page ships with a missing/empty title or duplicate/boilerplate meta.
 
@@ -40,6 +41,16 @@ SEO-critical may be injected only on the client or skipped for any page type._
   page type emits JSON-LD.
 - A Phase-3 **automated check**: crawl key routes in CI and assert title + description +
   ≥1 JSON-LD block exist in the server HTML.
+
+## Populating the copy (shipped)
+`generateMetadata` renders whatever `SeoMetadata` holds; the actual EN copy was filled by
+`scripts/seo-fill.mjs` — a reviewable CMA script that populates empty `metaTitle` (≤70) and
+`metaDescription` (≤180) across **all routable items**, deriving each description from the item's
+summary/excerpt and using hand-crafted copy for section/home experiences. It is **dry-by-default**;
+`--apply` writes, `--publish-only` republishes, `--overwrite` replaces existing values, `--type=`
+scopes to one type. It fills empty fields only unless `--overwrite` is passed, so hand-tuned copy is
+never clobbered. Publishing selects the newest EN version per item (version lists are not ordered by
+status or recency once AR versions exist).
 
 ## The reusable-module angle
 The **JSON-LD generator for Optimizely content types** is a clean, community-useful extract —

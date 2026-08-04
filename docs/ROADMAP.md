@@ -2,7 +2,11 @@
 
 _Phased plan. Each phase ends with a working, deployable state and (usually) a blog post._
 
-## Phase 0 — Foundations (planning) 🟡 _current_
+> **Where we are:** Phases 0 → 2.5 are done and Phase 3 (Optimizely superpowers) is **in progress**
+> — semantic search + result facets and the stakeholder preview module have shipped. This file is
+> the high-level plan; **`docs/SPRINTS.md` is the live, sprint-by-sprint tracker.**
+
+## Phase 0 — Foundations (planning) ✅
 - [x] Kickoff decisions locked
 - [ ] Research digested into OPTIMIZELY-RESEARCH.md + ARCHITECTURE.md
 - [ ] Content model drafted (CONTENT-MODEL.md)
@@ -44,7 +48,7 @@ _Phased plan. Each phase ends with a working, deployable state and (usually) a b
   Phase-3/4 feature (semantic search, AI retrieval, the MCP server) reads from this corpus.
 - See **SPRINTS.md §Phase 2.5** for the sprint breakdown.
 
-## Phase 3 — Optimizely superpowers
+## Phase 3 — Optimizely superpowers 🟡 _current_
 - [x] **Stakeholder preview links** — durable, shareable, login-free preview-before-publish.
       Signed token → Next Draft Mode → draft read from Graph with the App key + Secret over
       **HTTP Basic** (not HMAC: the SDK supports neither, and Basic needs no request signing),

@@ -18,7 +18,7 @@ Repo: https://github.com/nikkipunjabi1/thisisdubai · Hosting: Vercel (Hobby/fre
 
 ## What we're showcasing
 
-- ✅ Optimizely **Graph** — GraphQL content delivery + **bilingual (EN/AR) semantic search**
+- ✅ Optimizely **Graph** — GraphQL content delivery + **bilingual (EN/AR) semantic search** with result type facets
 - ✅ Optimizely **Visual Builder** — on-page editing, experiences, sections, components
 - ✅ A reusable, server-rendered **listing engine** (section pages as experiences + `SectionListing` block)
 - ✅ **CMP/DAM → SaaS CMS** bulk imagery pipeline (source → upload → attach, responsive AVIF)
@@ -26,8 +26,8 @@ Repo: https://github.com/nikkipunjabi1/thisisdubai · Hosting: Vercel (Hobby/fre
 - ✅ A distinctive **sleek-modern-luxury** design system (not a generic AI-looking template)
 - ✅ **SEO on every page, server-rendered** — title/meta/OG + JSON-LD in the initial HTML
 - ✅ **EN + AR localization** — `[locale]` routing, RTL shell, locale-aware data + strings, **hreflang/sitemap SEO**
-- 🔜 **Full AR translation** — CMA-driven bulk translate utility (translation engine TBD) + Blog #10
-- 🔜 **Stakeholder preview-before-publish** — durable, shareable, login-free preview links
+- ✅ **Stakeholder preview-before-publish** — durable, shareable, login-free preview links (signed token → Draft Mode → server-side draft read)
+- 🔜 **Full AR content translation** — done in the CMS UI with the built-in Opal/AI translate (no bulk translate-item API) + Blog #12
 - 🔜 **AI Search** (Claude-powered) over Events / Articles / Tours / Hotels / Places
 - 🔜 **AI Trip Planner** (outputs an `Itinerary`) + a reusable **community module/plugin**
 
@@ -42,7 +42,9 @@ Repo: https://github.com/nikkipunjabi1/thisisdubai · Hosting: Vercel (Hobby/fre
 | [docs/CONTENT-MODEL.md](docs/CONTENT-MODEL.md) | Content types, components, taxonomy |
 | [docs/DESIGN-SYSTEM.md](docs/DESIGN-SYSTEM.md) | Sleek-modern-luxury brand, tokens, typography, grid |
 | [docs/COMPONENT-STANDARDS.md](docs/COMPONENT-STANDARDS.md) | Component best practices, Light/Dark + Full/Container display settings, grid |
-| [docs/PREVIEW-WORKFLOW.md](docs/PREVIEW-WORKFLOW.md) | Stakeholder preview-before-publish workflow |
+| [docs/PREVIEW-WORKFLOW.md](docs/PREVIEW-WORKFLOW.md) | Stakeholder preview-before-publish workflow (shipped) |
+| [docs/PREVIEW-MODULE-PACKAGING.md](docs/PREVIEW-MODULE-PACKAGING.md) | Plan to extract the preview module as a reusable package |
+| [docs/LOCALIZATION.md](docs/LOCALIZATION.md) | EN/AR localization architecture (routing, RTL, data, strings, SEO) |
 | [docs/SEO.md](docs/SEO.md) | Server-rendered SEO tags + JSON-LD requirements |
 | [docs/AI-SEARCH.md](docs/AI-SEARCH.md) | AI search + trip planner (Graph semantic + Claude; no pgvector) |
 | [docs/AI-PLATFORM.md](docs/AI-PLATFORM.md) | AI observability, prompt admin, guardrails, safety, scaling |
@@ -63,18 +65,26 @@ Repo: https://github.com/nikkipunjabi1/thisisdubai · Hosting: Vercel (Hobby/fre
 - **Listing engine** — section pages as experiences with a droppable `SectionListing` block
   (server-side pagination, sort, faceted filters); high-volume articles modeled as blocks, not pages.
 - **Imagery pipeline** — CMP/DAM sourcing → upload → attach, delivered as responsive AVIF via `next/image`.
-- **Semantic search** on Optimizely Graph (`_ranking: SEMANTIC`), now **bilingual EN/AR**.
+- **Semantic search** on Optimizely Graph (`_ranking: SEMANTIC`), now **bilingual EN/AR**, with
+  result **type facets** (`?in=`).
+- **Stakeholder preview-before-publish** — durable, login-free share links: a signed token flips
+  Next.js Draft Mode, the server reads the unpublished draft from Graph (App key + Secret over HTTP
+  Basic, uncached, scoped to one item), a localized "PREVIEW" banner + `noindex` guard it, and authors
+  generate links from a **"Share with a stakeholder" button inside the CMS preview pane** (no admin
+  page, no secret in the author's hands). See [docs/PREVIEW-WORKFLOW.md](docs/PREVIEW-WORKFLOW.md).
 - **Performance** — cross-request Graph-read caching + a publish webhook for on-demand revalidation.
 - **Server-rendered SEO** — title/meta/OG + JSON-LD on every page, plus **hreflang alternates and a
-  bilingual sitemap**.
+  bilingual sitemap**; EN `metaTitle`/`metaDescription` populated across all routable items.
 - **Localization (EN + AR)** — `[locale]` routing, RTL shell, locale-aware data layer, a UI string
   catalog, Arabic search, and localization SEO. (**L0–L5 complete**; `isLocalized` content-model pass done.)
 
 **In progress / next:**
-- **L6 · Full AR content translation** — a reviewable, dry-run-first CMA bulk-translate utility
-  (translation engine still to be chosen).
-- **Stakeholder preview-before-publish** — shareable, login-free preview links.
+- **L6 · Full AR content translation** — done in the CMS UI with the built-in Opal/AI translate
+  (there is no bulk translate-item API); the master (EN) content and all localization plumbing are
+  in place.
 - **AI features** — Claude-powered search + trip planner, and a reusable community module.
+- **Packaging the preview module** for other teams — see
+  [docs/PREVIEW-MODULE-PACKAGING.md](docs/PREVIEW-MODULE-PACKAGING.md).
 
 The build is documented in the open — see [docs/BLOG-PLAN.md](docs/BLOG-PLAN.md) for the post series
 and [docs/SPRINTS.md](docs/SPRINTS.md) for the sprint history.

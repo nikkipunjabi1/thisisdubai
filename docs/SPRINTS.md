@@ -126,8 +126,10 @@ downstream (semantic search tuning, AI retrieval, the MCP server) needs a realis
   across POI/Event/Area with `_ranking: SEMANTIC`, results grouped by type, `noindex`, breadcrumbs,
   header entry point. Verified semantic (not keyword) matching: "skyscraper" → Burj Khalifa,
   "fish tank" → The Dubai Mall. See `src/lib/search.ts` + AI-SEARCH.md §"What shipped".
-  ⏭ **Still to do:** autocomplete, synonyms dictionary, boosting/date-decay, facets on results,
-  and pagination of results.
+  ✅ **Result type facets** shipped too (branch `feat/search-type-facets`, PR #60): a `?in=` chip
+  bar over `/search`, counts from the full result set, zero-JS, `searchFacets`/`filterByType` in
+  `src/lib/search.ts`.
+  ⏭ **Still to do:** autocomplete, synonyms dictionary, boosting/date-decay, and pagination of results.
 - [ ] **S3.3 — AR semantic search + localization showcase** 🟡
 - [ ] **S3.4 — Performance + accessibility pass** (CWV, images, a11y) 🟡
 - [ ] (optional) **S3.5 — Multisite** 🟡

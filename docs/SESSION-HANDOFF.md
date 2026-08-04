@@ -1,7 +1,14 @@
 # Session Handoff — This is Dubai (Optimizely SaaS CMS + Next.js)
 
-_Written to transfer context to a fresh Claude session (new account). Read this first, then
-`docs/PREVIEW-WORKFLOW.md`, `docs/SPRINTS.md`, and `docs/BLOG-PLAN.md`._
+> ✅ **RESOLVED — the handed-off work is merged.** The stakeholder preview module (Phases 1–4 +
+> the article/URL-less-block fix) shipped to `main` in **PR #61**; the `feat/stakeholder-preview`
+> branch is deleted. The "resume on this branch / PR open, NOT merged" instructions below are
+> **historical** — kept for the write-up and the gotchas, which are the durable value here. The
+> canonical, current state lives in `docs/PREVIEW-WORKFLOW.md`, `docs/SPRINTS.md`, `README.md`, and
+> `docs/PREVIEW-MODULE-PACKAGING.md`. Open follow-ups (screenshots + publish blog #13, package the
+> module) are unchanged and listed under "NEXT" below.
+
+_Originally written to transfer context to a fresh Claude session (new account)._
 
 ## Resume checklist
 1. Repo: `github.com/nikkipunjabi1/thisisdubai`. Active branch: **`feat/stakeholder-preview`**
@@ -92,8 +99,8 @@ which needs a CMS login and a ~5-min token (that's "Layer 1"; this is "Layer 2")
   set. Now falls back to select + `document.execCommand('copy')`, and if both fail it selects the
   text and tells the user to press Ctrl/Cmd+C.
 
-### NEXT — the preview module is complete (Phases 1-4 + blog draft + packaging plan).
-**PR is open against `main`; the USER merges.** Open follow-ups, in rough priority order:
+### NEXT — the preview module is complete (Phases 1-4 + blog draft + packaging plan) and **merged** (PR #61).
+Open follow-ups, in rough priority order:
 1. **Capture the 4 `📷` screenshots** and review `blog/shareable-stakeholder-previews-optimizely-saas.md`,
    then publish. Zero em-dashes verified; do not introduce any.
 2. **Package the module for other teams** — full plan in `docs/PREVIEW-MODULE-PACKAGING.md`.
@@ -175,5 +182,6 @@ Returns `{url, expiresInSeconds}`; open `url` → redirect to the page + preview
 - Confirm before hard-to-reverse or outward-facing actions.
 
 ## Open PRs / branches to be aware of
-- `feat/stakeholder-preview` — this work (Phases 1–2), PR open, awaiting user merge.
-- Recent merged work is on `main` (search facets, SEO script, blog rewrites, README).
+- Nothing outstanding. `feat/stakeholder-preview` merged (PR #61) and its branch is deleted, along
+  with the other recent feature branches (search facets, SEO script, blog rewrites, README) — all on
+  `main`. Local `main` is in sync with `origin/main`.

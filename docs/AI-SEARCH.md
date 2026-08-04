@@ -102,6 +102,12 @@ suppress noise also deletes good results ("swimming sea" scores its beaches at 0
 like "zzzzqqq" returns a flat low-score spread that no relative floor separates. Re-tune once
 there is substantially more content.
 
+**Result type facets (shipped).** A `?in=<type>` filter narrows the grouped results to one type via
+a chip bar. The chip counts always come from the **full** result set (so the bar stays stable while
+the displayed groups narrow), and the pure helpers `searchFacets` / `filterByType` / `isGroupKey`
+live in `src/lib/search.ts` (covered by `src/lib/search.test.ts`). Zero client JS — the chips are
+plain links that re-render the server component.
+
 ## Implementation notes (Phase 4)
 - Server-only Next.js route handlers under `app/api/ai/*`; `ANTHROPIC_API_KEY` server-scope only.
 - Use **structured outputs** (tool/JSON schema) so card + follow-up payloads are always valid.
