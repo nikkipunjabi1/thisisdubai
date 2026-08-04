@@ -72,10 +72,15 @@ which needs a CMS login and a ~5-min token (that's "Layer 1"; this is "Layer 2")
     link renders the draft; **AR link renders the unpublished Arabic translation**
     (`شارع السركال`) while the live page still shows "Alserkal Avenue". 48 tests pass.
 
-### NEXT — blog #13 (Shareable stakeholder previews). The module itself is complete.
-Also still open: rendering a **brand-new page that has no URL yet** (needs a render-by-key route),
-and the hardening gaps named in `PREVIEW-WORKFLOW.md` (single shared secret, no sign-in rate
-limit, no link revocation before expiry).
+- **Blog #13 — DONE (draft).** `blog/shareable-stakeholder-previews-optimizely-saas.md`, ~3,050
+  words, TPM voice, generic, zero em-dashes, 4 `📷` placeholders to capture. Status in
+  `BLOG-PLAN.md` moved to "Draft ready". **Needs the user's review + screenshots before publishing.**
+
+### NEXT — the preview module is complete (Phases 1-4 + blog draft). Open follow-ups:
+- Capture the 4 screenshots and review the blog draft, then publish.
+- Rendering a **brand-new page that has no URL yet** (needs a render-by-key route).
+- Hardening gaps named in `PREVIEW-WORKFLOW.md`: single shared secret rather than per-user
+  accounts, no sign-in rate limit, no link revocation before expiry.
 
 ### Generating a link
 Normally: open **`https://localhost:3000/admin/preview`** and sign in with `PREVIEW_ADMIN_SECRET`.
