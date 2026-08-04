@@ -13,6 +13,12 @@ concrete **deliverable**, and an **exit check**. **I always ask before starting 
 
 Legend: `[ ]` todo · `[~]` in progress · `[x]` done · 🚦 = phase gate (I ask you before starting).
 
+> **▶ Resume order — start here next (in this order):**
+> 1. **S3.1a — Preview access hardening (Internal-default)** — the immediate next sprint.
+> 2. **TTD-2 — Author the Things-to-Do pages** — after S3.1a.
+>
+> Both are "ask before starting" per the standing rule.
+
 ---
 
 ## Phase 0 — Foundations 🟢 (planning)
@@ -115,7 +121,7 @@ downstream (semantic search tuning, AI retrieval, the MCP server) needs a realis
     **HighlightCard** (reusable **shared** block for "For This Application"). Helpers
     `src/lib/youtube.ts` (+9 tests) + `src/lib/curated.ts`. Pushed to the CMS. SEO: hero = the
     only `<h1>`, rails `<h2>`, cards `<h3>`. Type-check/lint/64 tests/build green.
-  - [ ] **TTD-2 — Author the pages** 🟡 _(NEXT — ask before starting)_
+  - [ ] **TTD-2 — Author the pages** 🟡 _(after S3.1a Preview access hardening — ask before starting)_
     A reviewable, **dry-run-first** seed script (USER runs) that creates the 5 `ThingsToDoPage`
     experiences at their URLs + a couple of shared `HighlightCard` blocks; add a "Things to Do"
     nav entry; compose the landing page in Visual Builder; then **browser-verify** (hero video
@@ -143,6 +149,14 @@ downstream (semantic search tuning, AI retrieval, the MCP server) needs a realis
   scope/locale must be matched on `url.default` **per row**; SaaS CMS has no UI extensibility,
   so the preview pane is the only in-CMS surface. Blog drafted
   (`blog/shareable-stakeholder-previews-optimizely-saas.md`), needs screenshots.
+- [ ] **S3.1a — Preview access hardening (Internal-default)** 🟡 _(▶ NEXT — resume here)_
+  Make preview links **Internal (org-network-only) by default**, Shareable only by explicit
+  opt-in. Full design + caveats in `docs/PREVIEW-WORKFLOW.md` §"Access control: org-network-only by
+  default". Tasks: a `mode` claim on the signed token (so the URL can't escalate it); an
+  IP-allowlist gate in `src/proxy.ts` on `/preview*` (`PREVIEW_ALLOWED_IPS`, `403` off-network,
+  trusting only the platform's client-IP hop); an **Internal/Shareable toggle in
+  `StakeholderLinkPanel` defaulting to Internal**; tests + in-browser verification. The
+  `frame-ancestors` CSP (`next.config.ts`) already shipped as related surface hardening.
 - [~] **S3.2 — Semantic search** (autocomplete, synonyms, boosting, facets) 🔴
   ✅ **Core shipped:** `/search` — server-rendered, URL-driven (`?q=`), one federated Graph query
   across POI/Event/Area with `_ranking: SEMANTIC`, results grouped by type, `noindex`, breadcrumbs,
