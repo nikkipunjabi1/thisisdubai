@@ -24,11 +24,16 @@ The thing you actually asked for. A link an author generates and sends to a stak
 **no CMS login**, that stays valid for a chosen window (e.g. 7 days) and always shows the
 **current unpublished draft** of that content.
 
+**Status: built and working (Phases 1-4).** `/admin/preview` is the author's UI.
+
 **How it works:**
-1. **Generate a signed link.** A route `/api/preview/share` (author-triggered) mints a **signed
-   token** (JWT/HMAC, server-side secret) encoding `{ contentKey, version | "latest-draft",
-   locale, exp }`. Returns a URL like:
+1. **Generate a signed link.** The author opens **`/admin/preview`**, signs in with
+   `PREVIEW_ADMIN_SECRET`, picks an item that has unpublished edits, and chooses a lifetime.
+   A **signed token** (HMAC, server-side secret) encoding
+   `{ key, locale, version | "latest", path, exp }` is minted and shown as a copyable URL:
    `https://this-is-dubai.vercel.app/preview/share?token=<signed>`.
+   The `/api/preview/share` route does the same thing for machines (CI, scripts), authenticated
+   with `Authorization: Bearer <PREVIEW_ADMIN_SECRET>`.
 2. **Stakeholder opens the link.** The `/preview/share` route:
    - verifies the signed token (rejects expired/tampered) — no CMS auth needed by the viewer;
    - enables **Next.js Draft Mode** (sets the draft cookie), stores the signed token in a
@@ -96,6 +101,41 @@ one item, not the whole site.
 
 ---
 
+## The author's UI (Phase 4)
+
+`/admin/preview` — `src/app/admin/preview/`. Replaces the curl command.
+
+- **Sign in** with `PREVIEW_ADMIN_SECRET`, exchanged for an 8-hour signed session cookie
+  (`src/lib/admin-session.ts`), so the secret is typed once instead of pasted per request.
+  Admin sessions and share tokens are HMACs under the **same** secret, so the session body is
+  prefixed with a domain string — without it, any reviewer's 7-day share token would be a valid
+  admin session. There is a test asserting exactly that.
+- **Pick an item** from the list of everything that currently has an unpublished draft, newest
+  edit first, filterable by name or path. The query is `types eq "_page"` + `status eq "Draft"`:
+  experiences carry both `_Experience` and `_Page`, so one `eq` covers pages and experiences
+  while excluding blocks, taxonomy, folders and media. (`types` with `in: [...]` silently
+  matches nothing — use `eq`.)
+- **Choose the version**: "latest draft" (keeps tracking new edits after the link is sent) or a
+  pinned version (frozen snapshot). **Choose a lifetime**: 24 hours / 7 days / 30 days.
+- The generated URL is shown with a copy button and its expiry in local time.
+
+**Guarding it.** Every server action re-verifies the session — a server action is a POST
+endpoint, so "the form isn't rendered" is not access control. The page fetches the draft list
+only *after* the session check, so an unauthenticated request never touches Graph and the HTML
+contains no content titles. `/admin` is excluded from locale routing in `src/proxy.ts`, forced
+to `X-Robots-Tag: noindex, nofollow` there, `noindex` in its own metadata, and disallowed in
+`robots.txt`.
+
+**Known gaps** (fine for a demo, worth naming before anyone reuses this):
+- A single shared secret, not per-user accounts, so link generation is not attributable. Real
+  deployments should put this behind the same SSO as the CMS.
+- No rate limiting on sign-in. The defence is a long random secret plus a timing-safe compare;
+  a serverless in-memory counter would be per-instance and mostly theatre.
+- Generated links aren't logged or revocable before expiry. Rotating `PREVIEW_SIGNING_SECRET`
+  invalidates all of them at once, which is the emergency lever.
+
+---
+
 ## Key design decisions
 - **Token signing:** HMAC-signed (or JWT) with a server secret (`PREVIEW_SIGNING_SECRET`), short
   default TTL, explicit `contentKey`+`locale` scope (a link previews only its item).
@@ -115,10 +155,15 @@ one item, not the whole site.
 - Hobby is non-commercial use; a learning/demo tourism site qualifies. Watch function
   execution/bandwidth limits (fine for this scale). No cron/queue needed for this feature.
 
-## Build phase
-Implemented in **Phase 3** (after the site + content model exist), but the route + draft-mode
-scaffolding is stubbed in **Phase 1/2** since the baseline already has `/preview`. This is the
-**#1 module/blog candidate** — see BLOG-PLAN.md and ROADMAP Phase 5.
+## Build phases — all complete
+| Phase | What landed | Where |
+|---|---|---|
+| 1 | Signed, expiring share tokens (HMAC-SHA256, fail-closed, timing-safe) | `src/lib/preview-token.ts` |
+| 2 | Share-link routes, Draft Mode, localized banner, `noindex` | `src/app/preview/share/`, `src/app/api/preview/`, `src/components/preview/`, `src/proxy.ts` |
+| 3 | Real draft reads via App key + Secret; scoped to one item | `src/lib/draft.ts` |
+| 4 | Author UI to generate links, with sign-in | `src/app/admin/preview/`, `src/lib/admin-session.ts` |
+
+Still the **#1 module/blog candidate** — see BLOG-PLAN.md (post #13) and ROADMAP Phase 5.
 
 ## Validated against the live CMS
 - ✅ Exact call to fetch a **specific draft version** — resolved in Phase 3, see "How the draft

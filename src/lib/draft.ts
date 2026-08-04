@@ -250,6 +250,83 @@ async function fetchVersions(key: string, locale: Locale): Promise<VersionRow[]>
   });
 }
 
+/** A routable item with unpublished edits — one row in the admin UI's picker. */
+export type DraftItem = {
+  key: string;
+  displayName: string;
+  locale: string;
+  version: string;
+  lastModified: string;
+  /** CMS path (`url.default`), locale-prefixed for non-default locales. */
+  url: string;
+};
+
+/**
+ * Every ROUTABLE item that currently has an unpublished draft, newest edit first.
+ *
+ * `types eq "_page"` is the right filter even though it reads narrow: experiences carry
+ * both `_Experience` AND `_Page`, so one `eq` covers pages and experiences, while
+ * excluding shared blocks, taxonomy terms, folders and media. (`types` supports `eq`;
+ * an `in: [...]` list silently matches nothing, so don't reach for it.)
+ *
+ * Admin-only — this enumerates unpublished content and must never be exposed to a
+ * reviewer or to the public site. Graph caps `limit` at 100.
+ */
+const DRAFT_ITEMS_QUERY = `query DraftItems {
+  _Content(
+    where: { _metadata: { types: { eq: "_page" }, status: { eq: "Draft" } } }
+    orderBy: { _metadata: { lastModified: DESC } }
+    limit: 100
+  ) {
+    items {
+      _metadata {
+        key
+        displayName
+        locale
+        version
+        lastModified
+        url { default }
+      }
+    }
+    total
+  }
+}`;
+
+export async function listDraftItems(): Promise<{ items: DraftItem[]; total: number }> {
+  const data = (await getDraftClient().request(DRAFT_ITEMS_QUERY, {})) as {
+    _Content?: {
+      total?: number;
+      items?: {
+        _metadata?: {
+          key?: string;
+          displayName?: string;
+          locale?: string;
+          version?: string;
+          lastModified?: string;
+          url?: { default?: string };
+        };
+      }[];
+    };
+  };
+
+  const items = (data?._Content?.items ?? []).flatMap((item): DraftItem[] => {
+    const m = item._metadata;
+    if (!m?.key || !m.version || !m.url?.default) return [];
+    return [
+      {
+        key: m.key,
+        displayName: m.displayName ?? '(untitled)',
+        locale: m.locale ?? '',
+        version: m.version,
+        lastModified: m.lastModified ?? '',
+        url: m.url.default,
+      },
+    ];
+  });
+
+  return { items, total: data?._Content?.total ?? items.length };
+}
+
 /**
  * The unpublished content for `path`, or null to fall back to the published read.
  *

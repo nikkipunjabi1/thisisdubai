@@ -56,12 +56,31 @@ which needs a CMS login and a ~5-min token (that's "Layer 1"; this is "Layer 2")
     `X-Robots-Tag: noindex, nofollow` present only in Draft Mode; `/en` `/ar` and section pages
     all still 200. Typecheck + lint clean, 39 tests pass.
 
-### NEXT — Phase 4: a proper authenticated admin UI to generate links (replaces the curl), mark
-`PREVIEW-WORKFLOW.md` done, draft blog #13 (Shareable stakeholder previews).
-Also still open: rendering a **brand-new page that has no URL yet** (needs a render-by-key route).
+- **Phase 4 — author UI. DONE.** `/admin/preview` (`src/app/admin/preview/`) +
+  `src/lib/admin-session.ts` (+ `.test.ts`, 9 tests). Sign in with `PREVIEW_ADMIN_SECRET` → 8h
+  signed session cookie; pick from the list of items with unpublished drafts (newest first,
+  filterable); choose latest-vs-pinned version and 24h/7d/30d lifetime; copy the link.
+  - **Domain separation matters:** admin sessions and share tokens are HMACs under the SAME
+    secret, so the session body is prefixed `admin-session.v1.` — otherwise any reviewer's
+    share token would be a valid admin session. There's a test for it.
+  - Draft list query: `types eq "_page"` + `status eq "Draft"` (experiences carry `_Page` too;
+    `types: { in: [...] }` silently matches nothing). Graph caps `limit` at 100.
+  - `/admin` excluded from locale routing in `src/proxy.ts` + forced `X-Robots-Tag: noindex`,
+    `noindex` metadata, and disallowed in `robots.txt`.
+  - **Verified:** wrong secret rejected; unauthenticated page contains zero content titles and
+    makes no Graph call; forged session rejected; sign-out clears the cookie; UI-generated EN
+    link renders the draft; **AR link renders the unpublished Arabic translation**
+    (`شارع السركال`) while the live page still shows "Alserkal Avenue". 48 tests pass.
 
-### Test command (works now, end to end)
-Real Burj Khalifa POI key included so it's meaningful:
+### NEXT — blog #13 (Shareable stakeholder previews). The module itself is complete.
+Also still open: rendering a **brand-new page that has no URL yet** (needs a render-by-key route),
+and the hardening gaps named in `PREVIEW-WORKFLOW.md` (single shared secret, no sign-in rate
+limit, no link revocation before expiry).
+
+### Generating a link
+Normally: open **`https://localhost:3000/admin/preview`** and sign in with `PREVIEW_ADMIN_SECRET`.
+
+For scripts/CI, the machine-facing route still works (real Burj Khalifa POI key so it's meaningful):
 ```bash
 curl -sk "https://localhost:3000/api/preview/share?key=78ba1519705591c08d21e02b45793831&locale=en&path=/places-to-visit/burj-khalifa" \
   -H "Authorization: Bearer <PREVIEW_ADMIN_SECRET>"
