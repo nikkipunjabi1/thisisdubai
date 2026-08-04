@@ -96,15 +96,33 @@ downstream (semantic search tuning, AI retrieval, the MCP server) needs a realis
   101 Places to Visit · 19 Neighbourhoods · 20 Events · 24 Tags, all with authored rich-text
   bodies. Body renderers added to POI/Event/Area detail pages (`<Prose>`); seed refactored to
   `scripts/data/`; `npm run asset-manifest` generates the CMP upload manifest.
-- [ ] **SC2 — Articles section end-to-end** 🔴
-  `Article` type already exists in the CMS but is unregistered in `layout.tsx`. Needs: registry
-  entry, an `Articles` `_experience` section + migration, a card, nav entry, listing wiring —
-  then 100 long-form articles (~800+ words each) with categories and `relatedPlaces`.
-- [ ] **SC3 — "Things to Do" section** 🔴
-  Maps to the existing (unregistered) **`Tour`** type — activities and experiences, as distinct
-  from `PointOfInterest` landmarks: desert safaris, dhow cruises, skydiving, walking tours.
-  Same standing-up work as SC2 (registry + experience + card + nav), then ~30 tours with
-  `durationHours`, `priceFrom`, `highlights` and `stops` linking back to POIs.
+- [x] **SC2 — Articles section** ✅ _(code end-to-end; content is a later pass)_
+  Built and registered: `ArticlePost` shared block + `Articles` `_experience` + `ArticleDetail`,
+  `articleHref` routing, card + listing wiring, nav entry. Content so far is the first "guides"
+  batch only (`scripts/data/articles/`); growing toward the ~100 long-form target is a content
+  pass, not code.
+- [~] **SC3 — "Things to Do" campaign** (Visual Builder) 🔴 — _reconceived_
+  **Not** a new `Tour` listing (the earlier plan). It's a curated **campaign over existing
+  content**: a landing page plus themed sub-pages (New & Trending, Dubai Attractions, Arts &
+  Culture, Wellness), each pulling tagged Places/Events/Articles, with a video hero and reusable
+  highlight cards. Routed by the existing `[...slug]` catch-all — no new Next routes. (The `Tour`
+  content type still exists but is not used for this; a Tours listing can come later if wanted.)
+  - [x] **TTD-1 — Model + blocks** ✅ (branch `feat/things-to-do-campaign`)
+    `ThingsToDoPage` `_experience` + four blocks: **ThingsToDoHero** (YouTube background video;
+    owns the page's single `<h1>`), **CuratedContentRail** (source = Latest / By tag /
+    Hand-picked across Places/Neighbourhoods/Events/Articles; section-only), **VideoEmbed**
+    (inline YouTube with autoplay/mute/loop/start/hide-related + click-to-load facade),
+    **HighlightCard** (reusable **shared** block for "For This Application"). Helpers
+    `src/lib/youtube.ts` (+9 tests) + `src/lib/curated.ts`. Pushed to the CMS. SEO: hero = the
+    only `<h1>`, rails `<h2>`, cards `<h3>`. Type-check/lint/64 tests/build green.
+  - [ ] **TTD-2 — Author the pages** 🟡 _(NEXT — ask before starting)_
+    A reviewable, **dry-run-first** seed script (USER runs) that creates the 5 `ThingsToDoPage`
+    experiences at their URLs + a couple of shared `HighlightCard` blocks; add a "Things to Do"
+    nav entry; compose the landing page in Visual Builder; then **browser-verify** (hero video
+    plays muted/looped, rails resolve to real cards, single-`<h1>` check, RTL/AR).
+  - [ ] **TTD-3 — Imagery + AR + blog** 🟡
+    Poster/hero imagery, an AR pass of the new block strings, and a blog outline ("configurable
+    campaign pages in Visual Builder" — candidate for BLOG-PLAN).
 - [ ] **SC4 — Content quality pass** 🟡
   Tag/facet coverage across the full corpus, `relatedPlaces` cross-links, and a re-verification
   of semantic search + the relevance floor at ~250 items rather than 16.
