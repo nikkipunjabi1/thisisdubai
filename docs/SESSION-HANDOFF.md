@@ -44,8 +44,13 @@ which needs a CMS login and a ~5-min token (that's "Layer 1"; this is "Layer 2")
     returns unpublished versions. So `DraftGraphClient` subclasses `GraphClient` and overrides
     only `request()`; all SDK query generation is reused.
   - **Pick the draft by `_metadata.status`, never by version number** — live Burj Khalifa has
-    Draft **1377** next to Published **1378**. And the `locale` query *argument* does NOT filter
-    versions under super-user auth; locale must go in the `where` clause.
+    Draft **1377** next to Published **1378**.
+  - **Never filter a version list by locale — filter by `url.default`.** The `locale` query
+    *argument* doesn't narrow versions under super-user auth, AND `_metadata.locale` in the
+    `where` clause is wrong per version (an item can have a version whose URL is the `/ar` path
+    but whose metadata says `en`). URL is the only reliable discriminator, and it doubles as the
+    scope check. Apply it **per row**: the first cut picked one representative row's URL, which
+    silently rendered published content whenever another locale's row sorted first.
   - The signed token is also stored in an httpOnly `__preview_share` cookie (Draft Mode's own
     cookie has no payload), re-verified per request, so a link previews **one item only**.
   - Wired into `src/app/[locale]/[...slug]/page.tsx` and `src/app/[locale]/page.tsx`; falls back

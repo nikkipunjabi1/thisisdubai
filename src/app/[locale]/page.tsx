@@ -16,7 +16,7 @@ import { cmsContentPath, isLocale, DEFAULT_LOCALE, type Locale } from '@/lib/i18
 // exactly as before. See src/lib/draft.ts.
 const getHome = cache(async (locale: Locale) => {
   const path = cmsContentPath(locale, []);
-  const draft = await getDraftContentByPath(path, locale);
+  const draft = await getDraftContentByPath(path);
   if (draft) return draft;
   try {
     return await getClient().getContentByPath(path);

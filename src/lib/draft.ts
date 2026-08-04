@@ -2,7 +2,6 @@ import { cache } from 'react';
 import { cookies, draftMode } from 'next/headers';
 import { GraphClient, getClient, type GraphSlot } from '@optimizely/cms-sdk';
 import { verifyShareToken, type SharePayload } from './preview-token';
-import { graphLocale, type Locale } from './i18n';
 
 /**
  * Draft (unpublished) content reads for the stakeholder preview module — Layer 2,
@@ -164,6 +163,24 @@ function normalizePath(path: string): string {
 }
 
 /**
+ * Keep only the versions whose OWN url is the page being rendered.
+ *
+ * This is both the locale filter and the scope check, and it has to be applied per row.
+ * `_metadata.locale` cannot be trusted for either job: under super-user auth one item's
+ * versions report inconsistent locales, and a version whose `url.default` is the Arabic
+ * path can be labelled `en`. The URL is the reliable discriminator, because the routing
+ * model already gives every locale variant its own path.
+ *
+ * The earlier version of this picked one representative row's url and compared that,
+ * which silently rendered published content whenever the representative row happened to
+ * be another locale's version.
+ */
+export function rowsOnPath(rows: VersionRow[], path: string): VersionRow[] {
+  const target = normalizePath(path);
+  return rows.filter((r) => r.url && normalizePath(r.url) === target);
+}
+
+/**
  * The verified share token for this request, or null when the visitor is on the normal
  * published site. Deduped per request: the page and `generateMetadata` both ask.
  */
@@ -183,16 +200,15 @@ export const getDraftScope = cache(async (): Promise<SharePayload | null> => {
   }
 });
 
-const VERSIONS_QUERY = `query DraftVersions($key: String!, $locale: String!) {
+const VERSIONS_QUERY = `query DraftVersions($key: String!) {
   _Content(
     where: {
       _metadata: {
         key: { eq: $key }
-        locale: { eq: $locale }
         status: { notIn: ["Previous"] }
       }
     }
-    limit: 20
+    limit: 50
   ) {
     items {
       _metadata {
@@ -222,18 +238,17 @@ type VersionsResponse = {
 };
 
 /**
- * Fetch the non-superseded versions of the scoped item.
+ * Fetch every non-superseded version of the scoped item, ALL locales.
  *
- * Filtering by `_metadata.locale` (not the query's `locale` argument) is deliberate:
- * under super-user auth the `locale` argument does NOT narrow which versions come back
- * — a Burj Khalifa lookup returns the `en` and `ar` versions interleaved — so the
- * `where` clause is the only reliable locale filter. Same trap the SEO script hit.
+ * Deliberately unfiltered by locale. Neither way of asking Graph for one locale is
+ * trustworthy here: the query's `locale` argument does not narrow versions at all under
+ * super-user auth, and `_metadata.locale` in the `where` clause is inconsistent per
+ * version (an item can have a version whose `url.default` is the Arabic path while its
+ * metadata says `en`). `rowsOnPath` does the narrowing instead, on the one field that is
+ * reliable. Superseded history is still excluded server-side to keep this small.
  */
-async function fetchVersions(key: string, locale: Locale): Promise<VersionRow[]> {
-  const data = (await getDraftClient().request(VERSIONS_QUERY, {
-    key,
-    locale: graphLocale(locale),
-  })) as VersionsResponse;
+async function fetchVersions(key: string): Promise<VersionRow[]> {
+  const data = (await getDraftClient().request(VERSIONS_QUERY, { key })) as VersionsResponse;
 
   return (data?._Content?.items ?? []).flatMap((item) => {
     const m = item._metadata;
@@ -338,20 +353,20 @@ export async function listDraftItems(): Promise<{ items: DraftItem[]; total: num
  *   - the Graph draft read fails (misconfigured credentials, schema drift).
  */
 export const getDraftContentByPath = cache(
-  async (path: string, locale: Locale): Promise<unknown[] | null> => {
+  async (path: string): Promise<unknown[] | null> => {
     const scope = await getDraftScope();
     if (!scope) return null;
 
     try {
-      const rows = await fetchVersions(scope.key, locale);
-      if (rows.length === 0) return null;
+      const rows = await fetchVersions(scope.key);
 
-      // Scope enforcement: the link previews ONE item. If the reviewer navigated
-      // somewhere else, the URLs won't match and they get the published site.
-      const scopedUrl = rows.find((r) => r.url)?.url;
-      if (!scopedUrl || normalizePath(scopedUrl) !== normalizePath(path)) return null;
+      // Scope enforcement AND locale selection in one step: keep only the versions whose
+      // own url is this page. A reviewer who navigated elsewhere matches nothing and gets
+      // the published site; the other locale's versions of the same item drop out too.
+      const candidates = rowsOnPath(rows, path);
+      if (candidates.length === 0) return null;
 
-      const chosen = selectDraftVersion(rows, scope.version);
+      const chosen = selectDraftVersion(candidates, scope.version);
       if (!chosen) return null;
 
       const content = await getDraftClient().getContent({

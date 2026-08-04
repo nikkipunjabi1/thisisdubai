@@ -74,17 +74,36 @@ contradict the assumption the design started with:
    number is *lower*. Version numbers order by neither recency nor status. We filter
    `_metadata.status notIn ["Previous"]` and take the newest non-`Published` row by
    `lastModified`.
-4. **The `locale` query ARGUMENT does not filter versions under super-user auth** — a
-   single-key lookup returns one row per locale, but the same lookup with App key + Secret
-   returns `en` and `ar` versions interleaved. Locale must go in the `where` clause as
-   `_metadata.locale`. (Same trap that bit `scripts/seo-fill.mjs`.)
+4. **You cannot filter a version list by locale at all. Filter by URL instead.** Two
+   separate traps here, found a day apart:
+   - The `locale` query ARGUMENT does not narrow versions under super-user auth. A
+     single-key lookup returns one row per locale; the same lookup with App key + Secret
+     returns `en` and `ar` versions interleaved. (Same trap that bit `scripts/seo-fill.mjs`.)
+   - `_metadata.locale` in the `where` clause is **also** unreliable: an item can have a
+     version whose `url.default` is the Arabic path while its metadata says `en`. Filtering
+     on it drops the version you want, or keeps one you don't.
+
+   So the version list is fetched for ALL locales and narrowed on `url.default`, which is
+   reliable because the routing model already gives every locale variant its own path. That
+   single filter does double duty as the locale selector and the scope check.
 
 **Scoping.** Draft Mode's own cookie carries no payload — it means "may see drafts", not
 "may see *this* draft". So the signed token is kept in a second httpOnly cookie and
-re-verified on every request; a page only renders draft content when the token's `key`
-resolves to the page being rendered. A reviewer who navigates elsewhere sees the normal
-published site (verified: a preview link for Burj Khalifa shows published content on Burj
-Al Arab).
+re-verified on every request; a page only renders draft content when one of the token
+item's versions has exactly the URL being rendered. A reviewer who navigates elsewhere sees
+the normal published site (verified: a preview link for one POI shows published content on
+another).
+
+The scope check must be applied **per version row**, not by picking one row as
+representative of the item. The first cut took the first row that had a URL and compared
+that; when an item's `/ar` version happened to sort first, the check failed and the preview
+silently rendered published content. `rowsOnPath` in `src/lib/draft.ts` is the fix, with a
+regression test built from the real version list that exposed it.
+
+**Verifying a preview by eye.** Check a field the author actually edited. `<meta
+name="description">` comes from `metaDescription`, so editing only `Summary` correctly
+leaves the meta tag unchanged. Comparing the wrong field makes a working preview look
+broken (and, worse, can make a broken one look fine).
 
 **Fallbacks.** The draft read returns null — and the page renders published content — when
 the link is absent/expired/out of scope, when the item has no unpublished version (e.g. the
