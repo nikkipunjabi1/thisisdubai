@@ -2,9 +2,11 @@
 
 _Phased plan. Each phase ends with a working, deployable state and (usually) a blog post._
 
-> **Where we are:** Phases 0 → 2.5 are done and Phase 3 (Optimizely superpowers) is **in progress**
-> — semantic search + result facets and the stakeholder preview module have shipped. This file is
-> the high-level plan; **`docs/SPRINTS.md` is the live, sprint-by-sprint tracker.**
+> **Where we are:** the app runs locally against the SaaS CMS with the official SDK; Phases 0 → 2.5
+> are done and Phase 3 (Optimizely superpowers) is **in progress** — semantic search + result facets
+> and the stakeholder preview module have shipped. The **one deferred baseline item is the Vercel
+> deploy** (Phase 1): we build the full site locally first, then deploy. This file is the high-level
+> plan; **`docs/SPRINTS.md` is the live, sprint-by-sprint tracker.**
 
 ## Phase 0 — Foundations (planning) ✅
 - [x] Kickoff decisions locked
@@ -15,10 +17,12 @@ _Phased plan. Each phase ends with a working, deployable state and (usually) a b
 - **Blog:** _"Why I'm building This is Dubai on Optimizely SaaS — a public learning project."_
 
 ## Phase 1 — Baseline running
-- [ ] Fork `cms-saas-vercel-demo`, get it running locally against your dev CMS
-- [ ] Confirm Graph connection (env vars, a real query returns data)
-- [ ] Confirm Visual Builder preview + on-page editing works end-to-end
-- [ ] Deploy the untouched fork to Vercel (preview + prod)
+- [x] Scaffold the official `@optimizely/cms-sdk` Next.js app, running locally against the dev CMS
+      (we scaffolded `nextjs-starter`, not a fork of `cms-saas-vercel-demo`)
+- [x] Confirm Graph connection (env vars, real queries return data across every type)
+- [x] Confirm Visual Builder preview + on-page editing works end-to-end
+- [ ] **Deploy to Vercel (preview + prod)** — _deferred: we finish building the site locally first,
+      then deploy. The `/api/revalidate` publish webhook is already built and waiting._
 - **Blog:** _"Getting Optimizely SaaS CMS + Visual Builder running on Vercel with Next.js"_
   (setup gotchas are gold for the community).
 

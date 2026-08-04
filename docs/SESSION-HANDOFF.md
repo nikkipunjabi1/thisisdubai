@@ -162,7 +162,8 @@ Returns `{url, expiresInSeconds}`; open `url` → redirect to the page + preview
 
 ## Broader project state
 - **What it is:** an unofficial demo tourism site ("This is Dubai") on Optimizely SaaS CMS + Graph +
-  Visual Builder, Next.js App Router on Vercel. Built in the open toward Optimizely MVP.
+  Visual Builder, Next.js App Router (Vercel is the deploy target, not yet deployed). Built in the
+  open toward Optimizely MVP.
 - **Localization (EN + AR):** L0–L5 done (routing, RTL, locale data, string catalog, AR semantic
   search, hreflang/sitemap). **L6 = full AR content translation is IN PROGRESS, done manually by the
   user in the CMS UI** using the built-in Opal/translate (there is NO bulk translate-item API).
