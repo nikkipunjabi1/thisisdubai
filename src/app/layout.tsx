@@ -22,6 +22,10 @@ import SectionHeading, { SectionHeadingContentType } from '@/components/blocks/S
 import RichTextBlock, { RichTextBlockContentType } from '@/components/blocks/RichTextBlock';
 import Hero, { HeroBannerContentType } from '@/components/blocks/Hero';
 import SectionListing, { SectionListingContentType } from '@/components/blocks/SectionListing';
+import ThingsToDoHero, { ThingsToDoHeroContentType } from '@/components/blocks/ThingsToDoHero';
+import CuratedContentRail, { CuratedContentRailContentType } from '@/components/blocks/CuratedContentRail';
+import VideoEmbed, { VideoEmbedContentType } from '@/components/blocks/VideoEmbed';
+import HighlightCard, { HighlightCardContentType } from '@/components/blocks/HighlightCard';
 import { LayoutDisplayTemplate } from '@/components/blocks/LayoutDisplayTemplate';
 
 // This is Dubai experiences, pages + media.
@@ -32,6 +36,7 @@ import SectionExperience, {
   EventsContentType,
   ArticlesContentType,
 } from '@/components/content/SectionExperience';
+import ThingsToDoPage, { ThingsToDoPageContentType } from '@/components/content/ThingsToDoPage';
 import PointOfInterest, { PointOfInterestContentType } from '@/components/content/PointOfInterest';
 import ImageMedia, { ImageMediaContentType } from '@/components/media/ImageMedia';
 
@@ -66,11 +71,16 @@ initContentTypeRegistry([
   RichTextBlockContentType,
   HeroBannerContentType,
   SectionListingContentType,
+  ThingsToDoHeroContentType,
+  CuratedContentRailContentType,
+  VideoEmbedContentType,
+  HighlightCardContentType,
   HomePageContentType,
   PlacesToVisitContentType,
   NeighbourhoodsContentType,
   EventsContentType,
   ArticlesContentType,
+  ThingsToDoPageContentType,
   PointOfInterestContentType,
   AreaContentType,
   EventContentType,
@@ -88,11 +98,16 @@ initReactComponentRegistry({
     RichTextBlock,
     HeroBanner: Hero,
     SectionListing,
+    ThingsToDoHero,
+    CuratedContentRail,
+    VideoEmbed,
+    HighlightCard,
     HomePage,
     PlacesToVisit: SectionExperience,
     Neighbourhoods: SectionExperience,
     Events: SectionExperience,
     Articles: SectionExperience,
+    ThingsToDoPage,
     PointOfInterest,
     Area,
     Event: EventDetail,
