@@ -47,6 +47,8 @@ const en = {
     button: 'Search',
     boxLabel: 'Search This is Dubai',
     metaDescription: 'Search places to visit, events and neighbourhoods across This is Dubai.',
+    filterByType: 'Filter by type',
+    filterAll: 'All',
   },
   listing: {
     result: 'result',
@@ -111,6 +113,8 @@ const ar: Messages = {
     button: 'بحث',
     boxLabel: 'ابحث في This is Dubai',
     metaDescription: 'ابحث في أماكن الزيارة والفعاليات والأحياء عبر This is Dubai.',
+    filterByType: 'تصفية حسب النوع',
+    filterAll: 'الكل',
   },
   listing: {
     result: 'نتيجة',
