@@ -24,14 +24,15 @@ The thing you actually asked for. A link an author generates and sends to a stak
 **no CMS login**, that stays valid for a chosen window (e.g. 7 days) and always shows the
 **current unpublished draft** of that content.
 
-**Status: built and working (Phases 1-4).** `/admin/preview` is the author's UI.
+**Status: built and working (Phases 1-4).** Authors generate links from the **"Share with a
+stakeholder" button in the CMS preview pane**.
 
 **How it works:**
-1. **Generate a signed link.** The author opens **`/admin/preview`**, signs in with
-   `PREVIEW_ADMIN_SECRET`, picks an item that has unpublished edits, and chooses a lifetime.
-   A **signed token** (HMAC, server-side secret) encoding
-   `{ key, locale, version | "latest", path, exp }` is minted and shown as a copyable URL:
-   `https://this-is-dubai.vercel.app/preview/share?token=<signed>`.
+1. **Generate a signed link.** While editing, the author clicks **"Share with a stakeholder"**
+   in the CMS preview pane and picks a lifetime. A **signed token** (HMAC, server-side secret)
+   encoding `{ key, locale, version | "latest", path, exp }` is minted and shown as a copyable
+   URL: `https://this-is-dubai.vercel.app/preview/share?token=<signed>`. No login, no secret:
+   the request is authenticated by the CMS's own `preview_token`.
    The `/api/preview/share` route does the same thing for machines (CI, scripts), authenticated
    with `Authorization: Bearer <PREVIEW_ADMIN_SECRET>`.
 2. **Stakeholder opens the link.** The `/preview/share` route:
@@ -120,38 +121,70 @@ one item, not the whole site.
 
 ---
 
-## The author's UI (Phase 4)
+## The author's UI (Phase 4): a button inside the CMS preview pane
 
-`/admin/preview` — `src/app/admin/preview/`. Replaces the curl command.
+`src/app/preview/StakeholderLinkPanel.tsx` + `src/app/preview/actions.ts`.
 
-- **Sign in** with `PREVIEW_ADMIN_SECRET`, exchanged for an 8-hour signed session cookie
-  (`src/lib/admin-session.ts`), so the secret is typed once instead of pasted per request.
-  Admin sessions and share tokens are HMACs under the **same** secret, so the session body is
-  prefixed with a domain string — without it, any reviewer's 7-day share token would be a valid
-  admin session. There is a test asserting exactly that.
-- **Pick an item** from the list of everything that currently has an unpublished draft, newest
-  edit first, filterable by name or path. The query is `types eq "_page"` + `status eq "Draft"`:
-  experiences carry both `_Experience` and `_Page`, so one `eq` covers pages and experiences
-  while excluding blocks, taxonomy, folders and media. (`types` with `in: [...]` silently
-  matches nothing — use `eq`.)
-- **Choose the version**: "latest draft" (keeps tracking new edits after the link is sent) or a
-  pinned version (frozen snapshot). **Choose a lifetime**: 24 hours / 7 days / 30 days.
-- The generated URL is shown with a copy button and its expiry in local time.
+While an author edits a page, the CMS renders our app in its preview pane. A small
+**"Share with a stakeholder"** button sits in the corner of that pane: click it, choose
+"latest draft" or a pinned version, choose 24 hours / 7 days / 30 days, copy the link.
+The author never leaves the CMS and **never types a secret**.
 
-**Guarding it.** Every server action re-verifies the session — a server action is a POST
-endpoint, so "the form isn't rendered" is not access control. The page fetches the draft list
-only *after* the session check, so an unauthenticated request never touches Graph and the HTML
-contains no content titles. `/admin` is excluded from locale routing in `src/proxy.ts`, forced
-to `X-Robots-Tag: noindex, nofollow` there, `noindex` in its own metadata, and disallowed in
-`robots.txt`.
+### Why it lives there, and not in the CMS chrome
 
-**Known gaps** (fine for a demo, worth naming before anyone reuses this):
-- A single shared secret, not per-user accounts, so link generation is not attributable. Real
-  deployments should put this behind the same SSO as the CMS.
-- No rate limiting on sign-in. The defence is a long random secret plus a timing-safe compare;
-  a serverless in-memory counter would be per-instance and mostly theatre.
-- Generated links aren't logged or revocable before expiry. Rotating `PREVIEW_SIGNING_SECRET`
-  invalidates all of them at once, which is the emergency lever.
+The obvious ask is a "Create preview link" item in the CMS UI itself, the way the CMS 12
+add-on [advanced-reviews](https://github.com/barteksekula/advanced-reviews) does it. That is
+not buildable on SaaS:
+
+- `advanced-reviews` is a **CMS 12** add-on. It plugs into the editor via `[IFrameComponent]`,
+  `ProtectedModuleOptions` and the Dojo/ASP.NET UI framework.
+- **SaaS CMS has no UI extensibility.** Optimizely's docs state you cannot add custom editors,
+  and the 2026 SaaS release notes contain nothing about add-ons, custom content actions, or
+  menu items.
+- `cms_get_content_preview_url` looks promising but is an **Opal chat** system tool that
+  returns the same short-lived authenticated preview URL. Still five minutes, still needs a
+  CMS login. Not a stakeholder link.
+
+The preview pane is the only surface where we can put an author-facing control that is still
+*inside* the CMS, and it has the advantage of being exactly where the author already is.
+
+### Why there is no login
+
+The CMS appends `preview_token` to the preview URL, a JWT it issues to an authenticated
+editor session. Possession of an unexpired one is proof the request came from somebody logged
+into the CMS, so **the CMS login is the login**. That is what let us delete the admin page and
+its shared password.
+
+Verified against the live instance: the token is HS256, `iss`/`aud` of `graph`, an `appKey`
+claim equal to our Graph application key, and a **300-second** lifetime. It is signed with our
+own Graph secret (base64-decoded), so it *can* be checked locally with no network call.
+
+**We deliberately do not rely on that signature.** The signing key is an undocumented
+implementation detail Optimizely can change; what is documented is that the token goes to
+Graph as `Authorization: Bearer …`. So `verifyCmsPreviewToken` asks Graph, and treats only an
+explicit 401/403 as a rejection. The local checks in `isPlausibleCmsPreviewToken` run first
+purely to avoid a round trip on obvious junk, and are lenient by design: anything we cannot
+positively disprove is passed to Graph, so a format change degrades to an extra network call
+rather than to a dead feature. Network errors fail closed.
+
+**What the token proves, and what it does not.** It proves a live authenticated editor session
+against this instance, right now. It does **not** identify the user (`sub` is a service
+subject, not a person) and it carries no content key, so it does not prove rights to the
+specific item. That is a real limitation, not an oversight: it is the same attribution gap the
+shared secret had, minus the secret in the author's hands.
+
+### Known gaps (fine for a demo, worth naming before anyone reuses this)
+- **No per-user attribution.** Link generation cannot be traced to an individual author.
+  Closing this needs identity the CMS does not give us in the preview token.
+- **Links are not logged or revocable before expiry.** Rotating `PREVIEW_SIGNING_SECRET`
+  invalidates every outstanding link at once, which is the emergency lever.
+- **The button only appears where the CMS renders us**, so an item with no configured preview
+  URL, or a bulk job, still needs `/api/preview/share`.
+
+### The machine-facing route
+`/api/preview/share` is unchanged and still guarded by `Authorization: Bearer
+<PREVIEW_ADMIN_SECRET>`, for CI and scripts. That secret is no longer part of any human
+workflow.
 
 ---
 
@@ -180,7 +213,7 @@ to `X-Robots-Tag: noindex, nofollow` there, `noindex` in its own metadata, and d
 | 1 | Signed, expiring share tokens (HMAC-SHA256, fail-closed, timing-safe) | `src/lib/preview-token.ts` |
 | 2 | Share-link routes, Draft Mode, localized banner, `noindex` | `src/app/preview/share/`, `src/app/api/preview/`, `src/components/preview/`, `src/proxy.ts` |
 | 3 | Real draft reads via App key + Secret; scoped to one item | `src/lib/draft.ts` |
-| 4 | Author UI to generate links, with sign-in | `src/app/admin/preview/`, `src/lib/admin-session.ts` |
+| 4 | "Share with a stakeholder" button inside the CMS preview pane, authenticated by the CMS preview token | `src/app/preview/StakeholderLinkPanel.tsx`, `src/app/preview/actions.ts`, `src/lib/cms-preview-token.ts` |
 
 Still the **#1 module/blog candidate** — see BLOG-PLAN.md (post #13) and ROADMAP Phase 5.
 

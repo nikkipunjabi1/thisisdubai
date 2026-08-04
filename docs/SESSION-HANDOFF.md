@@ -61,21 +61,27 @@ which needs a CMS login and a ~5-min token (that's "Layer 1"; this is "Layer 2")
     `X-Robots-Tag: noindex, nofollow` present only in Draft Mode; `/en` `/ar` and section pages
     all still 200. Typecheck + lint clean, 39 tests pass.
 
-- **Phase 4 — author UI. DONE.** `/admin/preview` (`src/app/admin/preview/`) +
-  `src/lib/admin-session.ts` (+ `.test.ts`, 9 tests). Sign in with `PREVIEW_ADMIN_SECRET` → 8h
-  signed session cookie; pick from the list of items with unpublished drafts (newest first,
-  filterable); choose latest-vs-pinned version and 24h/7d/30d lifetime; copy the link.
-  - **Domain separation matters:** admin sessions and share tokens are HMACs under the SAME
-    secret, so the session body is prefixed `admin-session.v1.` — otherwise any reviewer's
-    share token would be a valid admin session. There's a test for it.
-  - Draft list query: `types eq "_page"` + `status eq "Draft"` (experiences carry `_Page` too;
-    `types: { in: [...] }` silently matches nothing). Graph caps `limit` at 100.
-  - `/admin` excluded from locale routing in `src/proxy.ts` + forced `X-Robots-Tag: noindex`,
-    `noindex` metadata, and disallowed in `robots.txt`.
-  - **Verified:** wrong secret rejected; unauthenticated page contains zero content titles and
-    makes no Graph call; forged session rejected; sign-out clears the cookie; UI-generated EN
-    link renders the draft; **AR link renders the unpublished Arabic translation**
-    (`شارع السركال`) while the live page still shows "Alserkal Avenue". 48 tests pass.
+- **Phase 4 — author UI. DONE, then REDESIGNED.** The first cut was `/admin/preview`, a separate
+  page where the author pasted `PREVIEW_ADMIN_SECRET`. The user rightly rejected that: authors
+  should not handle secrets, and link creation belongs in the CMS. **That page and
+  `src/lib/admin-session.ts` are deleted.**
+  - **Now:** a "Share with a stakeholder" button in the CMS **preview pane**
+    (`src/app/preview/StakeholderLinkPanel.tsx` + `actions.ts`). One click while editing,
+    pick latest-vs-pinned and 24h/7d/30d, copy. **No login, no secret.**
+  - **Authenticated by the CMS's own `preview_token`** (`src/lib/cms-preview-token.ts`,
+    + `.test.ts`, 9 tests). Verified on the live instance: HS256, `iss`/`aud` = `graph`,
+    `appKey` = our Graph app key, **300s** lifetime, signed with `OPTIMIZELY_GRAPH_SECRET`
+    (base64-decoded). We do NOT rely on that signature (undocumented); we send the token to
+    Graph and treat only 401/403 as rejection. Local checks are a lenient pre-filter only.
+  - **Why not a real CMS button:** SaaS CMS has **no UI extensibility** (no add-ons, no custom
+    editors/menu items; nothing in the 2026 release notes). `advanced-reviews` is a CMS 12
+    add-on using `[IFrameComponent]`/Dojo. `cms_get_content_preview_url` is an Opal chat tool
+    returning the same 5-minute URL. The preview pane is the only in-CMS surface available.
+  - **Verified:** panel renders only when a `preview_token` is present; a minted token is
+    accepted by Graph (which also confirmed the signing scheme); expired + garbage tokens are
+    rejected 401; a link generated from the panel renders the draft while the live page does
+    not. Earlier AR proof still holds (`شارع السركال` vs published "Alserkal Avenue").
+  - `PREVIEW_ADMIN_SECRET` now guards ONLY `/api/preview/share` (CI/scripts). No human path.
 
 - **Blog #13 — DONE (draft).** `blog/shareable-stakeholder-previews-optimizely-saas.md`, ~3,050
   words, TPM voice, generic, zero em-dashes, 4 `📷` placeholders to capture. Status in
@@ -88,7 +94,8 @@ which needs a CMS login and a ~5-min token (that's "Layer 1"; this is "Layer 2")
   accounts, no sign-in rate limit, no link revocation before expiry.
 
 ### Generating a link
-Normally: open **`https://localhost:3000/admin/preview`** and sign in with `PREVIEW_ADMIN_SECRET`.
+Normally: open the page in the **CMS editor** and click **"Share with a stakeholder"** in the
+preview pane. Nothing to sign into.
 
 For scripts/CI, the machine-facing route still works (real Burj Khalifa POI key so it's meaningful):
 ```bash

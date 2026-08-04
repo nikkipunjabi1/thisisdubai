@@ -6,6 +6,7 @@ import { PreviewComponent } from '@optimizely/cms-sdk/react/client';
 import { withAppContext } from '@optimizely/cms-sdk/react/server';
 import Script from 'next/script';
 import { getSiteSettings, buildContentMetadata, type PageSeo } from '@/lib/seo';
+import { StakeholderLinkPanel } from './StakeholderLinkPanel';
 
 type Props = {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -32,7 +33,15 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
 }
 
 async function Page({ searchParams }: Props) {
-  const content = await getPreview(JSON.stringify(await searchParams));
+  const sp = await searchParams;
+  const content = await getPreview(JSON.stringify(sp));
+
+  // The author-facing "share with a stakeholder" control (docs/PREVIEW-WORKFLOW.md).
+  // Rendered only when the CMS supplied a preview token, i.e. only inside the editor:
+  // that token is what authenticates the link generator, so without it there is nothing
+  // to render and nothing to authorise.
+  const previewToken = typeof sp.preview_token === 'string' ? sp.preview_token : '';
+  const meta = (content as { _metadata?: { key?: string; version?: string; locale?: string; displayName?: string; url?: { default?: string } } })?._metadata;
 
   return (
     <>
@@ -46,6 +55,16 @@ async function Page({ searchParams }: Props) {
       ></Script>
       <PreviewComponent />
       <OptimizelyComponent content={content} />
+      {previewToken && meta?.key && (
+        <StakeholderLinkPanel
+          previewToken={previewToken}
+          contentKey={meta.key}
+          version={meta.version ?? String(sp.ver ?? '')}
+          locale={meta.locale ?? String(sp.loc ?? '')}
+          path={meta.url?.default}
+          displayName={meta.displayName}
+        />
+      )}
     </>
   );
 }

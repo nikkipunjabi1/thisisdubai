@@ -213,6 +213,24 @@ This is the single most important design point in the whole feature, and it is t
 easiest to miss, because the naive version demos perfectly. You only find it by deliberately
 wandering off the page you were sent.
 
+**And then I got the scope check itself wrong**, which is worth admitting because the failure mode is
+the same silent one as the version numbers. To decide "is this page the item the link was for?" I
+fetched the item's versions, took the first one that had a URL, and compared that URL to the page
+being rendered. That works until an item has a version belonging to a *different language*, whose URL
+carries a language prefix, and that version happens to come back first. Then the comparison fails,
+the code falls back to published, and the preview looks broken in exactly the way that makes you
+doubt your content rather than your code.
+
+Two lessons, and the second one is the general one:
+
+- Locale metadata on a version was not trustworthy: an item had a version whose URL was the
+  Arabic path while its metadata reported the English locale. The URL was the only field that
+  told the truth, which makes sense, because the routing model is what actually distinguishes
+  language variants.
+- **A check that reduces a set to one representative row is not a check.** Filter the set and
+  evaluate every member, or you are asserting something about an arbitrary element and calling it
+  a property of the whole.
+
 ### 5. The cache would have published the draft for me
 
 The site had cross-request caching on content reads, keyed by path and shared by every visitor. That
@@ -237,6 +255,54 @@ CMS path straight into the token and the reviewer lands on a doubled path that d
 Trivial to fix once seen. Impossible to see without testing the second language. Which is the point:
 if you have a multilingual site, **every preview test has to be run twice.** The English path is the
 one that hides this class of bug.
+
+## The part I got most wrong: who pushes the button
+
+Everything above is about making the link work. The thing I underestimated is making the link
+*obtainable*, and it is the part your content team will judge you on.
+
+My first answer was a small admin page: the author signs in with a shared secret, picks the item,
+gets a link. It worked. It was also the wrong answer, and the person who told me so was right. Asking
+content authors to hold a secret is a smell. Asking them to leave the CMS, open a second tool, and
+find the page they were already editing is a workflow nobody will use twice. The measure of this
+feature is not "can a link be produced", it is "does the author reach for it instead of asking a
+developer".
+
+The bar is the CMS 12 add-on ecosystem, where an external-review add-on puts a panel directly in the
+editor and the author clicks a button on the page they are editing. That is the right experience.
+
+On a SaaS CMS you probably cannot build it, and it is worth checking early rather than promising it.
+Ours has no UI extensibility: no add-ons, no custom editors, no custom menu items, nothing on the
+roadmap notes for the year. The extension model that the CMS 12 add-ons rely on is exactly what the
+SaaS product does not expose. There is an AI-assistant tool that returns a preview URL, but it hands
+back the same short-lived editor URL, so it does not solve the sharing problem either.
+
+**The seam we did have was the preview pane itself.** The CMS renders your application in an iframe
+while the author edits. That is your UI, inside their CMS, on the page they are looking at. A single
+unobtrusive button in the corner of that pane gets you most of the way to the add-on experience with
+none of the extensibility.
+
+The detail that makes it genuinely good rather than merely convenient: **the CMS already tells you
+who is asking.** It appends a short-lived preview token to that iframe URL, issued to an
+authenticated editor session. Send it back to your content API and see whether it is accepted, and
+you have proof the request came from somebody logged into the CMS. No second login, no shared
+password, no account provisioning. The CMS login *is* the authentication.
+
+Two cautions from doing this:
+
+- **Let the platform validate the token, not your own signature check.** We found the token could be
+  verified locally against a key we already had. We deliberately did not, because that key
+  relationship is undocumented and can change without notice. What is documented is that the token is
+  accepted as a bearer credential by the content API. Validate against the documented contract, treat
+  only an explicit authentication failure as a rejection, and a future format change costs you a
+  network call instead of an outage.
+- **Be honest about what the token proves.** Ours proves a live editor session. It does not identify
+  the person, and it does not prove rights to the specific item. That is an acceptable trade for a
+  demo and a documented limitation for anything regulated. It is still strictly better than a shared
+  secret in a content author's password manager.
+
+If your platform genuinely has no such seam, that is a finding worth surfacing to stakeholders early,
+because "authors must use a separate tool" is a product decision, not an implementation detail.
 
 ## Guardrails worth building in from the start
 
@@ -296,6 +362,9 @@ took ten minutes and made the follow-up conversation with the client honest.
    locale.
 6. **Write the guardrails down as guardrails.** The noindex, the fail-closed behaviour, the read-only
    constraint. They read as paranoia in a pull request and as diligence in a security review.
+7. **Design the author's route to the button before you build the button.** Check what your CMS
+   actually lets you extend, find the seam it does give you, and use the credential it already
+   issues. A feature content authors have to be talked into using has not shipped.
 
 None of this is exotic. It is the ordinary shape of putting a privileged read behind a public link,
 which is a problem plenty of teams solve and comparatively few write up. The Optimizely-specific part

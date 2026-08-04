@@ -45,10 +45,10 @@ export default async function robots(): Promise<MetadataRoute.Robots> {
 
   const host = process.env.APPLICATION_HOST?.replace(/\/$/, '');
   return {
-    // `/admin` lists unpublished content and `/preview` serves it, so both stay
-    // disallowed even when the site itself is indexable. Belt and braces: each also
-    // sends `noindex` (page metadata + the proxy's X-Robots-Tag).
-    rules: [{ userAgent: '*', allow: '/', disallow: ['/admin', '/preview'] }],
+    // `/preview` serves unpublished content, so it stays disallowed even when the site
+    // itself is indexable. Belt and braces: it also sends `noindex` (the proxy's
+    // X-Robots-Tag whenever the Draft Mode cookie is present).
+    rules: [{ userAgent: '*', allow: '/', disallow: ['/preview'] }],
     sitemap: host ? `${host}/sitemap.xml` : undefined,
   };
 }

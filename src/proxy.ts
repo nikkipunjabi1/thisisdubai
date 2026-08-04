@@ -20,15 +20,6 @@ export function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const first = pathname.split('/')[1];
 
-  // The admin UI is not locale-scoped, so it must not be redirected to `/en/admin/...`.
-  // It lists unpublished content, so it is force-`noindex` at the header level too —
-  // independent of SITE_INDEXABLE and of the page's own metadata.
-  if (first === 'admin') {
-    const res = NextResponse.next();
-    res.headers.set('X-Robots-Tag', 'noindex, nofollow');
-    return res;
-  }
-
   if (isLocale(first)) {
     const headers = new Headers(req.headers);
     headers.set('x-locale', first);
