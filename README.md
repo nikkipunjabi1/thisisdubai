@@ -2,10 +2,10 @@
 
 > ⚠️ **Unofficial, independent demo project — for learning and showcase purposes only.** Built on
 > **Optimizely SaaS CMS**, **Optimizely Graph**, and **Optimizely Visual Builder** with a
-> **Next.js** frontend on Vercel. All branding here is **original**; imagery is **royalty-free**
+> **Next.js** frontend (targeting Vercel). All branding here is **original**; imagery is **royalty-free**
 > only (see `ASSETS.md`). Real place names/facts are used descriptively.
 
-Repo: https://github.com/nikkipunjabi1/thisisdubai · Hosting: Vercel (Hobby/free tier).
+Repo: https://github.com/nikkipunjabi1/thisisdubai · Deployment target: Vercel (Hobby/free tier) — planned; the app currently runs locally against the SaaS CMS while the site is built out.
 
 ## Why this project exists
 
@@ -56,8 +56,9 @@ Repo: https://github.com/nikkipunjabi1/thisisdubai · Hosting: Vercel (Hobby/fre
 
 ## Status
 
-🟢 **Phase 3 — a live, content-rich site on Optimizely SaaS + Next.js.** Built on the official
-`@optimizely/cms-sdk`, running on Vercel against the SaaS CMS.
+🟢 **Phase 3 — a content-rich site on Optimizely SaaS + Next.js.** Built on the official
+`@optimizely/cms-sdk`, running locally against the SaaS CMS. Vercel deployment is planned once the
+site is feature-complete (the on-demand revalidation webhook is already built and waiting).
 
 **Shipped so far:**
 - **Content model + Visual Builder** — pages / experiences / components, a shared display-template

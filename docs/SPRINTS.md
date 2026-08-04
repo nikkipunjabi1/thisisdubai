@@ -30,21 +30,25 @@ with Visual Builder + live preview confirmed working — **before** we add This 
   Scaffolded `nextjs-starter` (Next 16.2.1, React 19.2, `@optimizely/cms-sdk` 2.1) into the repo
   root; added `.env.example`, `type-check`/`opti-*` scripts, gitignore updates; documented the real
   structure in ARCHITECTURE.md §2/§5. **Exit met:** `npm run type-check` + `npm run build` clean.
-- [ ] **S1.2 — Connect CMS + Graph** 🟢
-  Tasks: you fill `.env` with dev-CMS credentials; `optimizely-cms-cli login`; run dev; one real
-  Graph query. Deliverable: local app renders content from your dev CMS. Exit: a page loads real
-  CMS data; a Graph query returns items.
-- [ ] **S1.3 — Verify Visual Builder + live preview** 🟡
-  Tasks: use the **`optimizely-preview` skill**; configure the CMS Application → preview at local
-  HTTPS; confirm click-to-edit. Deliverable: editing content in CMS shows in preview. Exit: live
-  preview refresh works; no blank-screen/communication/CSP errors.
-- [ ] **S1.4 — Deploy to Vercel** 🟢
+- [x] **S1.2 — Connect CMS + Graph** 🟢 ✅
+  `.env` filled with dev-CMS credentials; the app renders real content from the dev CMS via Graph
+  (home experience, all section listings, detail pages). **Exit met:** pages load real CMS data;
+  Graph queries return items across every content type.
+- [x] **S1.3 — Verify Visual Builder + live preview** 🟡 ✅
+  CMS Application configured for preview at local HTTPS; on-page editing + live preview confirmed
+  working. The stakeholder-preview module (S3.1) is built directly into this preview pane. **Exit
+  met:** live preview refreshes on edit; no blank-screen/communication/CSP errors.
+- [ ] **S1.4 — Deploy to Vercel** 🟢 _(deferred — see note)_
   Tasks: import repo to Vercel (Hobby); set env vars; deploy; wire the Graph publish webhook →
   revalidation route. Deliverable: prod + preview URLs live. Exit: a publish in CMS revalidates
   the live page.
+  ⏸ **Deliberately deferred.** We build the complete site locally against the SaaS CMS first, then
+  deploy to Vercel once it's feature-complete. The revalidation route (`/api/revalidate`) is already
+  built and waiting; deploying is a config step, not a code step.
 - [ ] **S1.5 — Blog #2 outline** (official-SDK setup & gotchas). 🟢
-- 🏁 Phase-1 done = official-SDK baseline verified end-to-end + deployed; ARCHITECTURE.md updated
-  with the real scaffold + SDK APIs.
+- 🏁 Phase-1 baseline **verified end-to-end locally** (SDK scaffold + CMS/Graph + live VB preview);
+  ARCHITECTURE.md updated with the real scaffold + SDK APIs. Vercel deploy (S1.4) is the one
+  remaining item, intentionally held until the site is complete.
 
 ## 🚦 Phase 2 — Content model + multi-page site  _(ask before starting)_
 Goal: This is Dubai content types, the luxury design system, and all page templates — a real
