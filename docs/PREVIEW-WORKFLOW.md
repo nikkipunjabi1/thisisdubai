@@ -188,6 +188,54 @@ workflow.
 
 ---
 
+## Access control: org-network-only by default
+
+A preview link renders **unpublished** content to a viewer with **no login**, so the default
+posture is **restricted, not open**. Every link is minted in one of two modes, and the author UI
+**defaults to the restricted one** — you have to deliberately choose to make a link public.
+
+| Mode | Who can open it | When to use | Default |
+|---|---|---|---|
+| **Internal** (org-network-only) | Only requests from allow-listed organization egress IPs (office network / VPN) | Day-to-day review by staff | ✅ **default** |
+| **Shareable** (login-free) | Anyone with the link | An external stakeholder who has no CMS login **and** isn't on the network | opt-in, chosen per link |
+
+### How "Internal" is enforced
+The `/preview` and `/preview/share` routes are gated **at the edge** in `src/proxy.ts`: the
+request's client IP is matched against an allow-list (`PREVIEW_ALLOWED_IPS` — comma-separated
+IPs/CIDRs). Off-network requests get **`403` before any draft is read**. The gate covers only
+preview paths; the public site is untouched.
+
+- **Mode lives in the signed token** (`mode: 'internal' | 'shareable'`), so it can't be escalated
+  by editing the URL: a validly-signed `internal` token opened off-network is still refused.
+- **Shareable** links skip the IP gate but keep every other control (short TTL, single-item scope,
+  `noindex`, the httpOnly scope cookie).
+
+### Caveats (this is a posture, not authentication)
+- **Corporate egress IPs rotate and are shared.** An allow-list authorizes a *network*, not a
+  *person* — lean on the short TTL + item scope alongside it, never on the IP alone.
+- **`x-forwarded-for` is only trustworthy behind a known proxy.** On Vercel, use the platform's
+  client-IP signal and ignore client-supplied XFF hops, or the allow-list is spoofable.
+- **Internal mode blocks legitimate *remote* reviewers by design.** That's the whole point; reach
+  for **Shareable** for them, as a conscious choice.
+
+### Stronger option (genuinely sensitive / embargoed drafts)
+Put the preview behind an **identity-aware proxy** (Cloudflare Access, or Vercel SSO / password
+protection) instead of an IP list — real per-user auth, at the cost of the login-free
+convenience. That's deploy-time config, not app code, and would *replace* the IP gate for Internal
+mode rather than stack on it.
+
+### Related hardening already in place
+- **`frame-ancestors` CSP** (`next.config.ts`) restricts who may *embed* the app to `'self'` + the
+  Optimizely CMS. That's a different axis (anti-clickjacking) from *who may open* a link, but it's
+  part of the same "lock down preview surfaces" story.
+
+**Status: designed, default decided (Internal), not yet built.** Implementation tasks: a `mode`
+claim on the signed token, the IP gate + `PREVIEW_ALLOWED_IPS` in `proxy.ts`, and an
+Internal/Shareable toggle in `StakeholderLinkPanel` that **defaults to Internal**. Tracked for a
+preview-hardening sprint.
+
+---
+
 ## Key design decisions
 - **Token signing:** HMAC-signed (or JWT) with a server secret (`PREVIEW_SIGNING_SECRET`), short
   default TTL, explicit `contentKey`+`locale` scope (a link previews only its item).
@@ -195,8 +243,10 @@ workflow.
   reissuing the link; optionally pin a version for a frozen snapshot.
 - **New pages not yet routable:** a brand-new page may not have a public URL yet. The preview
   route renders by `contentKey` directly (via `getContentById`), so it works before first publish.
-- **Access hardening (optional):** add a light gate (link + optional passphrase) if stakeholders
-  are external; log link generation for auditability.
+- **Access control (default = restricted):** links are minted **Internal (org-network-only)** by
+  default and only made **Shareable** by explicit author opt-in — see "Access control:
+  org-network-only by default" above. Optionally add a passphrase and log link generation for
+  auditability.
 - **Revalidation on publish:** already handled by the baseline's `createPublishApi` +
   `opti-graph webhook:create`; we confirm `optimizePublish` targets the right paths.
 

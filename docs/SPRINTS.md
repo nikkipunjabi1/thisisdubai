@@ -13,6 +13,12 @@ concrete **deliverable**, and an **exit check**. **I always ask before starting 
 
 Legend: `[ ]` todo · `[~]` in progress · `[x]` done · 🚦 = phase gate (I ask you before starting).
 
+> **▶ Resume order — start here next (in this order):**
+> 1. **S3.1a — Preview access hardening (Internal-default)** — the immediate next sprint.
+> 2. **TTD-2 — Author the Things-to-Do pages** — after S3.1a.
+>
+> Both are "ask before starting" per the standing rule.
+
 ---
 
 ## Phase 0 — Foundations 🟢 (planning)
@@ -96,15 +102,33 @@ downstream (semantic search tuning, AI retrieval, the MCP server) needs a realis
   101 Places to Visit · 19 Neighbourhoods · 20 Events · 24 Tags, all with authored rich-text
   bodies. Body renderers added to POI/Event/Area detail pages (`<Prose>`); seed refactored to
   `scripts/data/`; `npm run asset-manifest` generates the CMP upload manifest.
-- [ ] **SC2 — Articles section end-to-end** 🔴
-  `Article` type already exists in the CMS but is unregistered in `layout.tsx`. Needs: registry
-  entry, an `Articles` `_experience` section + migration, a card, nav entry, listing wiring —
-  then 100 long-form articles (~800+ words each) with categories and `relatedPlaces`.
-- [ ] **SC3 — "Things to Do" section** 🔴
-  Maps to the existing (unregistered) **`Tour`** type — activities and experiences, as distinct
-  from `PointOfInterest` landmarks: desert safaris, dhow cruises, skydiving, walking tours.
-  Same standing-up work as SC2 (registry + experience + card + nav), then ~30 tours with
-  `durationHours`, `priceFrom`, `highlights` and `stops` linking back to POIs.
+- [x] **SC2 — Articles section** ✅ _(code end-to-end; content is a later pass)_
+  Built and registered: `ArticlePost` shared block + `Articles` `_experience` + `ArticleDetail`,
+  `articleHref` routing, card + listing wiring, nav entry. Content so far is the first "guides"
+  batch only (`scripts/data/articles/`); growing toward the ~100 long-form target is a content
+  pass, not code.
+- [~] **SC3 — "Things to Do" campaign** (Visual Builder) 🔴 — _reconceived_
+  **Not** a new `Tour` listing (the earlier plan). It's a curated **campaign over existing
+  content**: a landing page plus themed sub-pages (New & Trending, Dubai Attractions, Arts &
+  Culture, Wellness), each pulling tagged Places/Events/Articles, with a video hero and reusable
+  highlight cards. Routed by the existing `[...slug]` catch-all — no new Next routes. (The `Tour`
+  content type still exists but is not used for this; a Tours listing can come later if wanted.)
+  - [x] **TTD-1 — Model + blocks** ✅ (branch `feat/things-to-do-campaign`)
+    `ThingsToDoPage` `_experience` + four blocks: **ThingsToDoHero** (YouTube background video;
+    owns the page's single `<h1>`), **CuratedContentRail** (source = Latest / By tag /
+    Hand-picked across Places/Neighbourhoods/Events/Articles; section-only), **VideoEmbed**
+    (inline YouTube with autoplay/mute/loop/start/hide-related + click-to-load facade),
+    **HighlightCard** (reusable **shared** block for "For This Application"). Helpers
+    `src/lib/youtube.ts` (+9 tests) + `src/lib/curated.ts`. Pushed to the CMS. SEO: hero = the
+    only `<h1>`, rails `<h2>`, cards `<h3>`. Type-check/lint/64 tests/build green.
+  - [ ] **TTD-2 — Author the pages** 🟡 _(after S3.1a Preview access hardening — ask before starting)_
+    A reviewable, **dry-run-first** seed script (USER runs) that creates the 5 `ThingsToDoPage`
+    experiences at their URLs + a couple of shared `HighlightCard` blocks; add a "Things to Do"
+    nav entry; compose the landing page in Visual Builder; then **browser-verify** (hero video
+    plays muted/looped, rails resolve to real cards, single-`<h1>` check, RTL/AR).
+  - [ ] **TTD-3 — Imagery + AR + blog** 🟡
+    Poster/hero imagery, an AR pass of the new block strings, and a blog outline ("configurable
+    campaign pages in Visual Builder" — candidate for BLOG-PLAN).
 - [ ] **SC4 — Content quality pass** 🟡
   Tag/facet coverage across the full corpus, `relatedPlaces` cross-links, and a re-verification
   of semantic search + the relevance floor at ~250 items rather than 16.
@@ -125,6 +149,14 @@ downstream (semantic search tuning, AI retrieval, the MCP server) needs a realis
   scope/locale must be matched on `url.default` **per row**; SaaS CMS has no UI extensibility,
   so the preview pane is the only in-CMS surface. Blog drafted
   (`blog/shareable-stakeholder-previews-optimizely-saas.md`), needs screenshots.
+- [ ] **S3.1a — Preview access hardening (Internal-default)** 🟡 _(▶ NEXT — resume here)_
+  Make preview links **Internal (org-network-only) by default**, Shareable only by explicit
+  opt-in. Full design + caveats in `docs/PREVIEW-WORKFLOW.md` §"Access control: org-network-only by
+  default". Tasks: a `mode` claim on the signed token (so the URL can't escalate it); an
+  IP-allowlist gate in `src/proxy.ts` on `/preview*` (`PREVIEW_ALLOWED_IPS`, `403` off-network,
+  trusting only the platform's client-IP hop); an **Internal/Shareable toggle in
+  `StakeholderLinkPanel` defaulting to Internal**; tests + in-browser verification. The
+  `frame-ancestors` CSP (`next.config.ts`) already shipped as related surface hardening.
 - [~] **S3.2 — Semantic search** (autocomplete, synonyms, boosting, facets) 🔴
   ✅ **Core shipped:** `/search` — server-rendered, URL-driven (`?q=`), one federated Graph query
   across POI/Event/Area with `_ranking: SEMANTIC`, results grouped by type, `noindex`, breadcrumbs,

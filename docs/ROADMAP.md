@@ -42,10 +42,11 @@ _Phased plan. Each phase ends with a working, deployable state and (usually) a b
 ## Phase 2.5 — Content at scale
 - [x] ~250-item corpus: **101 Places to Visit**, **19 Neighbourhoods**, **20 Events**, 24 Tags —
       all with authored rich-text bodies (originally written; see the sourcing rule in SPRINTS.md)
-- [ ] **Articles** section stood up end-to-end + 100 long-form articles
-- [ ] **Things to Do** section — the visitdubai.com `/things-to-do` equivalent, mapped to the
-      existing `Tour` type (activities and experiences, as distinct from `PointOfInterest`
-      landmarks) + ~30 tours
+- [x] **Articles** section stood up end-to-end (code); bulk long-form content is a later pass
+- [~] **Things to Do** campaign (Visual Builder) — a curated landing + themed sub-pages (New &
+      Trending, Dubai Attractions, Arts & Culture, Wellness) over existing content, with a video
+      hero and reusable highlight cards. **TTD-1 (model + blocks) shipped**; TTD-2 (author the
+      pages) + TTD-3 (imagery/AR/blog) next. See SPRINTS.md §Phase 2.5 SC3.
 - [ ] Imagery: 144 CMP folders (`docs/ASSET-MANIFEST.md`) → `npm run attach-assets -- --apply`
 - [ ] Content quality pass: facet coverage, cross-links, re-verify search relevance at scale
 - **Why:** relevance tuning, facets and pagination are untestable on 16 items — and every
