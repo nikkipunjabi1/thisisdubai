@@ -80,6 +80,10 @@ const en = {
     placesMentioned: 'Places mentioned',
     by: (author: string) => `By ${author}`,
   },
+  media: {
+    playVideo: 'Play video',
+    watchOnYouTube: 'Watch on YouTube',
+  },
 };
 
 export type Messages = typeof en;
@@ -149,6 +153,10 @@ const ar: Messages = {
     tickets: 'التذاكر والمعلومات ←',
     placesMentioned: 'أماكن مذكورة',
     by: (author: string) => `بقلم ${author}`,
+  },
+  media: {
+    playVideo: 'تشغيل الفيديو',
+    watchOnYouTube: 'المشاهدة على يوتيوب',
   },
 };
 
