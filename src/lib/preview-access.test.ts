@@ -47,17 +47,8 @@ describe('parseAllowList', () => {
   });
 });
 
-describe('isInternalAccessAllowed', () => {
+describe('isInternalAccessAllowed (strictly allowlist-only, no localhost bypass)', () => {
   const allowList = ['154.16.203.12'];
-
-  it('allows a direct connection with no proxy hop (local dev)', () => {
-    expect(isInternalAccessAllowed({ xff: null, xreal: null, allowList: [] })).toBe(true);
-  });
-
-  it('allows loopback addresses', () => {
-    expect(isInternalAccessAllowed({ xff: '127.0.0.1', xreal: null, allowList: [] })).toBe(true);
-    expect(isInternalAccessAllowed({ xff: '::1', xreal: null, allowList: [] })).toBe(true);
-  });
 
   it('allows an allowlisted client IP (left-most x-forwarded-for entry)', () => {
     expect(
@@ -76,8 +67,23 @@ describe('isInternalAccessAllowed', () => {
     ).toBe(false);
   });
 
-  it('fails safe: a proxy hop is present but the allowlist is empty → blocked', () => {
+  it('blocks a direct/local connection (treated as 127.0.0.1) unless loopback is allowlisted', () => {
+    // No proxy hop → resolves to 127.0.0.1, which is NOT auto-allowed anymore.
+    expect(isInternalAccessAllowed({ xff: null, xreal: null, allowList })).toBe(false);
+    expect(isInternalAccessAllowed({ xff: '127.0.0.1', xreal: null, allowList })).toBe(false);
+    // ...but works once 127.0.0.1 is explicitly added (the documented local-preview path).
+    expect(
+      isInternalAccessAllowed({ xff: null, xreal: null, allowList: ['127.0.0.1'] }),
+    ).toBe(true);
+    expect(
+      isInternalAccessAllowed({ xff: '127.0.0.1', xreal: null, allowList: ['127.0.0.1'] }),
+    ).toBe(true);
+  });
+
+  it('fails safe: an empty allowlist blocks everything, including loopback', () => {
     expect(isInternalAccessAllowed({ xff: '203.0.113.9', xreal: null, allowList: [] })).toBe(false);
+    expect(isInternalAccessAllowed({ xff: null, xreal: null, allowList: [] })).toBe(false);
+    expect(isInternalAccessAllowed({ xff: '127.0.0.1', xreal: null, allowList: [] })).toBe(false);
   });
 
   it('falls back to x-real-ip when x-forwarded-for is absent', () => {

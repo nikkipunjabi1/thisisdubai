@@ -220,10 +220,11 @@ only runs when a share token / draft cookie is present).
   edge reads `mode` from the payload *unverified* (defence-in-depth only) and **fails safe to
   `internal`** for any legacy/missing/garbled value — the HMAC is still verified server-side before
   a draft is read, so a forged `shareable` skips the gate but renders nothing.
-- **Fail-safe allow-list:** with a proxy hop present but `PREVIEW_ALLOWED_IPS` empty, internal links
-  are **denied**, so a misconfigured deploy locks down rather than leaks. Loopback (`127.0.0.1`,
-  `::1`) and a direct local connection with no proxy hop (`next dev`) are allowed, so previews work
-  out of the box in development.
+- **Strictly allow-list only — no localhost bypass.** An internal link opens ONLY from an IP in
+  `PREVIEW_ALLOWED_IPS`, in every environment. An empty list **denies everything** (fail-safe), and
+  a direct local connection (`next dev`) is treated as `127.0.0.1`, so to preview internal links on
+  localhost you add `127.0.0.1` (and `::1`) to the list. This is deliberate: it lets the deny path
+  be exercised from a normal browser, not just via a spoofed `x-forwarded-for` header.
 - **Shareable** links skip the IP gate but keep every other control (short TTL, single-item scope,
   `noindex`, the httpOnly scope cookie).
 

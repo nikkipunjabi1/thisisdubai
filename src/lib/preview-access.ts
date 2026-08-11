@@ -56,16 +56,14 @@ export function parseAllowList(raw: string | undefined | null): string[] {
  * from the forwarding headers and the configured allowlist. Pure, so it is unit-tested
  * directly (see preview-access.test.ts); the proxy just feeds it real request values.
  *
- * Rules, in order:
- *   1. No proxy hop at all (`x-forwarded-for` and `x-real-ip` both absent) → a direct
- *      connection, i.e. local `next dev`. Allowed, so internal previews work out of the
- *      box in development. Every deployed environment sits behind a platform proxy that
- *      always sets `x-forwarded-for`, so this branch never opens the gate in production.
- *   2. Loopback (`127.0.0.1`, `::1`) → allowed.
- *   3. Otherwise the client IP (the LEFT-most `x-forwarded-for` entry — the client as
- *      seen by the platform edge, which overwrites/appends it) must be in the allowlist.
- *   4. Fail-safe: a proxy hop IS present but the allowlist is empty → denied, so a
- *      misconfigured deploy locks internal previews down rather than leaking them.
+ * Strictly allowlist-only — there is NO localhost or loopback bypass:
+ *   1. Fail-safe: an empty allowlist means nothing passes.
+ *   2. Resolve the client IP: the LEFT-most `x-forwarded-for` entry (the client as seen by
+ *      the platform edge, which overwrites/appends it), else `x-real-ip`, else `127.0.0.1`
+ *      — a direct connection with no proxy hop (local `next dev`) IS loopback.
+ *   3. Allowed only if that IP is in the allowlist. So internal links open ONLY from an
+ *      allowlisted IP, in every environment. To preview them on localhost, add `127.0.0.1`
+ *      (and/or `::1`) to `PREVIEW_ALLOWED_IPS`.
  *
  * Caveat: `x-forwarded-for` is only trustworthy behind a proxy that rewrites it (Vercel
  * does). If the app were exposed WITHOUT such a proxy, a client could spoof it. See
@@ -77,10 +75,8 @@ export function isInternalAccessAllowed(opts: {
   allowList: string[];
 }): boolean {
   const { xff, xreal, allowList } = opts;
-  if (!xff && !xreal) return true; // direct / local dev
-  const ip = (xff?.split(',')[0] ?? xreal ?? '').trim();
-  if (ip === '127.0.0.1' || ip === '::1') return true; // loopback
-  if (allowList.length === 0) return false; // proxy present, nothing allowlisted → deny
+  if (allowList.length === 0) return false; // fail-safe: nothing allowlisted → nothing passes
+  const ip = (xff?.split(',')[0] ?? xreal ?? '127.0.0.1').trim();
   return allowList.includes(ip);
 }
 
