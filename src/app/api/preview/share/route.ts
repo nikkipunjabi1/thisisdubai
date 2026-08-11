@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { timingSafeEqual } from 'node:crypto';
 import { signShareToken, DEFAULT_TTL_SECONDS } from '@/lib/preview-token';
+import type { PreviewMode } from '@/lib/preview-access';
 import { DEFAULT_LOCALE } from '@/lib/i18n';
 
 /**
@@ -12,9 +13,12 @@ import { DEFAULT_LOCALE } from '@/lib/i18n';
  * Fail-closed: no secret configured, or a missing/wrong token, returns 401. Phase 4
  * replaces this with a proper authenticated admin UI.
  *
- *   GET /api/preview/share?key=<contentKey>&locale=en&version=latest&path=/places-to-visit/x&ttl=604800
+ *   GET /api/preview/share?key=<contentKey>&locale=en&version=latest&path=/places-to-visit/x&ttl=604800&mode=internal
  *   Header:  Authorization: Bearer <PREVIEW_ADMIN_SECRET>
- *   → { "url": "https://<host>/preview/share?token=…", "expiresInSeconds": 604800 }
+ *   → { "url": "https://<host>/preview/share?token=…", "expiresInSeconds": 604800, "mode": "internal" }
+ *
+ * `mode` defaults to `internal` (org-network-only, IP-gated in src/proxy.ts); pass
+ * `mode=shareable` for a login-free link that opens from anywhere.
  */
 export const dynamic = 'force-dynamic';
 
@@ -47,10 +51,12 @@ export async function GET(req: NextRequest) {
   const path = sp.get('path') || undefined;
   const ttlParam = Number(sp.get('ttl'));
   const ttl = Number.isFinite(ttlParam) && ttlParam > 0 ? ttlParam : DEFAULT_TTL_SECONDS;
+  // Default to the restrictive mode: only an explicit `mode=shareable` opts out of the gate.
+  const mode: PreviewMode = sp.get('mode') === 'shareable' ? 'shareable' : 'internal';
 
   let token: string;
   try {
-    token = signShareToken({ key, locale, version, path }, ttl);
+    token = signShareToken({ key, locale, version, path, mode }, ttl);
   } catch {
     return NextResponse.json({ error: 'PREVIEW_SIGNING_SECRET is not configured' }, { status: 500 });
   }
@@ -59,5 +65,6 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({
     url: `${origin}/preview/share?token=${encodeURIComponent(token)}`,
     expiresInSeconds: ttl,
+    mode,
   });
 }

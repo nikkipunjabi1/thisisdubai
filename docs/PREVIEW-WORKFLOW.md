@@ -200,13 +200,30 @@ posture is **restricted, not open**. Every link is minted in one of two modes, a
 | **Shareable** (login-free) | Anyone with the link | An external stakeholder who has no CMS login **and** isn't on the network | opt-in, chosen per link |
 
 ### How "Internal" is enforced
-The `/preview` and `/preview/share` routes are gated **at the edge** in `src/proxy.ts`: the
-request's client IP is matched against an allow-list (`PREVIEW_ALLOWED_IPS` — comma-separated
-IPs/CIDRs). Off-network requests get **`403` before any draft is read**. The gate covers only
-preview paths; the public site is untouched.
+The gate lives **at the edge** in `src/proxy.ts` (pure, unit-tested helpers in
+`src/lib/preview-access.ts`). It fires at the **two points where a login-free draft is served**:
 
+1. **Link consumption** — `GET /preview/share?token=…`, where the scope cookie is about to be set.
+2. **Every subsequent draft page view** — a locale page (`/en/…`, `/ar/…`) carrying Next's Draft
+   Mode cookie plus the `__preview_share` scope cookie. The gate re-checks here too, so an
+   off-network reviewer who already holds the cookie is stopped mid-session, not just at step 1.
+
+At both points the client IP is matched against `PREVIEW_ALLOWED_IPS` (comma-separated). Off-network
+requests get a **`403` before any draft is read**; the **public site is never touched** (the gate
+only runs when a share token / draft cookie is present).
+
+- **Layer 1 (the CMS editor's own `/preview` iframe) is deliberately NOT IP-gated.** It's
+  authenticated by the CMS's short-lived `preview_token`, and an author may legitimately edit from
+  anywhere; that path stays out of the proxy matcher. Only the Layer-2 login-free surface is gated.
 - **Mode lives in the signed token** (`mode: 'internal' | 'shareable'`), so it can't be escalated
-  by editing the URL: a validly-signed `internal` token opened off-network is still refused.
+  by editing the URL: a validly-signed `internal` token opened off-network is still refused. The
+  edge reads `mode` from the payload *unverified* (defence-in-depth only) and **fails safe to
+  `internal`** for any legacy/missing/garbled value — the HMAC is still verified server-side before
+  a draft is read, so a forged `shareable` skips the gate but renders nothing.
+- **Fail-safe allow-list:** with a proxy hop present but `PREVIEW_ALLOWED_IPS` empty, internal links
+  are **denied**, so a misconfigured deploy locks down rather than leaks. Loopback (`127.0.0.1`,
+  `::1`) and a direct local connection with no proxy hop (`next dev`) are allowed, so previews work
+  out of the box in development.
 - **Shareable** links skip the IP gate but keep every other control (short TTL, single-item scope,
   `noindex`, the httpOnly scope cookie).
 
@@ -229,10 +246,12 @@ mode rather than stack on it.
   Optimizely CMS. That's a different axis (anti-clickjacking) from *who may open* a link, but it's
   part of the same "lock down preview surfaces" story.
 
-**Status: designed, default decided (Internal), not yet built.** Implementation tasks: a `mode`
-claim on the signed token, the IP gate + `PREVIEW_ALLOWED_IPS` in `proxy.ts`, and an
-Internal/Shareable toggle in `StakeholderLinkPanel` that **defaults to Internal**. Tracked for a
-preview-hardening sprint.
+**Status: built and working (S3.1a).** Shipped: the `mode` claim on the signed token (defaulting to
+`internal` in both link generators — the CMS panel action and the machine `/api/preview/share`
+route); the edge IP gate + `PREVIEW_ALLOWED_IPS` in `src/proxy.ts` / `src/lib/preview-access.ts`,
+enforced at link consumption and on every draft page view; and the Internal/Shareable toggle in
+`StakeholderLinkPanel`, **defaulting to Internal**. Covered by unit tests (`preview-access.test.ts`,
+`preview-token.test.ts`) and an end-to-end proxy matrix.
 
 ---
 

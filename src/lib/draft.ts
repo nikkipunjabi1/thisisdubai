@@ -2,6 +2,7 @@ import { cache } from 'react';
 import { cookies, draftMode } from 'next/headers';
 import { GraphClient, getClient, type GraphSlot } from '@optimizely/cms-sdk';
 import { verifyShareToken, type SharePayload } from './preview-token';
+import { PREVIEW_SCOPE_COOKIE } from './preview-access';
 
 /**
  * Draft (unpublished) content reads for the stakeholder preview module — Layer 2,
@@ -37,8 +38,9 @@ import { verifyShareToken, type SharePayload } from './preview-token';
  * request via React `cache()`.
  */
 
-/** Cookie holding the signed share token, so a page can tell WHICH item is in scope. */
-export const PREVIEW_SCOPE_COOKIE = '__preview_share';
+// Canonical home is the edge-safe preview-access module (the proxy needs it too); re-export
+// so existing server-side importers keep their `@/lib/draft` import path.
+export { PREVIEW_SCOPE_COOKIE };
 
 /** Statuses that are not the draft we want: the live version and its superseded history. */
 const PUBLISHED_STATUSES = new Set(['Published', 'Previous']);

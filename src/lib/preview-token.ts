@@ -1,4 +1,5 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
+import type { PreviewMode } from './preview-access';
 
 /**
  * Signed, expiring share tokens for the stakeholder preview module (Layer 2 in
@@ -23,6 +24,12 @@ export type SharePayload = {
   version: string;
   /** Locale-neutral app path to redirect to. Optional: a brand-new page has no URL yet. */
   path?: string;
+  /**
+   * Access mode (src/lib/preview-access.ts): 'internal' = org-network-only (IP-gated in
+   * src/proxy.ts, the DEFAULT) or 'shareable' = login-free from anywhere. Signed into the
+   * payload so a recipient cannot escalate an internal link by editing the URL.
+   */
+  mode: PreviewMode;
   /** Expiry, epoch seconds. */
   exp: number;
 };
@@ -48,11 +55,16 @@ function sign(body: string): string {
  * Mint a signed share token. `nowSeconds` is injectable for deterministic tests.
  */
 export function signShareToken(
-  input: Omit<SharePayload, 'exp'> & { exp?: number },
+  input: Omit<SharePayload, 'exp' | 'mode'> & { exp?: number; mode?: PreviewMode },
   ttlSeconds: number = DEFAULT_TTL_SECONDS,
   nowSeconds: number = nowSecondsDefault(),
 ): string {
-  const payload: SharePayload = { ...input, exp: input.exp ?? nowSeconds + ttlSeconds };
+  // Default to the restrictive mode: an omitted mode means org-network-only, never open.
+  const payload: SharePayload = {
+    ...input,
+    mode: input.mode ?? 'internal',
+    exp: input.exp ?? nowSeconds + ttlSeconds,
+  };
   const body = Buffer.from(JSON.stringify(payload)).toString('base64url');
   return `${body}.${sign(body)}`;
 }

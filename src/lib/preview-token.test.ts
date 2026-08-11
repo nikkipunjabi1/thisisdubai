@@ -20,6 +20,22 @@ describe('preview share token', () => {
     }
   });
 
+  it('defaults mode to internal (the restrictive choice) when omitted', () => {
+    const token = signShareToken({ key: 'k', locale: 'en', version: 'latest' }, 60, NOW);
+    const result = verifyShareToken(token, NOW);
+    expect(result.ok && result.payload.mode).toBe('internal');
+  });
+
+  it('round-trips an explicit shareable mode', () => {
+    const token = signShareToken(
+      { key: 'k', locale: 'en', version: 'latest', mode: 'shareable' },
+      60,
+      NOW,
+    );
+    const result = verifyShareToken(token, NOW);
+    expect(result.ok && result.payload.mode).toBe('shareable');
+  });
+
   it('preserves an optional redirect path', () => {
     const token = signShareToken({ key: 'k', locale: 'ar', version: 'latest', path: '/places-to-visit/x' }, 60, NOW);
     const result = verifyShareToken(token, NOW);

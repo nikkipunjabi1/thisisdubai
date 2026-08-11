@@ -3,6 +3,7 @@
 import { headers } from 'next/headers';
 import { verifyCmsPreviewToken } from '@/lib/cms-preview-token';
 import { signShareToken, DEFAULT_TTL_SECONDS } from '@/lib/preview-token';
+import type { PreviewMode } from '@/lib/preview-access';
 import { isLocale, DEFAULT_LOCALE, splitLocale } from '@/lib/i18n';
 
 /**
@@ -57,9 +58,12 @@ export async function createShareLink(
   const ttlRaw = Number(formData.get('ttl'));
   const ttl = TTL_CHOICES.has(ttlRaw) ? ttlRaw : DEFAULT_TTL_SECONDS;
 
+  // Default to the restrictive mode: only an explicit 'shareable' opts out of the network gate.
+  const mode: PreviewMode = formData.get('mode') === 'shareable' ? 'shareable' : 'internal';
+
   let token: string;
   try {
-    token = signShareToken({ key, locale, version, path }, ttl);
+    token = signShareToken({ key, locale, version, path, mode }, ttl);
   } catch {
     return { error: 'PREVIEW_SIGNING_SECRET is not configured, so links cannot be signed.' };
   }
