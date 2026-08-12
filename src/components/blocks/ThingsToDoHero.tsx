@@ -85,10 +85,17 @@ export default function ThingsToDoHero({ content, displaySettings }: Props) {
       theme={(displaySettings?.theme as SectionTheme) ?? 'dark'}
       width={(displaySettings?.width as SectionWidth) ?? 'full'}
       spacing={(displaySettings?.spacing as SectionSpacing) ?? 'spacious'}
-      className="relative isolate flex min-h-[68vh] items-end overflow-hidden"
+      // Height is CONTAINER-driven, not `vh`: the Visual Builder renders each block in a
+      // preview iframe whose viewport height is not the visible canvas, so a bare `68vh`
+      // there resolves against a huge viewport and the hero balloons. The clamp keeps ~68vh
+      // on the real site but caps the extremes so the editor preview stays sane.
+      className="relative isolate flex min-h-[clamp(28rem,68vh,46rem)] items-end overflow-hidden"
     >
-      {/* Background layer: poster (always, as instant paint + fallback) then video over it. */}
-      <div className="absolute inset-0 -z-10 bg-obsidian">
+      {/* Background layer: poster (always, as instant paint + fallback) then video over it.
+          `container-type: size` makes the cover sizing below relative to THIS box (via cq*
+          units) instead of the viewport, so the video fills the hero identically on the real
+          site and inside the Visual Builder's preview iframe. */}
+      <div className="absolute inset-0 -z-10 bg-obsidian [container-type:size]">
         {poster ? (
           <Image src={poster} alt="" fill priority className="object-cover" sizes="100vw" />
         ) : null}
@@ -99,8 +106,10 @@ export default function ThingsToDoHero({ content, displaySettings }: Props) {
             aria-hidden
             tabIndex={-1}
             allow="autoplay; encrypted-media; picture-in-picture"
-            // Cover trick: scale a 16:9 iframe to fill any viewport without letterboxing.
-            className="pointer-events-none absolute left-1/2 top-1/2 h-[56.25vw] min-h-full w-[177.78vh] min-w-full -translate-x-1/2 -translate-y-1/2"
+            // Cover trick, container-relative: a 16:9 iframe sized to the larger of the
+            // container's own dimensions in each axis (cqw/cqh), so it always fills the hero
+            // without letterboxing, in any layout context.
+            className="pointer-events-none absolute left-1/2 top-1/2 h-[max(100cqh,56.25cqw)] w-[max(100cqw,177.78cqh)] -translate-x-1/2 -translate-y-1/2"
           />
         ) : null}
         <div className="absolute inset-0 bg-gradient-to-t from-obsidian via-obsidian/55 to-obsidian/20" />
