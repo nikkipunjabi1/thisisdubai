@@ -45,8 +45,9 @@ _Phased plan. Each phase ends with a working, deployable state and (usually) a b
 - [x] **Articles** section stood up end-to-end (code); bulk long-form content is a later pass
 - [~] **Things to Do** campaign (Visual Builder) — a curated landing + themed sub-pages (New &
       Trending, Dubai Attractions, Arts & Culture, Wellness) over existing content, with a video
-      hero and reusable highlight cards. **TTD-1 (model + blocks) shipped**; TTD-2 (author the
-      pages) + TTD-3 (imagery/AR/blog) next. See SPRINTS.md §Phase 2.5 SC3.
+      hero and reusable highlight cards. **TTD-1 (model + blocks) and TTD-2 (pages authored +
+      published, nav wired) shipped**; TTD-3 (imagery/AR/campaign blog) next. See SPRINTS.md
+      §Phase 2.5 SC3.
 - [ ] Imagery: 144 CMP folders (`docs/ASSET-MANIFEST.md`) → `npm run attach-assets -- --apply`
 - [ ] Content quality pass: facet coverage, cross-links, re-verify search relevance at scale
 - **Why:** relevance tuning, facets and pagination are untestable on 16 items — and every
@@ -59,8 +60,10 @@ _Phased plan. Each phase ends with a working, deployable state and (usually) a b
       **HTTP Basic** (not HMAC: the SDK supports neither, and Basic needs no request signing),
       + "PREVIEW" banner + noindex. Authors generate links from a **"Share with a stakeholder"
       button in the CMS preview pane**, authenticated by the CMS's own `preview_token`, so there
-      is no admin page and no secret in the author's hands. See PREVIEW-WORKFLOW.md.
-      **(Primary module/blog candidate — blog drafted.)**
+      is no admin page and no secret in the author's hands. Hardened since with a signed
+      Internal/Shareable access mode (Internal = org-network-only, IP-gated at the edge, the
+      default) and a `frame-ancestors` CSP. See PREVIEW-WORKFLOW.md.
+      **(Primary module/blog candidate — two blogs drafted, publishing next.)**
 - [x] **Semantic search** page (autocomplete, synonyms, faceting) — the headline feature
       (shipped S3.2; taxonomy synonyms denormalized into `searchKeywords`. See docs/AI-SEARCH.md.)
 - [ ] **Localization**: EN + **AR semantic search** on showcase pages (RTL); Opal AR translation

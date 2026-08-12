@@ -1,13 +1,15 @@
 ---
 title: "Shareable stakeholder previews on Optimizely SaaS CMS (headless): login-free links to unpublished content"
-status: draft
+status: ready
 audience: Optimizely community / dev.to / LinkedIn (long-form)
 author: Nikki Punjabi
 tags: [optimizely, saas-cms, optimizely-graph, headless, preview, draft-mode, governance, nextjs]
 ---
 
-> **Draft for review.** Written from a delivery/architecture point of view: the decisions and the
-> traps, not the implementation. Screenshot placeholders marked for capture before publishing.
+> **Copy final, pending screenshots before posting.** Written from a delivery/architecture point
+> of view: the decisions and the traps, not the implementation. The previewed-page shot is embedded;
+> capture the three CMS-editor 📷 shots still marked below, then publish. Pairs with the token/access
+> deep-dive linked at the end.
 
 ## The request that has no button
 
@@ -25,7 +27,7 @@ manager, a client sponsor, a regional lead. They will not be given an account, t
 trained, and they will open the link on a phone. They need to see the page as it will look, know
 that it is not live yet, and reply "approved".
 
-📷 [Screenshot: the CMS editor's preview pane, with the content still in Draft status]
+📷 **[Screenshot to capture (CMS editor)]** The preview pane with the content still in Draft status (the built-in author preview, i.e. Layer 1).
 
 ## Why this is trickier than it looks
 
@@ -130,7 +132,7 @@ covers an awkward one. Anything longer is a standing grant that nobody remembers
 **Never render a draft through a shared cache.** Covered below, and it is the one that would have
 been a genuine incident.
 
-📷 [Screenshot: the link generator UI, showing items with unpublished edits and the expiry selector]
+📷 **[Screenshot to capture (CMS editor)]** The "Share with a stakeholder" panel in the preview pane, showing the mode / expiry selectors and a generated link (the same panel that appears in the deep-dive companion).
 
 ## What broke
 
@@ -169,8 +171,7 @@ numbers are identifiers, not a chronology, and they are certainly not a status.
 The correct approach is to select on the version's **status** and break ties on the last-modified
 timestamp. Never on the number.
 
-📷 [Screenshot: the version list for a single item, showing a Draft with a lower version number than
-the Published one]
+📷 **[Screenshot to capture (CMS editor)]** The version list for a single item, showing a Draft with a *lower* version number than the Published one (the point of the story above).
 
 The wider lesson is about how this class of bug presents. A preview that shows the published page
 looks exactly like a preview that works, right up until a stakeholder approves a page they never
@@ -330,6 +331,12 @@ should be asking:
 - **Who can generate a link?** A single shared secret is fine for a small team and terrible for
   attribution. If it matters who shared what, put link generation behind the same identity provider
   as the CMS.
+- **Who can open a link, and from where?** A login-free link is convenient and indiscriminate:
+  anyone the URL reaches can open it, which for a forwarded email is precisely nobody you chose.
+  Scoping a link to a network (an allow-list of office or VPN addresses, with an off-network request
+  refused before any draft is read) turns that forwarded email into a non-event. Making that the
+  default, and treating a fully-open link as a deliberate per-link choice for genuine external
+  reviewers, matched how review actually happens. The companion deep-dive breaks that model down.
 - **How long should links live, by default?** Whatever you set as the default is what almost every
   link will use. Choose it deliberately.
 - **Can a link be revoked before it expires?** If you have not built per-link revocation, the
@@ -345,7 +352,7 @@ I would rather ship a small feature with the gaps written down than a bigger one
 away. Naming "no revocation, no audit log, shared secret" as known limitations in the documentation
 took ten minutes and made the follow-up conversation with the client honest.
 
-📷 [Screenshot: a previewed page showing the unpublished-draft banner and an exit control]
+![A previewed page: the golden "Preview: you are viewing unpublished draft content. Exit preview" banner across the top, above the normal page](assets/previewed-page-banner.png)
 
 ## What I would tell the next team
 
@@ -383,6 +390,9 @@ reviewers are external and the authors are not all in the same organization? If 
 audit-trail question elegantly, I would like to steal it.
 
 ## Related
+- How a login-free preview link actually works: signed tokens, cookies, and network-scoped access
+  (the companion deep-dive to this post, on the token anatomy, its lifecycle, and the
+  Internal-versus-Shareable access model)
 - Securing a headless Optimizely SaaS build: which credential does what, and where each one is allowed
   to live
 - Live Visual Builder preview for a headless application: wiring the editor-side preview end to end
