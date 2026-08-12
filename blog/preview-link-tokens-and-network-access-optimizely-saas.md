@@ -7,8 +7,9 @@ tags: [optimizely, saas-cms, optimizely-graph, headless, preview, draft-mode, hm
 ---
 
 > **Copy final, pending screenshots before posting.** Written from a delivery and architecture
-> point of view: the mechanics and the decisions, not a code dump. Capture the 📷 shots below (the
-> share panel and a previewed page) before publishing. Companion to the broader piece, "Shareable
+> point of view: the mechanics and the decisions, not a code dump. The previewed-page shot is
+> embedded; capture the one remaining CMS-editor 📷 shot (the Share panel) before publishing.
+> Companion to the broader piece, "Shareable
 > stakeholder previews on Optimizely SaaS CMS" (linked at the end); this one zooms into a single
 > question people keep asking me: what is that link, really, and how does it stay safe?
 
@@ -19,9 +20,7 @@ CMS, clicks one button, picks a couple of options, and gets a link. They paste i
 stakeholder with no CMS login opens it, and they see the draft exactly as it will look once
 published. No account, no VPN handshake at the CMS, no screenshots pasted into a document.
 
-📷 [Screenshot: the "Share with a stakeholder" panel, showing the "Who can open it" selector set to
-"Internal, organization network only", the "Shows" and "Expires after" options, and a generated
-link with a Copy button]
+📷 **[Screenshot to capture (CMS editor)]** The "Share with a stakeholder" panel, with the "Who can open it" selector on "Internal, organization network only", the "Shows" and "Expires after" options, and a generated link with a Copy button.
 
 Simple to use, and that is the point. But the moment you build it, a series of harder questions
 arrive, and they are the questions this post answers:
@@ -146,7 +145,7 @@ reading top to bottom once.
                                         the reviewer simply sees the normal published site
 ```
 
-📷 [Screenshot or exported figure: the flow diagram above, rendered cleanly for the post]
+📷 **[Optional figure]** The flow diagram above, exported as a clean image for the post (the ASCII version reads fine as-is if you would rather skip it).
 
 Notice that the network gate and the signature check run on *every* request, not just when the link
 is first opened. A reviewer who opened a link on the office network and then wandered off it does not
@@ -288,8 +287,7 @@ would repeat, distilled to the decisions rather than the code.
 - **Write down the localhost rule.** Decide how local development behaves, on purpose, and document
   it, so the loopback trap above becomes a footnote instead of a bug report.
 
-📷 [Screenshot: a previewed page showing the "unpublished draft" banner, to make the reviewer's
-end-state concrete]
+![A previewed page: the golden "Preview: you are viewing unpublished draft content. Exit preview" banner across the top, above the normal page](assets/previewed-page-banner.png)
 
 ## Closing
 
