@@ -13,11 +13,12 @@ concrete **deliverable**, and an **exit check**. **I always ask before starting 
 
 Legend: `[ ]` todo · `[~]` in progress · `[x]` done · 🚦 = phase gate (I ask you before starting).
 
-> **▶ Resume order — start here next (in this order):**
-> 1. **S3.1a — Preview access hardening (Internal-default)** — the immediate next sprint.
-> 2. **TTD-2 — Author the Things-to-Do pages** — after S3.1a.
+> **▶ Resume order — start here next:**
+> 1. ~~S3.1a — Preview access hardening (Internal-default)~~ ✅ **done** (branch
+>    `feat/preview-access-internal-default`).
+> 2. **TTD-2 — Author the Things-to-Do pages** — the immediate next sprint.
 >
-> Both are "ask before starting" per the standing rule.
+> "Ask before starting" per the standing rule.
 
 ---
 
@@ -149,14 +150,17 @@ downstream (semantic search tuning, AI retrieval, the MCP server) needs a realis
   scope/locale must be matched on `url.default` **per row**; SaaS CMS has no UI extensibility,
   so the preview pane is the only in-CMS surface. Blog drafted
   (`blog/shareable-stakeholder-previews-optimizely-saas.md`), needs screenshots.
-- [ ] **S3.1a — Preview access hardening (Internal-default)** 🟡 _(▶ NEXT — resume here)_
-  Make preview links **Internal (org-network-only) by default**, Shareable only by explicit
+- [x] **S3.1a — Preview access hardening (Internal-default)** ✅
+  Preview links are now **Internal (org-network-only) by default**, Shareable only by explicit
   opt-in. Full design + caveats in `docs/PREVIEW-WORKFLOW.md` §"Access control: org-network-only by
-  default". Tasks: a `mode` claim on the signed token (so the URL can't escalate it); an
-  IP-allowlist gate in `src/proxy.ts` on `/preview*` (`PREVIEW_ALLOWED_IPS`, `403` off-network,
-  trusting only the platform's client-IP hop); an **Internal/Shareable toggle in
-  `StakeholderLinkPanel` defaulting to Internal**; tests + in-browser verification. The
-  `frame-ancestors` CSP (`next.config.ts`) already shipped as related surface hardening.
+  default". Shipped: a `mode` claim on the signed token (defaults to `internal`, so the URL can't
+  escalate it — `src/lib/preview-token.ts`); an edge IP-allowlist gate in `src/proxy.ts` +
+  `src/lib/preview-access.ts` (`PREVIEW_ALLOWED_IPS`, `403` off-network, enforced at link
+  consumption **and** on every draft page view; fail-safe when the list is empty; loopback/local
+  dev allowed); an **Internal/Shareable toggle in `StakeholderLinkPanel` defaulting to Internal**;
+  and `mode` on the machine `/api/preview/share` route. Unit tests (`preview-access.test.ts`,
+  `preview-token.test.ts`) + an end-to-end proxy matrix (7 cases). The `frame-ancestors` CSP
+  (`next.config.ts`) shipped earlier as related surface hardening.
 - [~] **S3.2 — Semantic search** (autocomplete, synonyms, boosting, facets) 🔴
   ✅ **Core shipped:** `/search` — server-rendered, URL-driven (`?q=`), one federated Graph query
   across POI/Event/Area with `_ranking: SEMANTIC`, results grouped by type, `noindex`, breadcrumbs,

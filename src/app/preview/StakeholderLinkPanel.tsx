@@ -76,6 +76,7 @@ export function StakeholderLinkPanel({
   displayName,
 }: Props) {
   const [open, setOpen] = useState(false);
+  const [mode, setMode] = useState<'internal' | 'shareable'>('internal');
   const [copyState, setCopyState] = useState<'idle' | 'copied' | 'manual'>('idle');
   const urlInputRef = useRef<HTMLInputElement>(null);
   const [state, formAction, pending] = useActionState<ShareLinkState, FormData>(
@@ -122,7 +123,26 @@ export function StakeholderLinkPanel({
         <input type="hidden" name="locale" value={locale} />
         {path && <input type="hidden" name="path" value={path} />}
 
-        <label htmlFor="sp-version" className="block text-xs font-medium">
+        <label htmlFor="sp-mode" className="block text-xs font-medium">
+          Who can open it
+        </label>
+        <select
+          id="sp-mode"
+          name="mode"
+          value={mode}
+          onChange={(e) => setMode(e.target.value as 'internal' | 'shareable')}
+          className="mt-1 w-full rounded-lg border border-white/20 bg-white/10 px-2 py-1.5 text-xs"
+        >
+          <option value="internal">Internal — organization network only</option>
+          <option value="shareable">Shareable — anyone with the link</option>
+        </select>
+        <p className="mt-1 text-[11px] leading-relaxed text-white/50">
+          {mode === 'internal'
+            ? 'Opens only from an allowed network (office / VPN). Safest default for internal review.'
+            : 'Opens from anywhere — use only for external reviewers who are off the network.'}
+        </p>
+
+        <label htmlFor="sp-version" className="mt-3 block text-xs font-medium">
           Shows
         </label>
         <select
