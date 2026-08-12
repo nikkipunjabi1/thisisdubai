@@ -31,6 +31,11 @@ const LOCALE = process.env.SEED_LOCALE || 'en';
 const APPLY = process.argv.includes('--apply');
 const ONLY = process.argv.find((a) => a.startsWith('--only='))?.slice(7);
 
+// Outcome tally, so a failed create can never be mistaken for a successful run (an inline
+// ✖ line is easy to miss in a long log — the summary + non-zero exit make it unambiguous).
+const tally = { created: 0, exists: 0, failed: 0 };
+const failures = [];
+
 if (!CLIENT_ID || !CLIENT_SECRET) {
   console.error('✖ Missing OPTIMIZELY_CMS_CLIENT_ID / OPTIMIZELY_CMS_CLIENT_SECRET.');
   process.exit(1);
@@ -267,10 +272,14 @@ async function createPage(t, page, containerKey) {
   const r = await api(t, 'POST', '/content', body);
   if (r.status === 201) {
     console.log(`  ✔ created — ${await publishLatest(t, key)}`);
+    tally.created++;
   } else if (r.status === 409) {
     console.log('  = already exists (left alone)');
+    tally.exists++;
   } else {
     console.log(`  ✖ create ${r.status}: ${JSON.stringify(r.json).slice(0, 400)}`);
+    failures.push(`${page.hero.heading} (${url}) — HTTP ${r.status}`);
+    tally.failed++;
     process.exitCode = 1;
   }
   return key;
@@ -306,10 +315,14 @@ async function createHighlight(t, card) {
   const r = await api(t, 'POST', '/content', body);
   if (r.status === 201) {
     console.log(`  ✔ created — ${await publishLatest(t, key)}`);
+    tally.created++;
   } else if (r.status === 409) {
     console.log('  = already exists (left alone)');
+    tally.exists++;
   } else {
     console.log(`  ✖ create ${r.status}: ${JSON.stringify(r.json).slice(0, 400)}`);
+    failures.push(`Highlight card "${card.title}" — HTTP ${r.status}`);
+    tally.failed++;
     process.exitCode = 1;
   }
 }
@@ -341,7 +354,20 @@ async function createHighlight(t, card) {
     for (const card of HIGHLIGHTS) await createHighlight(t, card);
   }
 
-  console.log(APPLY ? '\nDone.' : '\nDry run — re-run with --apply to write.');
+  if (!APPLY) {
+    console.log('\nDry run — re-run with --apply to write.');
+    return;
+  }
+
+  console.log(`\n──────── Summary ────────`);
+  console.log(`  created: ${tally.created}   already existed: ${tally.exists}   failed: ${tally.failed}`);
+  if (failures.length) {
+    console.log('\n✖ SOME ITEMS FAILED — the campaign is NOT fully created:');
+    for (const f of failures) console.log(`    • ${f}`);
+    console.log('\nFix the cause above, then re-run (idempotent — created items are left alone).');
+  } else {
+    console.log('\n✔ All done. Compose/refine the pages in Visual Builder next.');
+  }
 })().catch((e) => {
   console.error(e);
   process.exit(1);
