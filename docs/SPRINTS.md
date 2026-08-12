@@ -14,9 +14,12 @@ concrete **deliverable**, and an **exit check**. **I always ask before starting 
 Legend: `[ ]` todo · `[~]` in progress · `[x]` done · 🚦 = phase gate (I ask you before starting).
 
 > **▶ Resume order — start here next:**
-> 1. ~~S3.1a — Preview access hardening (Internal-default)~~ ✅ **done** (branch
->    `feat/preview-access-internal-default`).
-> 2. **TTD-2 — Author the Things-to-Do pages** — the immediate next sprint.
+> 1. ~~S3.1a — Preview access hardening (Internal-default)~~ ✅ **done & merged** (PR #68/#69).
+> 2. ~~TTD-2 — Author the Things-to-Do pages~~ ✅ **done & merged** (PR #70).
+> 3. **Publish the two stakeholder-preview blogs** — in progress: copy final + cross-linked;
+>    pending screenshots (mostly CMS-editor shots the author captures) before posting.
+> 4. **TTD-3 — Imagery + AR + blog** — finish the campaign (hero videos/posters on all 5 pages,
+>    HighlightCards onto the landing, AR content for RTL, browser-verify, campaign blog).
 >
 > "Ask before starting" per the standing rule.
 
@@ -122,13 +125,19 @@ downstream (semantic search tuning, AI retrieval, the MCP server) needs a realis
     **HighlightCard** (reusable **shared** block for "For This Application"). Helpers
     `src/lib/youtube.ts` (+9 tests) + `src/lib/curated.ts`. Pushed to the CMS. SEO: hero = the
     only `<h1>`, rails `<h2>`, cards `<h3>`. Type-check/lint/64 tests/build green.
-  - [ ] **TTD-2 — Author the pages** 🟡 _(after S3.1a Preview access hardening — ask before starting)_
-    A reviewable, **dry-run-first** seed script (USER runs) that creates the 5 `ThingsToDoPage`
-    experiences at their URLs + a couple of shared `HighlightCard` blocks; add a "Things to Do"
-    nav entry; compose the landing page in Visual Builder; then **browser-verify** (hero video
-    plays muted/looped, rails resolve to real cards, single-`<h1>` check, RTL/AR).
-  - [ ] **TTD-3 — Imagery + AR + blog** 🟡
-    Poster/hero imagery, an AR pass of the new block strings, and a blog outline ("configurable
+  - [x] **TTD-2 — Author the pages** ✅ (branch `feat/ttd-2-author-things-to-do`, PR #70)
+    `scripts/create-things-to-do.mjs` (dry-run-first, idempotent, USER-run) created the 5
+    `ThingsToDoPage` experiences (landing + New & Trending / Dubai Attractions / Arts & Culture /
+    Wellness) with a starter Hero + Curated Rails canvas, plus 3 shared `HighlightCard` blocks
+    under "For This Application"; added the "Things to Do" nav entry (en/ar). Needed
+    `HomePage.mayContainTypes += ThingsToDoPage` (landing under Home) and
+    `ThingsToDoPage.mayContainTypes += ThingsToDoPage` (sub-pages nest for `/things-to-do/*` URLs).
+    Browser-verified: single `<h1>` per page, rails resolve to real cards, all 5 URLs + `/ar`
+    twins resolve. Also fixed the Video Hero to size container-relative (not `vh`) so it no longer
+    balloons in the Visual Builder preview iframe.
+  - [ ] **TTD-3 — Imagery + AR + blog** 🟡 _(the campaign finish — ask before starting)_
+    Hero videos + poster imagery on all 5 pages, HighlightCards placed on the landing in VB, an AR
+    pass of the new block strings, browser-verify + RTL, and a campaign blog ("configurable
     campaign pages in Visual Builder" — candidate for BLOG-PLAN).
 - [ ] **SC4 — Content quality pass** 🟡
   Tag/facet coverage across the full corpus, `relatedPlaces` cross-links, and a re-verification

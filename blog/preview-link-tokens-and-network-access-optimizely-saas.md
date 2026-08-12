@@ -1,16 +1,16 @@
 ---
 title: "How a login-free preview link actually works: signed tokens, cookies, and network-scoped access (Optimizely SaaS + Next.js)"
-status: draft
+status: ready
 audience: Optimizely community / dev.to / LinkedIn (long-form)
 author: Nikki Punjabi
 tags: [optimizely, saas-cms, optimizely-graph, headless, preview, draft-mode, hmac, security, nextjs]
 ---
 
-> **Draft for review.** Written from a delivery and architecture point of view: the mechanics and
-> the decisions, not a code dump. Screenshot placeholders are marked with 📷 for capture before
-> publishing. Companion to the broader piece, "Shareable stakeholder previews on Optimizely SaaS
-> CMS" (linked at the end); this one zooms into a single question people keep asking me: what is
-> that link, really, and how does it stay safe?
+> **Copy final, pending screenshots before posting.** Written from a delivery and architecture
+> point of view: the mechanics and the decisions, not a code dump. Capture the 📷 shots below (the
+> share panel and a previewed page) before publishing. Companion to the broader piece, "Shareable
+> stakeholder previews on Optimizely SaaS CMS" (linked at the end); this one zooms into a single
+> question people keep asking me: what is that link, really, and how does it stay safe?
 
 ## The one button, and the question behind it
 
