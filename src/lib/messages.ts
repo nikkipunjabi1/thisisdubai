@@ -15,6 +15,7 @@ import { DEFAULT_LOCALE, type Locale } from './i18n';
 const en = {
   nav: {
     home: 'Home',
+    thingsToDo: 'Things to Do',
     places: 'Places to Visit',
     neighbourhoods: 'Neighbourhoods',
     events: 'Events',
@@ -91,6 +92,7 @@ export type Messages = typeof en;
 const ar: Messages = {
   nav: {
     home: 'الرئيسية',
+    thingsToDo: 'أشياء تفعلها',
     places: 'أماكن للزيارة',
     neighbourhoods: 'الأحياء',
     events: 'الفعاليات',
