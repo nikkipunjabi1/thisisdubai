@@ -15,6 +15,7 @@ export function SiteHeader({ locale, pathname }: { locale: Locale; pathname: str
   const m = t(locale);
   const NAV: { href: string; label: string }[] = [
     { href: '/', label: m.nav.home },
+    { href: '/things-to-do', label: m.nav.thingsToDo },
     { href: '/places-to-visit', label: m.nav.places },
     { href: '/neighbourhoods', label: m.nav.neighbourhoods },
     { href: '/events', label: m.nav.events },

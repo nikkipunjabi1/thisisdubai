@@ -13,6 +13,7 @@ import {
   EventsContentType,
   ArticlesContentType,
 } from './SectionExperience';
+import { ThingsToDoPageContentType } from './ThingsToDoPage';
 
 /**
  * HomePage — the site's home experience AND its site root (one node, e.g.
@@ -34,6 +35,7 @@ export const HomePageContentType = contentType({
     NeighbourhoodsContentType,
     EventsContentType,
     ArticlesContentType,
+    ThingsToDoPageContentType, // the "Things to Do" campaign landing page lives under Home
     AreaContentType,
     EventContentType,
   ],

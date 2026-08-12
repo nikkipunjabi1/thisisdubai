@@ -15,6 +15,7 @@
     "opti-login": "optimizely-cms-cli login",
     "opti-push": "optimizely-cms-cli config push optimizely.config.mjs",
     "seed": "node --env-file=.env scripts/seed.mjs",
+    "create-things-to-do": "node --env-file=.env scripts/create-things-to-do.mjs",
     "asset-manifest": "node scripts/asset-manifest.mjs",
     "cmp-folders": "node --env-file=.env scripts/cmp-folders.mjs",
     "create-section": "node --env-file=.env scripts/create-section.mjs",

@@ -22,7 +22,10 @@ export const ThingsToDoPageContentType = contentType({
   displayName: 'Things to Do (Campaign Page)',
   baseType: '_experience',
   extends: SeoMetadataContract,
-  mayContainTypes: [],
+  // Allows the themed sub-pages (New & Trending, Dubai Attractions, …) to nest UNDER the
+  // landing page in the tree, which is what gives them their `/things-to-do/<segment>` URLs.
+  // It parents no OTHER content — the page body is a curated canvas of blocks, not children.
+  mayContainTypes: ['ThingsToDoPage'],
   properties: {
     internalTitle: {
       type: 'string',
