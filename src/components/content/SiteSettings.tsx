@@ -88,5 +88,21 @@ export const SiteSettingsContentType = contentType({
       sortOrder: 2,
       items: { type: 'component', contentType: NavGroupContentType },
     },
+    showSearch: {
+      type: 'boolean',
+      displayName: 'Show search in the header',
+      description: 'Turn the header search control on or off. Defaults to on when unset.',
+      group: 'navigation',
+      sortOrder: 3,
+    },
+    languageSwitchLabel: {
+      type: 'string',
+      displayName: 'Language name (this language)',
+      description:
+        'The name of THIS language, in its own script (e.g. "English" on the English version, "العربية" on the Arabic version). The switcher shows the OTHER language\'s name, taken from that language\'s value here.',
+      group: 'navigation',
+      sortOrder: 4,
+      isLocalized: true,
+    },
   },
 });
