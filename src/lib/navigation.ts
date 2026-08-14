@@ -46,7 +46,8 @@ type RawSettings = {
 
 /** Title-case the last path segment, as a last-resort label when none was authored. */
 function labelFromHref(href: string): string {
-  const seg = href.replace(/[/?#].*$/, '').split('/').filter(Boolean).pop() ?? '';
+  const path = href.split(/[?#]/)[0]; // drop any query/hash first
+  const seg = path.split('/').filter(Boolean).pop() ?? '';
   const words = seg.replace(/[-_]+/g, ' ').trim();
   return words ? words.charAt(0).toUpperCase() + words.slice(1) : 'Link';
 }
@@ -66,7 +67,7 @@ const CHROME_QUERY = (locale: Locale) => `query {
     items {
       showSearch
       headerMenu {
-        label externalUrl openInNewTab page { url { default } }
+        label externalUrl page { url { default } }
         children { label externalUrl openInNewTab page { url { default } } }
       }
       footerGroups {
