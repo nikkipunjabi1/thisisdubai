@@ -1,4 +1,5 @@
 import { contentType } from '@optimizely/cms-sdk';
+import { NavMenuItemContentType, NavGroupContentType } from './Navigation';
 
 /**
  * SiteSettings — a singleton global config item, modelled as a **shared block**
@@ -17,9 +18,11 @@ export const SiteSettingsContentType = contentType({
   key: 'SiteConfiguration',
   displayName: 'Site Settings',
   baseType: '_component',
-  // Needed so the block is exposed as a Graph root type (and creatable as a shared
-  // block). It's config, not a visual element, so authors won't actually place it.
-  compositionBehaviors: ['elementEnabled'],
+  // Exposed as a Graph root type + creatable as a shared block. `sectionEnabled` (not
+  // `elementEnabled`) because this block now holds list properties (the nav below), and an
+  // element-enabled component may not have an array/content-list property. It's config, not
+  // a visual element, so authors won't actually place it on a canvas either way.
+  compositionBehaviors: ['sectionEnabled'],
   properties: {
     // --- Global branding used in every page's <title> ---
     siteName: {
@@ -62,6 +65,44 @@ export const SiteSettingsContentType = contentType({
       description: 'Optional extra lines appended to the generated robots.txt (when indexing is allowed).',
       group: 'seo',
       sortOrder: 2,
+    },
+    // --- Navigation (the "Navigation" tab) ---
+    // Header mega-menu: an ordered list of top-level items; each may carry a dropdown of
+    // links (NavMenuItem.children). Reorder / add / remove right here in the editor.
+    headerMenu: {
+      type: 'array',
+      displayName: 'Header menu',
+      description:
+        'The primary navigation. Drag to reorder. Add “Dropdown links” to an item to turn it into a mega-menu dropdown. Leave the whole list empty to use the built-in default nav.',
+      group: 'navigation',
+      sortOrder: 1,
+      items: { type: 'component', contentType: NavMenuItemContentType },
+    },
+    // Footer: a list of columns, each a heading + its links.
+    footerGroups: {
+      type: 'array',
+      displayName: 'Footer columns',
+      description:
+        'Each entry is a footer column (a heading plus its links). Leave empty to use the built-in default footer.',
+      group: 'navigation',
+      sortOrder: 2,
+      items: { type: 'component', contentType: NavGroupContentType },
+    },
+    showSearch: {
+      type: 'boolean',
+      displayName: 'Show search in the header',
+      description: 'Turn the header search control on or off. Defaults to on when unset.',
+      group: 'navigation',
+      sortOrder: 3,
+    },
+    languageSwitchLabel: {
+      type: 'string',
+      displayName: 'Language name (this language)',
+      description:
+        'The name of THIS language, in its own script (e.g. "English" on the English version, "العربية" on the Arabic version). The switcher shows the OTHER language\'s name, taken from that language\'s value here.',
+      group: 'navigation',
+      sortOrder: 4,
+      isLocalized: true,
     },
   },
 });

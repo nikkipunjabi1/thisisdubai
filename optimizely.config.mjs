@@ -9,6 +9,7 @@ export default buildConfig({
   propertyGroups: [
     // 'content' is a read-only system group; only declare our custom groups.
     { key: 'seo', displayName: 'SEO', sortOrder: 1 },
+    { key: 'navigation', displayName: 'Navigation', sortOrder: 2 },
   ],
   // NOTE: our CLI API key can push content *types* but is Forbidden from creating
   // content *instances* or applications. So the Home experience + the "This is Dubai"
