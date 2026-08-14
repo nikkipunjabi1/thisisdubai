@@ -26,6 +26,12 @@ import ThingsToDoHero, { ThingsToDoHeroContentType } from '@/components/blocks/T
 import CuratedContentRail, { CuratedContentRailContentType } from '@/components/blocks/CuratedContentRail';
 import VideoEmbed, { VideoEmbedContentType } from '@/components/blocks/VideoEmbed';
 import HighlightCard, { HighlightCardContentType } from '@/components/blocks/HighlightCard';
+// Content-block library (author-first names; see docs/OPTIMIZELY-BEST-PRACTICES.md).
+import TwoColumnText, { TwoColumnTextContentType } from '@/components/blocks/TwoColumnText';
+import TextAndImage, { TextAndImageContentType } from '@/components/blocks/TextAndImage';
+import TextAndVideo, { TextAndVideoContentType } from '@/components/blocks/TextAndVideo';
+import Quote, { QuoteContentType } from '@/components/blocks/Quote';
+import Callout, { CalloutContentType } from '@/components/blocks/Callout';
 import { LayoutDisplayTemplate } from '@/components/blocks/LayoutDisplayTemplate';
 
 // This is Dubai experiences, pages + media.
@@ -75,6 +81,11 @@ initContentTypeRegistry([
   CuratedContentRailContentType,
   VideoEmbedContentType,
   HighlightCardContentType,
+  TwoColumnTextContentType,
+  TextAndImageContentType,
+  TextAndVideoContentType,
+  QuoteContentType,
+  CalloutContentType,
   HomePageContentType,
   PlacesToVisitContentType,
   NeighbourhoodsContentType,
@@ -102,6 +113,11 @@ initReactComponentRegistry({
     CuratedContentRail,
     VideoEmbed,
     HighlightCard,
+    TwoColumnText,
+    TextAndImage,
+    TextAndVideo,
+    Quote,
+    Callout,
     HomePage,
     PlacesToVisit: SectionExperience,
     Neighbourhoods: SectionExperience,
