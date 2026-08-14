@@ -15,10 +15,12 @@ import { contentType } from '@optimizely/cms-sdk';
  * `label` is an optional override; left empty, the page's own (localized) name is used.
  *
  * Modelling notes:
- * - A single `contentReference` is allowed on an element-enabled component, so `NavLink`
- *   (no list property) stays `elementEnabled` (matches TagTerm).
- * - `NavMenuItem` and `NavGroup` hold a list, and an element-enabled component may not have
- *   an array/content-list property, so they are `sectionEnabled` instead.
+ * - All three carry NO composition behaviour (`compositionBehaviors: []`), so they never
+ *   surface in the "Add Section" or inline element pickers — they are not page building
+ *   blocks, only inline lists inside Site Settings. Inline `component` usage does not require
+ *   a composition behaviour, so the nav still edits normally in the Site Settings editor.
+ * - (Previously `NavLink` was `elementEnabled` and `NavMenuItem`/`NavGroup` `sectionEnabled`;
+ *   that was only to satisfy the editor, and it leaked all three into the section picker.)
  */
 
 /** Routable page/experience types an author can point a nav link at (content-tree picker). */
@@ -39,7 +41,8 @@ export const NavLinkContentType = contentType({
   key: 'NavLink',
   displayName: 'Navigation link',
   baseType: '_component',
-  compositionBehaviors: ['elementEnabled'],
+  // No canvas placement: managed only as inline links inside Site Settings.
+  compositionBehaviors: [],
   properties: {
     page: {
       type: 'contentReference',
@@ -82,7 +85,8 @@ export const NavMenuItemContentType = contentType({
   key: 'NavMenuItem',
   displayName: 'Header menu item',
   baseType: '_component',
-  compositionBehaviors: ['sectionEnabled'],
+  // No canvas placement: managed only as the inline header list inside Site Settings.
+  compositionBehaviors: [],
   properties: {
     label: {
       type: 'string',
@@ -124,7 +128,8 @@ export const NavGroupContentType = contentType({
   key: 'NavGroup',
   displayName: 'Footer column',
   baseType: '_component',
-  compositionBehaviors: ['sectionEnabled'],
+  // No canvas placement: managed only as the inline footer list inside Site Settings.
+  compositionBehaviors: [],
   properties: {
     heading: {
       type: 'string',
