@@ -66,7 +66,7 @@ export const SiteSettingsContentType = contentType({
       group: 'seo',
       sortOrder: 2,
     },
-    // --- Navigation (the "Navigation" tab) ---
+    // --- Top Navigation (the "Top Navigation" tab) ---
     // Header mega-menu: an ordered list of top-level items; each may carry a dropdown of
     // links (NavMenuItem.children). Reorder / add / remove right here in the editor.
     headerMenu: {
@@ -74,35 +74,136 @@ export const SiteSettingsContentType = contentType({
       displayName: 'Header menu',
       description:
         'The primary navigation. Drag to reorder. Add “Dropdown links” to an item to turn it into a mega-menu dropdown. Leave the whole list empty to use the built-in default nav.',
-      group: 'navigation',
+      group: 'topNavigation',
       sortOrder: 1,
       items: { type: 'component', contentType: NavMenuItemContentType },
-    },
-    // Footer: a list of columns, each a heading + its links.
-    footerGroups: {
-      type: 'array',
-      displayName: 'Footer columns',
-      description:
-        'Each entry is a footer column (a heading plus its links). Leave empty to use the built-in default footer.',
-      group: 'navigation',
-      sortOrder: 2,
-      items: { type: 'component', contentType: NavGroupContentType },
     },
     showSearch: {
       type: 'boolean',
       displayName: 'Show search in the header',
       description: 'Turn the header search control on or off. Defaults to on when unset.',
-      group: 'navigation',
-      sortOrder: 3,
+      group: 'topNavigation',
+      sortOrder: 2,
     },
     languageSwitchLabel: {
       type: 'string',
       displayName: 'Language name (this language)',
       description:
         'The name of THIS language, in its own script (e.g. "English" on the English version, "العربية" on the Arabic version). The switcher shows the OTHER language\'s name, taken from that language\'s value here.',
-      group: 'navigation',
+      group: 'topNavigation',
+      sortOrder: 3,
+      isLocalized: true,
+    },
+
+    // --- Footer (the "Footer" tab) ---
+    // A list of columns, each a heading + its links.
+    footerGroups: {
+      type: 'array',
+      displayName: 'Footer columns',
+      description:
+        'Each entry is a footer column (a heading plus its links). Leave empty to use the built-in default footer.',
+      group: 'footer',
+      sortOrder: 1,
+      items: { type: 'component', contentType: NavGroupContentType },
+    },
+
+    // --- Cookie Consent Banner (the "Cookie Consent Banner" tab) ---
+    // SKELETON ONLY: fields are authored now; the front-end banner is a later sprint.
+    cookieConsentEnabled: {
+      type: 'boolean',
+      displayName: 'Enable cookie consent banner',
+      description: 'Skeleton for a future release. No front-end yet.',
+      group: 'cookieConsent',
+      sortOrder: 1,
+    },
+    cookieConsentMessage: {
+      type: 'string',
+      displayName: 'Message',
+      description: 'The consent text shown in the banner.',
+      group: 'cookieConsent',
+      sortOrder: 2,
+      isLocalized: true,
+    },
+    cookieAcceptLabel: {
+      type: 'string',
+      displayName: 'Accept button label',
+      group: 'cookieConsent',
+      sortOrder: 3,
+      isLocalized: true,
+    },
+    cookieDeclineLabel: {
+      type: 'string',
+      displayName: 'Decline button label',
+      group: 'cookieConsent',
       sortOrder: 4,
       isLocalized: true,
+    },
+    cookiePolicyLinkLabel: {
+      type: 'string',
+      displayName: 'Policy link label',
+      description: 'e.g. "Privacy policy".',
+      group: 'cookieConsent',
+      sortOrder: 5,
+      isLocalized: true,
+    },
+    cookiePolicyPage: {
+      type: 'contentReference',
+      displayName: 'Policy page',
+      description: 'The privacy/cookie policy page (picked from the content tree).',
+      group: 'cookieConsent',
+      sortOrder: 6,
+    },
+
+    // --- Announcement Bar (the "Announcement Bar" tab) ---
+    // SKELETON ONLY: a site-wide alert/notice strip. Front-end component is a later sprint.
+    announcementEnabled: {
+      type: 'boolean',
+      displayName: 'Show announcement bar',
+      description: 'Skeleton for a future release. No front-end yet.',
+      group: 'announcementBar',
+      sortOrder: 1,
+    },
+    announcementMessage: {
+      type: 'string',
+      displayName: 'Message',
+      description: 'The alert/notice text.',
+      group: 'announcementBar',
+      sortOrder: 2,
+      isLocalized: true,
+    },
+    announcementTone: {
+      type: 'string',
+      format: 'selectOne',
+      displayName: 'Tone',
+      description: 'Visual style of the bar (used by the future front-end).',
+      group: 'announcementBar',
+      sortOrder: 3,
+      enum: [
+        { value: 'info', displayName: 'Info' },
+        { value: 'success', displayName: 'Success' },
+        { value: 'warning', displayName: 'Warning' },
+        { value: 'critical', displayName: 'Critical' },
+      ],
+    },
+    announcementLinkLabel: {
+      type: 'string',
+      displayName: 'Link label (optional)',
+      group: 'announcementBar',
+      sortOrder: 4,
+      isLocalized: true,
+    },
+    announcementLinkPage: {
+      type: 'contentReference',
+      displayName: 'Link page (optional)',
+      description: 'Where the announcement links to (picked from the content tree).',
+      group: 'announcementBar',
+      sortOrder: 5,
+    },
+    announcementDismissible: {
+      type: 'boolean',
+      displayName: 'Allow visitors to dismiss it',
+      group: 'announcementBar',
+      sortOrder: 6,
     },
   },
 });
