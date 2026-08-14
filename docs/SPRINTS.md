@@ -14,14 +14,24 @@ concrete **deliverable**, and an **exit check**. **I always ask before starting 
 Legend: `[ ]` todo · `[~]` in progress · `[x]` done · 🚦 = phase gate (I ask you before starting).
 
 > **▶ Resume order — start here next:**
-> 1. ~~S3.1a — Preview access hardening (Internal-default)~~ ✅ **done & merged** (PR #68/#69).
-> 2. ~~TTD-2 — Author the Things-to-Do pages~~ ✅ **done & merged** (PR #70).
-> 3. ~~S3.6 — CMS-editable navigation (header mega-menu + footer + search toggle + language
->    switcher)~~ ✅ **built & verified** (branch `feat/cms-editable-navigation`, in review).
-> 4. **Publish the stakeholder-preview blog** — copy final; now a SINGLE combined post
+>
+> _Done & merged:_ S3.1a preview access hardening (PR #68/#69), TTD-2 authored the
+> Things-to-Do pages (PR #70), S3.6 CMS-editable navigation (PR #74), S3.7 Site Settings
+> tabs + Cookie/Announcement skeletons (merged).
+>
+> **Waiting on user CMS content, then verify (do not lose these):**
+> - **`/ar` (RTL) navigation** — user populates the Arabic header/footer nav + language
+>   labels; then verify dropdown direction, footer columns, and the "English" switcher in RTL.
+> - **Footer columns** — user adds links (currently headings only, so the footer falls back
+>   to the built-in default column until links exist).
+>
+> **Next, in order:**
+> 1. **Announcement Bar + Cookie Consent Banner front-end** — the CMS fields exist (S3.7,
+>    skeleton); build the front-end components that render them. Ask before starting.
+> 2. **Publish the stakeholder-preview blog** — copy final; a SINGLE combined post
 >    (`blog/shareable-stakeholder-previews-optimizely-saas.md`); pending the CMS-editor
 >    screenshots before posting.
-> 5. **TTD-3 — Imagery + AR + blog** — finish the campaign (hero videos/posters on all 5 pages,
+> 3. **TTD-3 — Imagery + AR + blog** — finish the campaign (hero videos/posters on all 5 pages,
 >    HighlightCards onto the landing, AR content for RTL, browser-verify, campaign blog).
 >
 > "Ask before starting" per the standing rule.
@@ -197,6 +207,17 @@ downstream (semantic search tuning, AI retrieval, the MCP server) needs a realis
   each language's `languageSwitchLabel` (EN shows "العربية"/your value, AR shows "English").
   Accessible dropdown (`PrimaryNav`, hover + focus + Escape). Falls back to the built-in nav
   when unconfigured. Verified live on `/en` (dropdown, search hidden, CMS switcher label).
+  Merged as **PR #74**. **Still pending (user CMS content, then verify):** `/ar` (RTL) nav +
+  labels; footer column links (headings only so far → footer falls back to default).
+- [x] **S3.7 — Site Settings tabs + Cookie/Announcement skeletons** ✅ (merged)
+  Split the Site Settings "Navigation" tab into **Top Navigation** (headerMenu, showSearch,
+  languageSwitchLabel) and **Footer** (footerGroups). Added two **skeleton-only** tabs on
+  `SiteConfiguration` (fields authored in the CMS now, **no front-end yet**):
+  **Cookie Consent Banner** (enabled, message, accept/decline labels, policy link label +
+  policy page) and **Announcement Bar** (enabled, message, tone info/success/warning/critical,
+  link label + link page, dismissible). Property groups declared in `optimizely.config.mjs`.
+  **Follow-up sprint:** build the front-end components that render the cookie banner + the
+  announcement bar (the fields are ready; the rendering is not built).
 - 🏁 + Blog #5–#8 outlines.
 
 ## 🚦 Phase 4 — AI features (Claude)  _(ask before starting)_
