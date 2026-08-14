@@ -16,9 +16,12 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · 🚦 = phase gate (I as
 > **▶ Resume order — start here next:**
 > 1. ~~S3.1a — Preview access hardening (Internal-default)~~ ✅ **done & merged** (PR #68/#69).
 > 2. ~~TTD-2 — Author the Things-to-Do pages~~ ✅ **done & merged** (PR #70).
-> 3. **Publish the two stakeholder-preview blogs** — in progress: copy final + cross-linked;
->    pending screenshots (mostly CMS-editor shots the author captures) before posting.
-> 4. **TTD-3 — Imagery + AR + blog** — finish the campaign (hero videos/posters on all 5 pages,
+> 3. ~~S3.6 — CMS-editable navigation (header mega-menu + footer + search toggle + language
+>    switcher)~~ ✅ **built & verified** (branch `feat/cms-editable-navigation`, in review).
+> 4. **Publish the stakeholder-preview blog** — copy final; now a SINGLE combined post
+>    (`blog/shareable-stakeholder-previews-optimizely-saas.md`); pending the CMS-editor
+>    screenshots before posting.
+> 5. **TTD-3 — Imagery + AR + blog** — finish the campaign (hero videos/posters on all 5 pages,
 >    HighlightCards onto the landing, AR content for RTL, browser-verify, campaign blog).
 >
 > "Ask before starting" per the standing rule.
@@ -182,6 +185,18 @@ downstream (semantic search tuning, AI retrieval, the MCP server) needs a realis
 - [ ] **S3.3 — AR semantic search + localization showcase** 🟡
 - [ ] **S3.4 — Performance + accessibility pass** (CWV, images, a11y) 🟡
 - [ ] (optional) **S3.5 — Multisite** 🟡
+- [x] **S3.6 — CMS-editable navigation** ✅ (branch `feat/cms-editable-navigation`, in review)
+  Header + footer nav are now edited in **Site Settings → Navigation**, no code/deploy.
+  Model (`src/components/content/Navigation.tsx`): `NavLink` / `NavMenuItem` (with `children`
+  = a dropdown → the header **mega menu**) / `NavGroup` (footer column), all inline
+  `component` lists inside `SiteConfiguration` so the whole nav lives in one block. Links
+  target a **page picked from the content tree** (contentReference), resolved to a
+  locale-correct href at render (`src/lib/navigation.ts` → `toAppPath`), so links survive
+  page moves/renames; `externalUrl` is the off-site escape hatch. Also added: a **search
+  on/off toggle** (`showSearch`) and a **single-language switcher** whose label comes from
+  each language's `languageSwitchLabel` (EN shows "العربية"/your value, AR shows "English").
+  Accessible dropdown (`PrimaryNav`, hover + focus + Escape). Falls back to the built-in nav
+  when unconfigured. Verified live on `/en` (dropdown, search hidden, CMS switcher label).
 - 🏁 + Blog #5–#8 outlines.
 
 ## 🚦 Phase 4 — AI features (Claude)  _(ask before starting)_

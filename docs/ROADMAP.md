@@ -63,7 +63,7 @@ _Phased plan. Each phase ends with a working, deployable state and (usually) a b
       is no admin page and no secret in the author's hands. Hardened since with a signed
       Internal/Shareable access mode (Internal = org-network-only, IP-gated at the edge, the
       default) and a `frame-ancestors` CSP. See PREVIEW-WORKFLOW.md.
-      **(Primary module/blog candidate — two blogs drafted, publishing next.)**
+      **(Primary module/blog candidate — one combined blog drafted, publishing next.)**
 - [x] **Semantic search** page (autocomplete, synonyms, faceting) — the headline feature
       (shipped S3.2; taxonomy synonyms denormalized into `searchKeywords`. See docs/AI-SEARCH.md.)
 - [ ] **Localization**: EN + **AR semantic search** on showcase pages (RTL); Opal AR translation
