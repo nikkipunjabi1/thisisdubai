@@ -86,7 +86,10 @@ export function PrimaryNav({ items }: { items: HeaderItem[] }) {
               aria-haspopup="menu"
               onClick={() => setOpenIdx((o) => (o === i ? null : i))}
               onFocus={() => setOpenIdx(i)}
-              className={`flex items-center gap-1 ${linkCls}`}
+              // No `text-muted` here on purpose: the global `a { color: inherit }` rule makes
+              // the sibling <a> links render at --fg, and a <button> would keep `text-muted`
+              // and look greyer than them. Inheriting (like the links) keeps the bar uniform.
+              className="flex items-center gap-1 transition hover:text-accent"
             >
               {item.label}
               <svg aria-hidden viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" className={`size-3.5 transition ${open ? 'rotate-180' : ''}`}>
@@ -94,25 +97,30 @@ export function PrimaryNav({ items }: { items: HeaderItem[] }) {
               </svg>
             </button>
             {open ? (
-              <div
-                role="menu"
-                className="absolute start-0 top-full z-50 mt-2 min-w-56 rounded-xl border border-line bg-bg p-2 shadow-2xl"
-              >
-                {item.href ? (
-                  <NavAnchor
-                    link={{ ...item, href: item.href }}
-                    role="menuitem"
-                    className="block rounded-lg px-3 py-2 text-sm font-medium text-fg transition hover:bg-accent/10 hover:text-accent"
-                  />
-                ) : null}
-                {item.children.map((c, ci) => (
-                  <NavAnchor
-                    key={ci}
-                    link={c}
-                    role="menuitem"
-                    className="block rounded-lg px-3 py-2 text-sm text-muted transition hover:bg-accent/10 hover:text-accent"
-                  />
-                ))}
+              // Outer wrapper touches the trigger (`top-full`, no margin) and provides the
+              // visual gap as PADDING (`pt-2`), so the pointer never crosses empty space when
+              // moving from the trigger into the menu — the dropdown no longer closes mid-move.
+              <div className="absolute start-0 top-full z-50 pt-2">
+                <div
+                  role="menu"
+                  className="min-w-56 rounded-xl border border-line bg-bg p-2 shadow-2xl"
+                >
+                  {item.href ? (
+                    <NavAnchor
+                      link={{ ...item, href: item.href }}
+                      role="menuitem"
+                      className="block rounded-lg px-3 py-2 text-sm font-medium transition hover:bg-accent/10 hover:text-accent"
+                    />
+                  ) : null}
+                  {item.children.map((c, ci) => (
+                    <NavAnchor
+                      key={ci}
+                      link={c}
+                      role="menuitem"
+                      className="block rounded-lg px-3 py-2 text-sm transition hover:bg-accent/10 hover:text-accent"
+                    />
+                  ))}
+                </div>
               </div>
             ) : null}
           </li>
