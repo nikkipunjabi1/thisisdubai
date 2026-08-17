@@ -245,6 +245,10 @@ downstream (semantic search tuning, AI retrieval, the MCP server) needs a realis
   **User action for the naming blog:** after push, capture CMS screenshots — (1) the "Add Section"
   picker showing the clean content-block names in a list, and (2) a block editor field set (e.g.
   Text and Image showing the Layout dropdown; Callout showing Tone).
+  **✅ Blog SHIPPED** (2026-08-15): "Component Naming Conventions for a CMS Website" published to the
+  personal WordPress; final HTML archived at `blog/component-naming-conventions-cms-website.html`.
+  All 5 screenshots captured + wired. Also proved (and documented in §12 / COMPONENT-NAMING.md) that
+  Optimizely SaaS has **no component-picker thumbnail** — the CMA rejects a thumbnail field on push.
 - 🏁 + Blog #5–#8 outlines.
 
 ## 🚦 Phase 4 — AI features (Claude)  _(ask before starting)_

@@ -1,0 +1,332 @@
+<p>Hello Digital Team,</p>
+
+<p>I am sure everyone of us has faced this moment. You are building a CMS component library, you have a beautiful design file on one screen and the CMS admin on the other, and you are stuck on one small thing: <strong>what do we actually call this thing?</strong></p>
+
+<p>A week later the content author opens the CMS, scrolls a list of forty components, and cannot find the one they need. Small naming decisions become big authoring problems. A tiny card variation ends up as "Card Block" and "Card Block New", and now nobody knows which to use. This is the practical playbook I have used on Optimizely, Sitecore, and headless builds over the last twelve years, written for the developers, designers, and PMs setting a library up or cleaning one up.</p>
+
+<div style="border: 1px solid #2b4b72; border-left: 4px solid #eeae56; background: rgba(238,174,86,0.07); padding: 18px 22px; margin: 28px 0; border-radius: 6px;">
+  <p style="margin: 0 0 10px;"><strong>The library at a glance.</strong> Most CMS libraries are these shelves. The names in bold are the plain, author-first labels I use.</p>
+  <ul style="margin: 0 0 10px; padding-left: 20px;">
+    <li><strong>Global (kept out of the picker):</strong> Top Navigation, Footer, Cookie Consent Banner, Announcement Bar</li>
+    <li><strong>Hero:</strong> one Hero, with layout and media as options</li>
+    <li><strong>Content blocks:</strong> Rich Text, Two Column Text, Text and Image, Text and Video, Quote, Callout</li>
+    <li><strong>Cards:</strong> Card Grid + Card</li>
+    <li><strong>Media:</strong> Image, Video, Image Gallery, Logo Strip</li>
+    <li><strong>Call to action:</strong> CTA Banner, CTA Card</li>
+    <li><strong>Interactive:</strong> Accordion, Tabs, Timeline, Stats, Testimonial</li>
+    <li><strong>Listing:</strong> Article Listing, Event Listing, Related Content</li>
+  </ul>
+  <p style="margin: 0;">Want the full picture? The <a href="https://nikkipunjabi.com/component-index.html" target="_blank" rel="noopener"><strong>CMS Component Index Drawing Set</strong></a> draws all 162, labelled by scope.</p>
+</div>
+
+<hr>
+
+<h2>Why Naming Matters More Than People Think</h2>
+
+<p>A component name is read by three very different people, and it has to work for all three:</p>
+
+<ol>
+  <li>The <strong>content author</strong> who drags it onto a page and guesses what it does from the name alone.</li>
+  <li>The <strong>developer</strong> who finds it in the codebase, styles it, and maintains its variants for five years.</li>
+  <li>The <strong>designer</strong> who is adding a variation and needs to know if it already exists.</li>
+</ol>
+
+<p>If the name only makes sense to one of them, the library drifts. Authors misuse components, developers create duplicates, and designers invent parallel versions in Figma that do not match the CMS.</p>
+
+<blockquote style="border-left: 4px solid #eeae56; padding-left: 15px; margin: 20px 0;">
+  <p><strong>💡 Golden Rule:</strong> Good naming is boring on purpose. It is clear, predictable, and hard to misinterpret. That is the whole job.</p>
+</blockquote>
+
+<hr>
+
+<h2>The Seven Golden Rules</h2>
+
+<ol>
+  <li><strong>Name by purpose, not appearance.</strong> "Blue Banner" is wrong the day the brand turns purple. "Promo Banner" survives the redesign.</li>
+  <li><strong>Author-first language.</strong> The picker is used by marketers, not developers. "Two Column Text" beats "SplitContentBlockV2". Keep the technical suffix (<code>Block</code>, <code>Component</code>) in the codebase, not the label.</li>
+  <li><strong>Consistent suffix or none, but pick one.</strong> Do not mix "Hero Block", "Testimonial Component", and "FAQ Module". I drop suffixes from author-facing names entirely.</li>
+  <li><strong>Variants live inside the component.</strong> "Image Left" and "Image Right" are one component with a dropdown, not two. This rule alone halves a library.</li>
+  <li><strong>Group logically.</strong> Use a category prefix only when the CMS has no folders or groups. If it has them, use them.</li>
+  <li><strong>Test the name in the list, not on its own.</strong> A name is read in an alphabetical dropdown next to forty others. Write it into the full list and read it aloud before committing.</li>
+  <li><strong>A name without a thumbnail is half a label.</strong> Authors scan the picker, they do not read it. More on that below.</li>
+</ol>
+
+<hr>
+
+<h2>Global Components: The Ones on Every Page</h2>
+
+<p>Keep the Top Navigation separate. It appears on every page by default, so it should never sit in the drag-and-drop component list. The same goes for the footer, cookie banner, and any announcement bar. These are site-wide fixtures, not authorable sections. Treat them as their own "Global" or "Site Settings" group, admin-only.</p>
+
+<p>On the Optimizely build behind these screenshots, navigation and footer are edited inside a single <strong>Site Settings</strong> item, and the underlying data models are deliberately given <strong>no composition behaviour</strong>. That one setting keeps them out of the page picker, so an author can never drag a stray "menu item" onto a landing page.</p>
+
+<figure style="margin: 35px 0; text-align: center;">
+  <img src="https://blog.nikkipunjabi.com/wp-content/uploads/2026/08/01-Component-Naming-Conventions.jpg" alt="Optimizely SaaS CMS Site Settings item with Top Navigation, Footer, Cookie Consent Banner, and Announcement Bar as tabs, isolated from the page component picker" style="max-width: 100%; height: auto; border: 1px solid #2b4b72; border-radius: 6px; box-shadow: 0 4px 16px rgba(0,0,0,0.15);">
+  <figcaption style="font-size: 13px; color: #8aa3bf; margin-top: 10px; font-style: italic;">
+    Global fixtures collected in one Site Settings item, kept out of the page component picker.
+  </figcaption>
+</figure>
+
+<hr>
+
+<h2>Hero and Banner Components</h2>
+
+<p>Heroes are where naming goes wrong first, because they have the most variants. Do not build five heroes. Build one <strong>Hero</strong> with a Layout option (Image Left, Image Right, Full Width, Centered, Video Background), a Media Type option, and CTA options. If you genuinely need something different, for example a Campaign Hero with a countdown no other hero has, name it by purpose: <strong>Campaign Hero</strong>, not <strong>Hero 2</strong>.</p>
+
+<hr>
+
+<h2>Content Blocks: The Workhorses</h2>
+
+<p>These are the components authors use most, so the names matter most. This is the set I built on the Optimizely SaaS project behind this post, and the naming is deliberately flat and plain:</p>
+
+<ul>
+  <li><strong>Rich Text</strong> (single column of text, headings, links, lists)</li>
+  <li><strong>Two Column Text</strong> (two columns of rich text, no media)</li>
+  <li><strong>Text and Image</strong> (text and image, with a layout toggle for left or right)</li>
+  <li><strong>Text and Video</strong> (same, with video)</li>
+  <li><strong>Quote</strong> (large pull quote, optional attribution)</li>
+  <li><strong>Callout</strong> (short highlighted block, usually on a colored background)</li>
+</ul>
+
+<p>Avoid "Content Block A" or "Layout Variant 3": meaningless the moment you step away. Note that Text and Image and Text and Video are two components, because the field genuinely differs (an image versus a video), while left or right is a single dropdown inside each. That is the variant rule in practice.</p>
+
+<figure style="margin: 35px 0; text-align: center;">
+  <img src="https://blog.nikkipunjabi.com/wp-content/uploads/2026/08/03-Add-Section-scaled.jpg" alt="Optimizely SaaS CMS Add Section component picker listing content blocks with clean author-first names: Rich Text, Two Column Text, Text and Image, Text and Video, Quote, and Callout" style="max-width: 100%; height: auto; border: 1px solid #2b4b72; border-radius: 6px; box-shadow: 0 4px 16px rgba(0,0,0,0.15);">
+  <figcaption style="font-size: 13px; color: #8aa3bf; margin-top: 10px; font-style: italic;">
+    The content-block group in the Optimizely picker. Plain, author-first names that read cleanly in a scrolling list.
+  </figcaption>
+</figure>
+
+<hr>
+
+<h2>Cards, Media, CTAs, and the Rest</h2>
+
+<p>Cards are the second place libraries explode. Resist a new card for every design. Build a <strong>Card Grid</strong> container (with Columns and Card Style dropdowns) holding a <strong>Card</strong>. Only name a card by its data source when it is genuinely tied to one: <strong>Product Card</strong>, <strong>Article Card</strong>, <strong>Event Card</strong>.</p>
+
+<p>Keep the rest simple and predictable, and let options live inside each component rather than spawning siblings:</p>
+
+<ul>
+  <li><strong>Media:</strong> Image, Video, Image Gallery, Logo Strip. One Video with a size option, not "Hero Video" and "Content Video".</li>
+  <li><strong>Call to action:</strong> CTA Banner, CTA Card. "CTA" is understood by every marketing team, so it is safe.</li>
+  <li><strong>Interactive:</strong> Accordion, Tabs, Timeline, Stats, Testimonial, Testimonial Carousel. The items inside (Accordion Item, Tab Item) are nested children, not standalone picker entries.</li>
+  <li><strong>Forms:</strong> Contact Form, Newsletter Signup, Event Registration Form, Gated Content Form. Name these by purpose even when the underlying form is the same.</li>
+</ul>
+
+<figure style="margin: 35px 0; text-align: center;">
+  <img src="https://blog.nikkipunjabi.com/wp-content/uploads/2026/08/04-Highlight-Card-scaled.jpg" alt="The CMS editor for a promo panel on the left, showing Image, Eyebrow, Title, Body, CTA label and CTA link fields, with the rendered result on the right" style="max-width: 100%; height: auto; border: 1px solid #2b4b72; border-radius: 6px; box-shadow: 0 4px 16px rgba(0,0,0,0.15);">
+  <figcaption style="font-size: 13px; color: #8aa3bf; margin-top: 10px; font-style: italic;">
+    Image, eyebrow, title, body, one action. Adobe calls this a Teaser, Sitecore a Promo. The caution: avoid the word Card here if Card already means the item inside a Card Grid.
+  </figcaption>
+</figure>
+
+<hr>
+
+<h2>Listing and Dynamic Components</h2>
+
+<p>These pull content from elsewhere in the CMS: <strong>Article Listing</strong>, <strong>Event Listing</strong>, <strong>Product Listing</strong>, <strong>Related Content</strong>. Put the filter and sort options inside the component. Do not create "Article Listing by Date" and "Article Listing by Category" as separate components.</p>
+
+<figure style="margin: 35px 0; text-align: center;">
+  <img src="https://blog.nikkipunjabi.com/wp-content/uploads/2026/08/02-Curated-Content-scaled.jpg" alt="A CMS editor showing a content listing component with Heading, Content type, How to choose items, Tag, Hand-picked items, How many to show, and View all fields, next to the rendered row of event cards" style="max-width: 100%; height: auto; border: 1px solid #2b4b72; border-radius: 6px; box-shadow: 0 4px 16px rgba(0,0,0,0.15);">
+  <figcaption style="font-size: 13px; color: #8aa3bf; margin-top: 10px; font-style: italic;">
+    One component, a content type dropdown, three selection modes. The alternative is eight near-identical components that all do the same job.
+  </figcaption>
+</figure>
+
+<hr>
+
+<h2>Handling Variants Without Creating Chaos</h2>
+
+<p>Every project hits the "can we just add a small variation?" moment. My rule of thumb:</p>
+
+<ul>
+  <li>Changes <strong>layout only</strong> (position, columns, alignment) is a variant. Add a dropdown.</li>
+  <li>Changes <strong>content structure</strong> (new fields, new data source, new workflow) is probably a new component.</li>
+  <li>Exists only for a <strong>temporary campaign</strong>? Build it behind a flag and remove it after. Do not leave campaign components lying around for years.</li>
+</ul>
+
+<p>Here is that rule made concrete. Text and Image does not ship as "Text Image Left" and "Text Image Right". It is one component with a single Layout dropdown, and Callout handles its colour the same way, through a Tone dropdown rather than four coloured copies. Two dropdowns standing in for six components.</p>
+
+<figure style="margin: 35px 0; text-align: center;">
+  <img src="https://blog.nikkipunjabi.com/wp-content/uploads/2026/08/05-Variant-Dropdown-scaled-1.jpg" alt="Optimizely CMS block editor showing the Text and Image component with a Layout dropdown set to Image right or Image left, and a Callout component with a Tone dropdown for Info, Success, Warning, or Neutral" style="max-width: 100%; height: auto; border: 1px solid #2b4b72; border-radius: 6px; box-shadow: 0 4px 16px rgba(0,0,0,0.15);">
+  <figcaption style="font-size: 13px; color: #8aa3bf; margin-top: 10px; font-style: italic;">
+    Variants as dropdowns, not components: Text and Image carries a Layout toggle, Callout carries a Tone toggle. Neither spawns a duplicate block.
+  </figcaption>
+</figure>
+
+<hr>
+
+<h2>Naming the New AI Components</h2>
+
+<p>This is the newest and messiest shelf in the library, so it is worth a rule before it fills up. Most "AI" features are one of two things, and teams mislabel both. The mode switch you now see next to All and Images, the toggle between a keyword list and a generated answer, is a <strong>variant</strong>: another tab in a row of tabs, sharing the structure of its neighbours, so it belongs as an option inside your existing search or filter component, not as a standalone "AI Mode Toggle". The generated answer itself is a real <strong>new component</strong>, because it carries fields nothing else has: streamed body, citations, a source list, follow-up prompts, a disclosure line, and a generating state. Its parts are nested children, the way an Accordion Item lives inside an Accordion.</p>
+
+<blockquote style="border-left: 4px solid #eeae56; padding-left: 15px; margin: 20px 0;">
+  <p><strong>Name the component for what the reader receives, not the technology behind it.</strong> Keep the word "AI" only where the reader genuinely needs to know the text was machine-generated.</p>
+</blockquote>
+
+<hr>
+
+<h2>Component Thumbnails: The Part Everyone Skips</h2>
+
+<p>This is where naming stops being a wording exercise and becomes a usability one. Authors do not read the picker, they scan it, flicking down forty entries looking for a shape. A thumbnail skips the translate-word-back-into-shape step entirely. Every serious CMS supports one, and almost nobody fills it in, because it falls in the gap between design and development. So ask for it: make the thumbnail a named design deliverable.</p>
+
+<p><strong>Use a plain wireframe, not the polished design.</strong> It survives the rebrand and answers the author's real question ("where does my stuff go").</p>
+
+<p>The mechanism differs on every platform, which is half the reason it gets dropped:</p>
+
+<table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse; width: 100%; margin: 20px 0;">
+  <thead>
+    <tr style="background-color: #0e1e33; color: #ffffff;">
+      <th style="text-align: left;">Platform</th>
+      <th style="text-align: left;">Where the preview lives</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Optimizely CMS (PaaS / .NET)</strong></td>
+      <td>An attribute on the block or page type pointing at an image path, with convention-based pickup when the asset matches the type name</td>
+    </tr>
+    <tr>
+      <td><strong>Optimizely CMS (SaaS / composable)</strong></td>
+      <td>Not supported out of the box today. The content-type schema has no thumbnail field, and the Add Section dialog shows a generic icon for every component. See the note below.</td>
+    </tr>
+    <tr>
+      <td><strong>Sitecore</strong></td>
+      <td>A thumbnail or preview field on the rendering item, surfaced by SXA and similar toolboxes</td>
+    </tr>
+    <tr>
+      <td><strong>Umbraco</strong></td>
+      <td>A thumbnail path and icon per block in the Block List / Block Grid configuration</td>
+    </tr>
+    <tr>
+      <td><strong>WordPress (Gutenberg)</strong></td>
+      <td>An icon plus an <code>example</code> definition that renders a live preview in the inserter</td>
+    </tr>
+    <tr>
+      <td><strong>Adobe Experience Manager</strong></td>
+      <td>A component icon or abbreviation, with a thumbnail used by the component console</td>
+    </tr>
+  </tbody>
+</table>
+
+<blockquote style="border-left: 4px solid #eeae56; padding-left: 15px; margin: 20px 0;">
+  <p><strong>A note from a live Optimizely SaaS build.</strong> I tried to do exactly this on the SaaS product while writing the post, and it is worth reporting honestly. There is no built-in way to assign a preview image to a component today. I added a thumbnail field to a block in code and pushed it, and the Content Management API rejected it outright: the field does not exist on the content type. Optimizely confirmed the same, that custom component thumbnails would currently need a feature request or a custom solution, and the Add Section dialog shows a generic icon for every component in the meantime. This is exactly the kind of gap that tends to close quickly on an actively developed SaaS platform, so I hope and expect it will arrive before long. Until it does, on Optimizely SaaS your names are carrying the whole load, which is all the more reason to get them right.</p>
+</blockquote>
+
+<p>The reason thumbnails get skipped is process, not effort. Make the component deliverable design + states + thumbnail (three files, not two), give the component register a thumbnail column, and include "renders correctly in the picker" in ticket acceptance. The <a href="https://nikkipunjabi.com/component-index.html" target="_blank" rel="noopener">CMS Component Index Drawing Set</a> gives you 162 generic plates to start from.</p>
+
+<hr>
+
+<h2>A Worked Example: Two Real Components</h2>
+
+<p>Here are two components from a live build. Both keep their names, and the reasoning for keeping them is as useful as any rename.</p>
+
+<p><strong>"Curated Content"</strong> takes a content type and three fill modes (Latest, By tag, Hand-picked). It is a good, author-first name, with one honesty wrinkle: only one of its three modes is literally "curated", so on a brand new build I might reach for <strong>Content Collection</strong>. But that is a day-one preference, not a reason to migrate a shipped component and re-point every reference for a marginal gain. The real win is the shape: one component with a content-type dropdown replaces the eight listing components many teams build.</p>
+
+<p><strong>"Highlight Card"</strong> is image, eyebrow, title, body, one CTA, as a wide feature panel. There is a general lesson attached: on a big library, watch the word <strong>Card</strong>, because Card usually already means the item inside a Card Grid, and AEM would call this a <strong>Teaser</strong>, Sitecore a <strong>Promo</strong>. On this build it does not collide (there is no Card or Card Grid beside it), it reads clearly for the daily authors, and it is shipped. So the guidance is layered: reach for Teaser or Promo Panel on a new build, and do not migrate a shipped name that is already clear.</p>
+
+<p>Two things travel out of this. Get the shape right before you fuss over the word, and treat a naming rule as a design-time tool, not a licence to churn shipped content. Before you commit a name, write it into the full alphabetical list and read it aloud. Collisions are invisible in a design file and obvious in a dropdown.</p>
+
+<hr>
+
+<h2>Who Owns Naming, and a Short Checklist</h2>
+
+<p>Both designer and developer, but not equally. The designer proposes the name and the thumbnail at design time, because they know the visual family it belongs to. The developer validates it against the codebase and the CMS, and wires the thumbnail in. The content lead has final sign-off, because they are the daily user. I run a fifteen-minute naming review at the end of each component sprint, and every name goes into a shared register (name, category, thumbnail, screenshot, one-line "when to use"). If it is not in the register, it does not exist yet.</p>
+
+<p>Before you finalize any name, run the list:</p>
+
+<ol>
+  <li>Describes purpose, not appearance?</li>
+  <li>An author understands it without training?</li>
+  <li>Consistent with the pattern, and no collision when read in the alphabetical list?</li>
+  <li>Variants handled inside the component, not as separate entries?</li>
+  <li>Has a thumbnail, same ratio and style as the rest, rendering in the picker?</li>
+  <li>In the shared register with a screenshot and description?</li>
+  <li>Content lead signed off?</li>
+</ol>
+
+<p>Yes to all seven, ship it.</p>
+
+<hr>
+
+<h2>Frequently Asked Questions</h2>
+
+<h3>Should designers or developers name CMS components?</h3>
+<p>Both, with clear roles. The designer proposes the functional name based on intent, the developer validates it against codebase constraints, and the content lead gives final sign-off based on authoring usability.</p>
+
+<h3>What content blocks should a CMS component library include?</h3>
+<p>Start with a small, author-first set and grow only when a genuinely new structure appears. A reliable baseline is Rich Text, Two Column Text, Text and Image, Text and Video, Quote, and Callout. Keep left-or-right and colour choices as dropdowns inside those blocks rather than as separate components.</p>
+
+<h3>What is the difference between a CMS component and a variant?</h3>
+<p>A component defines the underlying content structure (e.g., Hero Banner). A variant alters layout or styling within that same structure (e.g., Image Left vs. Image Right), and should be a dropdown rather than a duplicate component.</p>
+
+<h3>Should you rename a CMS component that is already live?</h3>
+<p>Usually not. Renaming a shipped component means re-pointing every instance and reference in the CMS, a breaking change for a marginal wording gain. Get the name right on day one and keep it unless it is actively causing authoring errors.</p>
+
+<hr>
+
+<h2>Final Thoughts</h2>
+
+<p>Naming feels trivial until it costs you a week of rework. A tidy, author-first library makes content teams faster and developers happier. If you are starting a build, open the naming register on day one. If you are inheriting a messy one, do a two-hour naming audit with the whole team. Unglamorous work, real payoff.</p>
+
+<p>If you have your own naming rules that have saved you from chaos, I would love to hear them, leave a comment below.</p>
+
+<!--
+  OPTIONAL: FAQ schema for richer AI/search results. Paste this only if your SEO plugin
+  (Yoast, Rank Math, SEO Framework) is NOT already emitting FAQ schema for this page, to
+  avoid duplicate structured data. Remove this whole comment block if unused.
+-->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Should designers or developers name CMS components?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Both, with clear roles. The designer proposes the functional name based on intent, the developer validates it against codebase constraints, and the content lead gives final sign-off based on authoring usability."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What content blocks should a CMS component library include?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "A reliable author-first baseline is Rich Text, Two Column Text, Text and Image, Text and Video, Quote, and Callout. Keep left-or-right and colour choices as dropdowns inside those blocks rather than as separate components."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is the difference between a CMS component and a variant?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "A component defines the underlying content structure, such as a Hero Banner. A variant alters layout or visual styling within that same structure, such as Image Left versus Image Right, and should be a dropdown rather than a duplicate component."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Should you rename a CMS component that is already live?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Usually not. Renaming a shipped component means re-pointing every instance and reference in the CMS, a breaking change for a marginal wording gain. Get the name right on day one and keep it once content is built on the component, unless it is actively causing authoring errors."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Should you put AI in a component name?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Only when disclosure to the reader is required, such as AI Answer or AI Disclosure Notice. Do not prefix internal tools or recommendation feeds with AI; use Recommended for You instead of AI Recommendations, because technical prefixes age poorly once the feature becomes baseline."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Why use wireframe thumbnails instead of real screenshots in the CMS picker?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Real design screenshots become outdated after brand updates and lose clarity when scaled down to small picker thumbnails. Neutral wireframes represent structural layout and remain accurate even after a rebrand."
+      }
+    }
+  ]
+}
+</script>
