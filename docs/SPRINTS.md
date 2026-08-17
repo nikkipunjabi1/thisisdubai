@@ -17,7 +17,14 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · 🚦 = phase gate (I as
 >
 > _Done & merged:_ S3.1a preview access hardening (PR #68/#69), TTD-2 authored the
 > Things-to-Do pages (PR #70), S3.6 CMS-editable navigation (PR #74), S3.7 Site Settings
-> tabs + Cookie/Announcement skeletons (merged).
+> tabs + Cookie/Announcement skeletons (merged), fix: hide Nav data components from the
+> picker (PR #76).
+>
+> _In review:_ **S3.8 content-block library** (branch `feat/content-block-library`) — five new
+> author-first blocks (Two Column Text, Text and Image, Text and Video, Quote, Callout) + the
+> COMPONENT-NAMING.md best-practices doc, for the "Component Naming Conventions" blog. **Needs
+> `opti-push`** (push before the app serves pages — see S3.8 rollout note). After push, capture the
+> two CMS screenshots for the blog (picker list + a block editor field set).
 >
 > **Waiting on user CMS content, then verify (do not lose these):**
 > - **`/ar` (RTL) navigation** — user populates the Arabic header/footer nav + language
@@ -218,6 +225,30 @@ downstream (semantic search tuning, AI retrieval, the MCP server) needs a realis
   link label + link page, dismissible). Property groups declared in `optimizely.config.mjs`.
   **Follow-up sprint:** build the front-end components that render the cookie banner + the
   announcement bar (the fields are ready; the rendering is not built).
+- [x] **S3.8 — Content-block library (author-first naming)** ✅ (branch `feat/content-block-library`)
+  Added five new page content blocks with plain-English, author-first names, to round out the
+  library and back the "Component Naming Conventions" blog: **Two Column Text**, **Text and Image**
+  (image left/right = a `layout` variant), **Text and Video** (same, with a YouTube field),
+  **Quote** (pull quote + optional attribution/role), **Callout** (heading + body + `tone` variant).
+  **Rich Text** already existed. All are `_component` (`sectionEnabled` + `elementEnabled`), grouped
+  under `content`, with minimal but functional server renders (SectionShell + Prose). Registered in
+  `src/app/layout.tsx` (both registries); `tsc` + `opti-push --dryRun` clean.
+  Deliberately KEPT the names **Highlight Card** and **Curated Content** (shipped, clear in-picker;
+  renaming is a breaking migration for no gain) — documented in COMPONENT-NAMING.md.
+  Also added the best-practices doc **docs/COMPONENT-NAMING.md** + a §13 summary in
+  OPTIMIZELY-BEST-PRACTICES.md.
+  **Requires `opti-push`** to create the 5 types in the CMS (may need `--force`; safe, no data lost).
+  ⚠️ **Rollout order:** the app now queries these 5 types, so **push before the app serves pages** or
+  experience queries 400 on the unknown types (the documented registry↔Graph coupling, §12).
+  **Follow-up sprint (UI polish, later):** the renders are intentionally minimal; refine spacing,
+  typography, and the Callout tones to the design system when we do a content-block visual pass.
+  **User action for the naming blog:** after push, capture CMS screenshots — (1) the "Add Section"
+  picker showing the clean content-block names in a list, and (2) a block editor field set (e.g.
+  Text and Image showing the Layout dropdown; Callout showing Tone).
+  **✅ Blog SHIPPED** (2026-08-15): "Component Naming Conventions for a CMS Website" published to the
+  personal WordPress; final HTML archived at `blog/component-naming-conventions-cms-website.html`.
+  All 5 screenshots captured + wired. Also proved (and documented in §12 / COMPONENT-NAMING.md) that
+  Optimizely SaaS has **no component-picker thumbnail** — the CMA rejects a thumbnail field on push.
 - 🏁 + Blog #5–#8 outlines.
 
 ## 🚦 Phase 4 — AI features (Claude)  _(ask before starting)_
