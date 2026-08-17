@@ -106,9 +106,14 @@ and development.
   register has a thumbnail column; ticket acceptance includes the preview rendering in the picker,
   not just the component rendering on the page.
 
-> Optimizely note: the preview/thumbnail mechanism differs between the older .NET/on-prem product
-> and the newer SaaS/composable one. Confirm the current SDK/CLI support before building a thumbnail
-> pipeline; treat wireframes in the field `description` as the fallback where no picker image exists.
+> Optimizely note: the older .NET/PaaS product supports a thumbnail attribute on the type; the newer
+> SaaS/composable product does **NOT** (tested Aug 2026). The CMA rejects a thumbnail field on the
+> content type with `InvalidModel: field 'thumbnailUrl' does not exist on type 'ContentType'`, and the
+> Visual Builder "Add Section" dialog shows a generic icon for every component. Optimizely confirmed it
+> needs a feature request or a custom solution today. `--dryRun` does NOT catch this (local bundle
+> only); only a real `config push` validates against the CMA. On SaaS, lean on author-first names (and
+> the per-property `description`) until the platform adds picker thumbnails. See
+> OPTIMIZELY-BEST-PRACTICES.md §12.
 
 ## Worked examples from this build
 

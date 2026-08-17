@@ -194,6 +194,15 @@ COMPONENT-STANDARDS.md, SEO.md, PREVIEW-WORKFLOW.md, QUALITY.md._
 - **Always check status codes when benchmarking, not just timings.** A 500 returns fast and looks
   like a healthy number in a timing column; we briefly "measured" a broken page as a 3.2s baseline.
 
+- **SaaS CMS has no component-picker thumbnail (confirmed Aug 2026).** There is no way to attach a
+  preview image to a component/block in Optimizely SaaS today. The content-type schema rejects a
+  thumbnail key on a real push (`Error 400 InvalidModel: The field 'thumbnailUrl' does not exist on
+  type 'ContentType'`), and the Visual Builder "Add Section" dialog shows a generic icon for every
+  component. **`--dryRun` does NOT catch this** — it only bundles locally; the CMA is the only
+  authority, so a *real* `config push` is the true validator (a good reminder for any model change).
+  Optimizely support confirmed it needs a feature request or a custom solution. Until the platform
+  adds it, lean on author-first names (and per-property `description`). See COMPONENT-NAMING.md.
+
 > These gotchas are prime blog material (BLOG-PLAN.md #2/#3) — they're exactly what the community
 > searches for.
 
