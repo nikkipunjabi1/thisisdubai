@@ -18,10 +18,29 @@ so each environment is pinned to a known, auditable commit:
 `production`, and never merge backwards. That one rule is what stops the classic environment-branch
 drift: every upper branch is always an ancestor-consistent snapshot of the trunk.
 
-```bash
-git checkout uat && git merge --ff-only main && git push     # promote DEV → UAT
-git checkout production && git merge --ff-only uat && git push  # promote UAT → PROD
-```
+**Promotion happens via a Pull Request**, same as everything else, so each promotion has a diff, a
+CI run, and an approval:
+
+1. Land the work on `main` via a normal feature PR, and verify it on DEV.
+2. Open a PR **`main → uat`**. The diff is exactly what you are promoting. Merge it.
+3. Later, a PR **`uat → production`** does the same for the live site.
+
+### Merge strategy matters (this is the one that bites)
+
+| PR type | Merge button | Why |
+|---|---|---|
+| `feature → main` | **Squash and merge** | One tidy commit per unit of work |
+| `main → uat`, `uat → production` | **Create a merge commit** | Keeps the original SHAs, so the branches never diverge |
+
+**Never squash or rebase a promotion PR.** Squashing rewrites the promoted commits into a *new* SHA
+with identical content, so `uat` permanently diverges from `main` and every later promotion PR gets
+noisier and eventually conflicts.
+
+### Branch protection
+
+`main`, `uat`, and `production` should all require a PR (no direct pushes), which is what keeps the
+forward-only rule from depending on anyone's memory. `production` additionally requires an approving
+reviewer via its GitHub Environment.
 
 A push to any of the three runs [`.github/workflows/promote.yml`](.github/workflows/promote.yml):
 snapshot the target instance's model → `config push` (**never** `--force`) → trigger the app deploy.

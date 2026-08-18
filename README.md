@@ -5,7 +5,7 @@
 > **Next.js** frontend (targeting Vercel). All branding here is **original**; imagery is **royalty-free**
 > only (see `ASSETS.md`). Real place names/facts are used descriptively.
 
-Repo: https://github.com/nikkipunjabi1/thisisdubai · Deployed on **Vercel**, one project per environment (DEV / UAT), each pointing at its own Optimizely SaaS instance. See [docs/ENVIRONMENTS.md](docs/ENVIRONMENTS.md).
+Repo: https://github.com/nikkipunjabi1/thisisdubai · **Live (DEV): https://thisisdubai-dev.vercel.app** · Deployed on **Vercel**, one project per environment (DEV / UAT / PROD), each pointing at its own Optimizely SaaS instance and promoted by CI. See [docs/ENVIRONMENTS.md](docs/ENVIRONMENTS.md).
 
 ## Why this project exists
 
