@@ -30,6 +30,12 @@ Every commit is co-authored by the assistant per repo policy.
 - Must pass: typecheck, lint, build (once the app exists). No secrets committed (`.env` is ignored).
 - Link the relevant sprint (e.g. "Closes S2.3").
 
+## Keep docs in sync (no silent drift)
+Some files are human-readable indexes that must be updated in the **same PR** as the change they describe, or they quietly go stale:
+- **Add or change a script in `/scripts`** → add/adjust its row in [`scripts/README.md`](scripts/README.md) (the plain-language index for PMs/BAs/new joiners). Every script also carries a `//` purpose comment at the top of its own file.
+- **Add a new `docs/` file** → add it to the Docs table in [`README.md`](README.md).
+- **Change content/imagery source data** → the derived lists (`docs/ASSET-MANIFEST.md`, CMP folders) regenerate from data, so re-run the generator rather than hand-editing.
+
 ## Environments (once the app exists)
 - `main` → **Vercel production**.
 - Open PRs → **Vercel preview deployments** (share these for quick UI review).
