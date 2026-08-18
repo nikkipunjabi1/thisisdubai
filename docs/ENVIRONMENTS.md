@@ -17,6 +17,31 @@ The common and expensive mistake is treating content like code and trying to syn
 Content types flow upward through code. Content is authored where it lives (usually Production), and
 only reference/seed data is scripted.
 
+## The topology
+
+| Tier | CMS instance | Branch | Vercel project | Indexable |
+|---|---|---|---|---|
+| **DEV / Integration** | Instance 1 | `main` (trunk) | `thisisdubai-dev` | No |
+| **UAT** | Instance 2 | `uat` | `thisisdubai-uat` | No |
+| **Production** | Instance 3 | `production` | `thisisdubai` | **Yes** |
+
+Trunk-based with **forward-only promotion branches**: all PRs land on `main`; you promote by merging
+`main → uat → production`, never backwards and never by committing directly to an upper branch.
+See [`CONTRIBUTING.md`](../CONTRIBUTING.md#branching-model-trunk-based--forward-only-promotion-branches).
+
+### The deploy race (get this ordering right)
+
+The app queries the content types, so **the model must land on the instance before the new frontend
+deploys** or delivery queries fail on types the instance does not have yet. Vercel's Git integration
+auto-deploys the moment a branch is pushed, which races exactly that.
+
+**So: turn Vercel's Git auto-deploy OFF for `main`/`uat`/`production`, and let CI trigger the deploy
+via a Deploy Hook after the model push succeeds.** That is what `promote.yml` does:
+
+```
+push branch → snapshot model → config push → wait for propagation → trigger Vercel deploy
+```
+
 ## An environment is an instance, not a folder
 
 On Optimizely SaaS, one environment is generally **one CMS instance**. There is no "promote this
@@ -33,7 +58,34 @@ to push. The target is decided by `OPTIMIZELY_CMS_URL` + client ID/secret in the
 plus different credentials equals the same model, everywhere. `.env.*` is gitignored (only
 `.env.example` is committed).
 
+## What a model push does, and does not do
+
+The single most important table here. `config push` takes only `--dryRun`, `--force`, `--host` and
+`--output`: **there is no `--prune`, `--delete` or `--sync`.**
+
+| Change in your code | Effect on the target instance | Content impact |
+|---|---|---|
+| **New** type | Created | None |
+| **Safe edit** (add optional field, change display name / help text / group) | Updated in place | None |
+| **Breaking edit** (add required field, remove or retype a field, shared → per-language) | **Refused** unless `--force` | With `--force`, that field's data can be lost |
+| **Type deleted from the repo** | **Nothing — it stays on the instance** | None |
+| Content items | **Never touched by a model push** | — |
+
+**Push is additive/upsert only. It never deletes.** Proof from this project: the scaffold's demo types
+were excluded from the config glob and still had to be removed by explicit scripts
+(`cleanup-legacy.mjs`, `retire-legacy-articles.mjs`), and the CLI keeps deletion behind a separate
+`danger delete-all-content-types` command.
+
+So **content on an upper environment is safe by default**. The only ways content data is lost are a
+*forced* breaking change that removes or retypes a field, or flipping localization ON → OFF (which
+deletes that field's values in every language). Both need a human to pass `--force` deliberately.
+
+> **Never put `--force` in CI for UAT or Production.** A promotion that fails on a breaking change is
+> the safety net working. Snapshot, review, and apply it by hand, with a maintenance note.
+
 ## Promoting the model
+
+CI does this automatically per branch (`promote.yml`). Manually, against any instance:
 
 ```bash
 npm run opti-login:uat     # verify the credentials reach the right instance
@@ -73,16 +125,40 @@ model and the front end. Seed it with the scripts.
 
 ## A promotion runbook
 
-1. **Dev** — change the content type in a branch → `npm run opti-push` → build the component → verify.
-2. **PR review** → merge to `main`.
-3. **UAT** — `npm run opti-snapshot:uat` (backup) → `npm run opti-push:uat` → deploy the app → seed
-   representative content (`npm run seed:uat`) → test.
-4. **Production** — snapshot → push the model → deploy the app. Existing author content is untouched,
-   because only the schema moved.
+1. **Feature branch** — change the content type → `npm run opti-push` against DEV → build the
+   component → verify locally.
+2. **PR review** → merge to `main`. CI promotes the model to **DEV** and deploys `thisisdubai-dev`.
+3. **Promote to UAT** — `git checkout uat && git merge --ff-only main && git push`. CI snapshots
+   Instance 2, pushes the model, deploys `thisisdubai-uat`. Seed representative content once with
+   `npm run seed:uat`, then test.
+4. **Promote to Production** — `git checkout production && git merge --ff-only uat && git push`.
+   CI waits for an approving reviewer, snapshots Instance 3, pushes the model, deploys `thisisdubai`.
+   Author content is untouched, because only the schema moved.
 
-In CI, hold each environment's credentials as secrets and run the push as a pre-deploy step, so
-promotion is identical every time and never hand-clicked. (Our `ci.yml` currently runs quality gates
-only — type-check, lint, tests, build — so model promotion is a deliberate manual step today.)
+If step 3 or 4 fails with a breaking-change error, that is the guard working: pull a snapshot, review
+what would be lost, and apply it by hand with `--force` during a maintenance window.
+
+## One-time setup checklist
+
+**Per environment, in GitHub → Settings → Environments** (`dev`, `uat`, `production`):
+- Secrets: `OPTIMIZELY_CMS_URL`, `OPTIMIZELY_CMS_CLIENT_ID`, `OPTIMIZELY_CMS_CLIENT_SECRET`
+- Secret: `VERCEL_DEPLOY_HOOK_URL` (Vercel → Project → Settings → Git → Deploy Hooks)
+- On `production` only: add a **Required reviewer** so promotion needs approval
+
+**Per Vercel project** (`thisisdubai-dev`, `thisisdubai-uat`, `thisisdubai`):
+- **Disable Git auto-deploy** for the tracked branch (CI triggers the deploy instead — see the deploy
+  race above). Vercel → Settings → Git → *Ignored Build Step* returning exit 0, or disconnect the
+  branch and rely solely on the Deploy Hook.
+- Environment variables pointing at **that tier's instance**: `OPTIMIZELY_CMS_URL`,
+  `OPTIMIZELY_GRAPH_SINGLE_KEY`, `OPTIMIZELY_GRAPH_GATEWAY`, `APPLICATION_HOST` (that project's own
+  public host, so canonical/hreflang are correct), plus server-only secrets
+  (`PREVIEW_SIGNING_SECRET`, `PREVIEW_ADMIN_SECRET`, `REVALIDATE_SECRET`,
+  `OPTIMIZELY_GRAPH_APP_KEY`/`SECRET`). **Generate fresh secrets per environment; never share them.**
+- `SITE_INDEXABLE`: **unset on dev and uat**, `true` only on production. A UAT site getting indexed is
+  a classic, avoidable SEO incident; `robots.ts` fails closed, so leaving it unset is the safe default.
+
+**Per CMS instance:** create its own least-privilege API key. Ours pushes content *types* but is
+Forbidden from creating content *instances* — keep that restriction; it is a feature, not a limitation.
 
 ## Tearing down a throwaway environment
 
