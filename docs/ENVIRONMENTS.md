@@ -19,11 +19,15 @@ only reference/seed data is scripted.
 
 ## The topology
 
-| Tier | CMS instance | Branch | Vercel project | Indexable |
-|---|---|---|---|---|
-| **DEV / Integration** | Instance 1 | `main` (trunk) | `thisisdubai-dev` | No |
-| **UAT** | Instance 2 | `uat` | `thisisdubai-uat` | No |
-| **Production** | Instance 3 | `production` | `thisisdubai` | **Yes** |
+| Tier | CMS instance | Branch | Vercel project | URL | Indexable |
+|---|---|---|---|---|---|
+| **DEV / Integration** | Instance 1 | `main` (trunk) | `thisisdubai-dev` | https://thisisdubai-dev.vercel.app | No |
+| **UAT** | Instance 2 | `uat` | `thisisdubai-uat` | _(to come)_ | No |
+| **Production** | Instance 3 | `production` | `thisisdubai` | _(to come)_ | **Yes** |
+
+**DEV is live and verified** (2026-08-18): EN/AR routes 200, Graph delivering real content, RTL correct
+(`<html lang="ar-AE" dir="rtl">`), locale-aligned slugs resolving in both languages, absolute canonical
++ hreflang, a 159-URL bilingual sitemap, and `robots.txt` returning `Disallow: /` so DEV is never indexed.
 
 Trunk-based with **forward-only promotion branches**: all PRs land on `main`; you promote by merging
 `main → uat → production`, never backwards and never by committing directly to an upper branch.
@@ -127,13 +131,14 @@ model and the front end. Seed it with the scripts.
 
 1. **Feature branch** — change the content type → `npm run opti-push` against DEV → build the
    component → verify locally.
-2. **PR review** → merge to `main`. CI promotes the model to **DEV** and deploys `thisisdubai-dev`.
-3. **Promote to UAT** — `git checkout uat && git merge --ff-only main && git push`. CI snapshots
-   Instance 2, pushes the model, deploys `thisisdubai-uat`. Seed representative content once with
-   `npm run seed:uat`, then test.
-4. **Promote to Production** — `git checkout production && git merge --ff-only uat && git push`.
-   CI waits for an approving reviewer, snapshots Instance 3, pushes the model, deploys `thisisdubai`.
-   Author content is untouched, because only the schema moved.
+2. **PR review** → squash-merge to `main`. CI promotes the model to **DEV** and deploys
+   `thisisdubai-dev`. Verify it there.
+3. **Promote to UAT** — open a PR **`main → uat`** and **merge it with a merge commit** (never
+   squash: see CONTRIBUTING). CI snapshots Instance 2, pushes the model, deploys `thisisdubai-uat`.
+   Seed representative content once with `npm run seed:uat`, then test.
+4. **Promote to Production** — open a PR **`uat → production`**, same merge-commit rule. CI waits for
+   an approving reviewer, snapshots Instance 3, pushes the model, deploys `thisisdubai`. Author
+   content is untouched, because only the schema moved.
 
 If step 3 or 4 fails with a breaking-change error, that is the guard working: pull a snapshot, review
 what would be lost, and apply it by hand with `--force` during a maintenance window.
@@ -150,8 +155,8 @@ what would be lost, and apply it by hand with `--force` during a maintenance win
   race above). Vercel → Settings → Git → *Ignored Build Step* returning exit 0, or disconnect the
   branch and rely solely on the Deploy Hook.
 - Environment variables pointing at **that tier's instance**: `OPTIMIZELY_CMS_URL`,
-  `OPTIMIZELY_GRAPH_SINGLE_KEY`, `OPTIMIZELY_GRAPH_GATEWAY`, `APPLICATION_HOST` (that project's own
-  public host, so canonical/hreflang are correct), plus server-only secrets
+  `OPTIMIZELY_GRAPH_SINGLE_KEY`, `OPTIMIZELY_GRAPH_GATEWAY`, **`APPLICATION_HOST`** (that project's own
+  public host — see the gotcha below), plus server-only secrets
   (`PREVIEW_SIGNING_SECRET`, `PREVIEW_ADMIN_SECRET`, `REVALIDATE_SECRET`,
   `OPTIMIZELY_GRAPH_APP_KEY`/`SECRET`). **Generate fresh secrets per environment; never share them.**
 - `SITE_INDEXABLE`: **unset on dev and uat**, `true` only on production. A UAT site getting indexed is
@@ -159,6 +164,27 @@ what would be lost, and apply it by hand with `--force` during a maintenance win
 
 **Per CMS instance:** create its own least-privilege API key. Ours pushes content *types* but is
 Forbidden from creating content *instances* — keep that restriction; it is a feature, not a limitation.
+
+### Gotcha: a missing `APPLICATION_HOST` fails quietly
+
+Hit on the first DEV deploy. With it unset, the app does not crash, it silently degrades:
+
+- `canonical` and `hreflang` are emitted as **relative** URLs (`href="/en"`). hreflang requires
+  absolute URLs, so every alternate is invalid.
+- `sitemap.xml` returns a **valid but empty** urlset (the sitemap is gated on an absolute host).
+
+Both are easy to miss because every page still returns 200. Set it per Vercel project to that
+project's own public origin and redeploy. After the fix on DEV: absolute canonical/hreflang, and the
+sitemap went from 0 to **159** URLs. Verify with:
+
+```bash
+curl -s https://<host>/en | grep -oE '<link rel="(canonical|alternate)"[^>]*>'
+curl -s https://<host>/sitemap.xml | grep -c "<url>"
+```
+
+**Note the ordering trap:** on a brand-new Vercel project you do not know the final URL until after
+the first deploy, so `APPLICATION_HOST` is necessarily a second pass (set it, then redeploy). Attaching
+a custom domain up front avoids the round trip.
 
 ## Tearing down a throwaway environment
 
