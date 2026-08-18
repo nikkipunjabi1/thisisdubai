@@ -68,17 +68,22 @@ with Visual Builder + live preview confirmed working — **before** we add This 
   CMS Application configured for preview at local HTTPS; on-page editing + live preview confirmed
   working. The stakeholder-preview module (S3.1) is built directly into this preview pane. **Exit
   met:** live preview refreshes on edit; no blank-screen/communication/CSP errors.
-- [ ] **S1.4 — Deploy to Vercel** 🟢 _(deferred — see note)_
-  Tasks: import repo to Vercel (Hobby); set env vars; deploy; wire the Graph publish webhook →
-  revalidation route. Deliverable: prod + preview URLs live. Exit: a publish in CMS revalidates
-  the live page.
-  ⏸ **Deliberately deferred.** We build the complete site locally against the SaaS CMS first, then
-  deploy to Vercel once it's feature-complete. The revalidation route (`/api/revalidate`) is already
-  built and waiting; deploying is a config step, not a code step.
+- [x] **S1.4 — Deploy to Vercel** ✅ _(DEV live, 2026-08-18)_
+  Deferred through Phases 2–3 by design (build the site locally against the SaaS CMS first), then
+  done as part of the environment pipeline. **Live DEV: https://thisisdubai-dev.vercel.app**
+  — Vercel project `thisisdubai-dev` → Instance 1, env vars set, EN/AR routes 200, Graph serving
+  real content, RTL correct, absolute canonical + hreflang, 159-URL bilingual sitemap,
+  `robots.txt` disallowing all (DEV is never indexed). Two fixes were needed to get there: SDK 2.2
+  type compatibility (PR #83) and a missing `APPLICATION_HOST` (documented as a quiet-failure gotcha
+  in [ENVIRONMENTS.md](ENVIRONMENTS.md)).
+  ⚠️ **One piece of the original exit check is still open:** the Graph publish webhook is not yet
+  pointed at the deployed DEV URL, so "publish in CMS revalidates the live page" is proven locally
+  but not on Vercel. `/api/revalidate` is built; it needs the CMS webhook target + `REVALIDATE_SECRET`
+  set per environment. Tracked as part of the UAT/environment work.
 - [ ] **S1.5 — Blog #2 outline** (official-SDK setup & gotchas). 🟢
 - 🏁 Phase-1 baseline **verified end-to-end locally** (SDK scaffold + CMS/Graph + live VB preview);
-  ARCHITECTURE.md updated with the real scaffold + SDK APIs. Vercel deploy (S1.4) is the one
-  remaining item, intentionally held until the site is complete.
+  ARCHITECTURE.md updated with the real scaffold + SDK APIs. Vercel deploy (S1.4) landed later,
+  with the environment pipeline; **S1.5 (Blog #2 outline) is the one remaining Phase-1 item.**
 
 ## 🚦 Phase 2 — Content model + multi-page site  _(ask before starting)_
 Goal: This is Dubai content types, the luxury design system, and all page templates — a real
@@ -350,6 +355,45 @@ downstream (semantic search tuning, AI retrieval, the MCP server) needs a realis
 
   **Blog trigger:** yes, and a strong one — a runnable starter kit is the kind of contribution that
   gets used rather than just read.
+
+- [ ] **S3.12 — Commerce feature + "ready-made theme" — is there a product here?** 🔵 _(brainstorm)_
+  **The idea.** Two related but separable ambitions:
+  1. **A Commerce feature** — Product listing + detail pages and **Stripe** checkout, shipped as an
+     *optional, toggleable feature* on top of the starter kit: content types, blocks, display
+     templates and routes that someone enables and configures rather than builds.
+  2. **A ready-made Optimizely SaaS theme** — enough polished, drag-and-drop components and page
+     templates that a team can compose real pages in Visual Builder and go live in days.
+
+  **Is it worth it? An honest read.** The theme half is the stronger idea and is *already most of the
+  way there* — we have a design system, a display-template system, a content-block library with
+  author-first naming, a listing engine, bilingual + RTL support, SEO and preview. Packaging that is
+  a genuine gap in the Optimizely SaaS ecosystem, where most public examples are thin scaffolds.
+  It also composes perfectly with the [S3.11] starter kit: the kit installs it, the theme is what
+  you get.
+
+  The commerce half is the riskier one, and worth being clear-eyed about before committing:
+  - **Optimizely already sells Configured Commerce.** A Stripe side-door is a demo pattern, not a
+    recommended architecture. Position it as "here is how you wire an external payment provider to
+    a headless SaaS CMS", never as a commerce platform.
+  - **Payments raise the stakes.** Real money means PCI scope, webhooks, idempotency, refunds, tax,
+    order state that does **not** belong in the CMS. The honest scope is **Stripe Checkout / Payment
+    Links** (Stripe hosts the payment page, we never touch card data) with the CMS owning the product
+    *catalogue* only.
+  - **Never bundle live keys or a live-mode default.** Test mode only, out of the box.
+
+  **Questions to settle in the brainstorm:**
+  - One deliverable or two? (theme first, commerce as an add-on, is the likely answer)
+  - What is the smallest commerce slice that teaches something real — catalogue + Checkout, and
+    where does order/inventory state live?
+  - Is "feature toggle" a build-time flag, a separate package, or just content types you can decline
+    to push? What does *not* installing it look like?
+  - How many components make a theme feel complete without becoming a maintenance burden?
+  - Distribution + versioning: how does someone take an update after they have customized it?
+
+  **Dependency:** this sits on top of [S3.11] — build the starter kit first, then the theme it
+  installs, then commerce as an optional feature. Do not start it in parallel.
+
+  **Blog trigger:** yes, and probably the strongest MVP artefact of the whole project.
 
 ## 🚦 Phase 4 — AI features (Claude)  _(ask before starting)_
 - [ ] **S4.1 — AI Search** (Graph retrieval → Claude → cards) 🔴 — AI-SEARCH.md
