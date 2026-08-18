@@ -304,6 +304,53 @@ downstream (semantic search tuning, AI retrieval, the MCP server) needs a realis
   **Blog trigger:** strong candidate — "why semantic search returns confidently wrong results, and
   how to tune it" is a genuinely under-written topic and pairs naturally with the AI-search post.
 
+- [ ] **S3.11 — "This is Dubai" as a starter kit / reusable library** 🔵 _(brainstorm first, then build)_
+  **The idea.** Someone clones the repo, fills in a handful of environment variables, runs **one
+  command**, and ends up with a fully working Optimizely SaaS CMS instance: content types pushed,
+  content items created, EN + AR language variants populated, everything published, and a Next.js
+  front end that renders it. A genuine kick-start for anyone learning the SaaS stack, instead of the
+  usual empty instance and a blank page.
+
+  Plus a **second command that tears the whole instance back down** (content, then types, and the
+  Graph index with it), so people can experiment freely and reset — or keep what they built and
+  carry on with it as a real project.
+
+  **Why this is worth doing.** It is the most reusable thing this project could give back to the
+  community, and it is a strong MVP artefact. Most of the parts already exist in `/scripts` —
+  `seed.mjs`, `create-section.mjs`, `attach-assets.mjs`, `source-images.mjs`, `seo-fill.mjs`,
+  `publish-ar.mjs`, `align-ar-slugs.mjs`, `teardown-env.mjs` — but they are a sequence a newcomer has
+  to know the order of. This sprint turns that sequence into a product.
+
+  **Open questions to brainstorm (do not pre-decide these):**
+  - **Shape:** a template repo ("Use this template"), an npm `create-` initializer, or a
+    documented clone + `npm run setup`? Each has different maintenance and versioning costs.
+  - **Idempotency + resumability:** the run is long and network-bound. Re-running after a failure
+    must not duplicate content. Does it checkpoint, or is every step naturally idempotent?
+  - **Ordering:** the model must land before anything queries it, and Graph indexing lags publish.
+    Where do the waits go, and how does the script report progress over several minutes?
+  - **Imagery:** we cannot ship royalty-free binaries for everyone. Source at setup time, ship a
+    small bundled set, or degrade gracefully to placeholders?
+  - **Content volume:** the full 187-item corpus, or a representative subset that is fast to
+    install and fast to tear down? Possibly a `--full` flag.
+  - **Teardown safety — the hard one.** `teardown-env.mjs` is destructive and today is protected by
+    four guards that assume *our* setup (a known primary host in `.env`). For a stranger's machine
+    the "protected host" concept does not exist. What replaces it? Probably: explicit
+    `--confirm-host` typed by hand, a dry run by default, a printed inventory of exactly what will
+    be deleted, and a refusal on any instance the setup script did not itself create (a marker item?).
+  - **The "keep it" path:** how does someone graduate from sandbox to real project cleanly?
+  - **Secrets hygiene:** `.env.example` must make it obvious which keys are needed and which CMS
+    API-key scopes to grant — our own key is deliberately Forbidden from creating content
+    *instances*, so a setup key needs broader scope. Document that trade-off honestly.
+  - **Licensing + branding:** all branding here is original and imagery is royalty-free; a
+    redistributable starter kit needs that stated explicitly, plus a clear "unofficial" notice.
+
+  **Exit check:** a clean clone on a fresh Optimizely SaaS instance, with only `.env` filled in,
+  reaches a browsable bilingual site in one command — verified by actually doing it on an unused
+  instance. Then the teardown command returns that instance to empty.
+
+  **Blog trigger:** yes, and a strong one — a runnable starter kit is the kind of contribution that
+  gets used rather than just read.
+
 ## 🚦 Phase 4 — AI features (Claude)  _(ask before starting)_
 - [ ] **S4.1 — AI Search** (Graph retrieval → Claude → cards) 🔴 — AI-SEARCH.md
 - [ ] **S4.2 — AI Trip Planner** (→ `Itinerary`) 🔴
