@@ -46,6 +46,17 @@ via a Deploy Hook after the model push succeeds.** That is what `promote.yml` do
 push branch → snapshot model → config push → wait for propagation → trigger Vercel deploy
 ```
 
+## A note on "code-first"
+
+On SaaS there is no C#/.NET class-driven content modeling, so "code-first" in the traditional
+Optimizely (PaaS / CMS 12) sense does not exist here — Optimizely's own docs are explicit that SaaS
+modeling is **schema-first**, via the UI or the REST API. The accurate description of what this
+project does is **schema-first with the definitions held in source control**: TypeScript
+`contentType()` definitions in Git, applied to each instance by the CLI. Optimizely recommends
+precisely that ("save the exported JSON schema files into your repository, or use CLI scripts, to
+version and deploy content models alongside your application code"). Same practice; "code-first" is
+just the wrong label for it on SaaS.
+
 ## An environment is an instance, not a folder
 
 On Optimizely SaaS, one environment is generally **one CMS instance**. There is no "promote this
@@ -126,6 +137,78 @@ scoped-key) activity.
 
 **UAT does not need to mirror Production.** It needs *representative* content, enough to validate the
 model and the front end. Seed it with the scripts.
+
+## The two migration routes (and which to use when)
+
+Optimizely's own guidance for SaaS splits the job in two, and so do we:
+
+| What | Route | Trigger | Endpoint / tool |
+|---|---|---|---|
+| **Content model** (types, property groups, display templates) | **Manifest REST API or the CLI**, from CI | Automatic, every promotion | `optimizely-cms-cli config push` — the CLI wraps `GET/POST /v1/manifest` |
+| **Content data + media** (pages, blocks, assets, language variants) | **Export / Import package** | Manual, deliberate, per test cycle | Admin UI **Settings → Export Data / Import Data**, or `POST /v1/experimental/packages` |
+
+**Why the model is automated and the content is not.** The model is a deterministic function of the
+repo, so a machine should apply it on every promotion. Content is not: an environment's content is
+authored *in* that environment, and a pipeline that routinely copies DEV content into UAT will one
+day flatten a tester's work in the middle of a UAT cycle. Content movement is a decision, so it gets
+a human trigger.
+
+Optimizely recommends exactly this split: automate model deployment via the Manifest REST API or CLI,
+and use Export/Import for actual content data and media during testing cycles.
+
+### Route 1 — the model, from CI only
+
+Already built: [`promote.yml`](../.github/workflows/promote.yml). It runs on a push to
+`main`/`uat`/`production`, **and** on `workflow_dispatch` with an environment picker — so a model
+push to any instance can be run from the Actions tab with **nothing executed from a laptop**. The
+`npm run opti-push:uat` script stays in `package.json` as a local escape hatch for debugging; it is
+not the promotion path.
+
+Two useful details from the API docs:
+
+- **`cms-ignore-data-loss-warnings: true`** is the raw-API equivalent of the CLI's `--force`. Same
+  semantics, same danger, same rule: **never in CI.** A promotion that fails on a breaking change is
+  the safety net working.
+- A manifest export doubles as a **rollback reference**; the workflow already snapshots one to a
+  90-day artifact before every push.
+
+### Route 2 — content data, deliberately triggered
+
+`.episerverdata` packages carry content, definitions and assets. Import offers **"Update existing
+content items with matching ID"**, which preserves GUIDs across instances — that is what makes a
+*repeat* import an update rather than a duplicate. Always tick it.
+
+Limits: ~500MB via the UI, ~2GB via the API, plus an execution-time ceiling Optimizely
+acknowledges it is still working on.
+
+> ⚠️ **`POST /v1/experimental/packages` is marked *experimental*** — the word is in the URL. Good
+> enough for a bootstrap or a refresh you supervise; do **not** make it the unattended backbone of
+> production promotion until it leaves experimental.
+
+**Unknowns to verify empirically before trusting it** (the docs do not state these, and they matter
+most to this project):
+
+1. Do **language variants** survive the round trip? We have 187 EN + 187 AR.
+2. Does **publish state** survive, or does everything arrive as Draft?
+3. Do **`routeSegment` values** survive per language? Our AR slugs were hand-aligned; regenerating
+   them would reintroduce the 404s that S3.9 fixed.
+4. Does the CMS API key need broader scope to import content? Ours is deliberately **Forbidden from
+   creating content instances** — a restriction we want to keep, so if import needs more, the extra
+   scope belongs to a separate, tightly-held key.
+
+Answer these on the first UAT bootstrap and record the results here, rather than assuming.
+
+### Bootstrapping UAT content
+
+UAT does not need to mirror DEV. It needs **representative** content. Two options, in preference order:
+
+1. **Seed scripts** (`npm run seed:uat` and friends) — reproducible, reviewable, versioned, and they
+   already work. Best when you want a known baseline.
+2. **Export/Import package** — best when you specifically want *today's DEV corpus*, translations and
+   all, without re-running the whole content pipeline.
+
+Do one, verify counts in both languages, then leave UAT alone and let it diverge. Divergence is
+correct: it means people are testing.
 
 ## A promotion runbook
 
