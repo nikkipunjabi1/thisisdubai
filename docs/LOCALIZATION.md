@@ -1,8 +1,8 @@
 # Localization — EN + AR (Arabic) on Optimizely SaaS + Next.js
 
-_Status: **L0–L5 + L-mod complete** (foundations, content-model `isLocalized`, routing/RTL, data
-layer, string catalog, AR semantic search, hreflang/SEO). **L6 in progress** — bulk AR translation
-runs in the CMS (user-driven via Opal); the operational tooling and gotchas are captured below._
+_Status: **COMPLETE (L0–L6 + L-mod).** Full bilingual EN/AR site is live: the whole corpus is
+translated and published (187 EN = 187 AR, verified via Graph), every AR page slug matches its EN
+twin, and language switching works site-wide with no 404s. Operational tooling and gotchas below._
 
 This is the plan and the record of decisions for adding Arabic alongside English. It exists
 because the routing, RTL, data, search, and SEO layers all touch each other — the map is worth
@@ -53,7 +53,7 @@ Success = `ar` (or `ar_AE`) appears in the enum.
 | **L3 · UI string catalog** | `src/lib/i18n/messages/{en,ar}.ts` + `t()`; extract nav/footer/search/controls/breadcrumb strings; AR translations of chrome. | No (chrome strings are ours). |
 | **L4 · AR semantic search** | `locale` into the 3 search sub-queries + `$loc` var + keyParts; AR stop-word path (the English `STOP_WORDS` list must not strip AR); localize search UI + group labels + hrefs. → **Blog #7.** | **Yes** (needs AR content to search). |
 | **L5 · SEO** | `hreflang` alternates (en↔ar), per-locale canonical, `og:locale`, per-locale sitemap entries. | Partial — markup can land pre-content. |
-| **L6 · Full AR translation** | ~250 items translated in the CMS via **Opal (user-driven)**. → **Blog #10.** | **Yes.** |
+| **L6 · Full AR translation** ✅ | ~250 items translated in the CMS via **Opal (user-driven)**, published (`publish:ar`) + slugs aligned (`align:ar-slugs`). 187 EN = 187 AR. → **Blog #10.** | **Yes.** |
 
 ## Known touch-points (from the L0 codebase map)
 
@@ -235,10 +235,13 @@ a new `src/app/sitemap.ts`:
   fully in prod where `APPLICATION_HOST` is set; empty-but-valid locally where it isn't). Tests: 14
   passing (5 new `localeAlternates` cases); `tsc` clean.
 
-## L6 — bulk AR translation + operational tooling — IN PROGRESS
+## L6 — bulk AR translation + operational tooling — DONE
 
 Translation itself happens in the CMS (Opal, user-driven). What the app side owns is the **operational
 tooling** to get a translated corpus live cleanly, plus the gotchas that surfaced doing it.
+**Outcome:** 187 EN = 187 AR published (Graph parity), all slugs aligned (`align:ar-slugs` reports 0 to
+fix), locale switch has no 404s. The 2 `ThingsToDoPage` experiences' AR slugs were corrected in the CMS
+(the script skips experiences on purpose, to avoid overwriting fresher published content with a stale draft).
 
 ### Nav model is now per-language (`headerMenu` / `footerGroups`)
 The header menu and footer columns are lists of inline components (`NavMenuItem` / `NavGroup`) held on

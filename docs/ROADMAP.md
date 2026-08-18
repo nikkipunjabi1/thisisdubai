@@ -66,8 +66,8 @@ _Phased plan. Each phase ends with a working, deployable state and (usually) a b
       **(Primary module/blog candidate — one combined blog drafted, publishing next.)**
 - [x] **Semantic search** page (autocomplete, synonyms, faceting) — the headline feature
       (shipped S3.2; taxonomy synonyms denormalized into `searchKeywords`. See docs/AI-SEARCH.md.)
-- [ ] **Localization**: EN + **AR semantic search** on showcase pages (RTL); Opal AR translation
-      path scoped (guided)
+- [x] **Localization** ✅ — full EN + AR bilingual site (RTL, AR semantic search, hreflang);
+      whole corpus translated via Opal + published (187 EN = 187 AR), slugs aligned. See LOCALIZATION.md.
 - [ ] **Multisite** (optional): stand up a second site on the same instance
 - [ ] Personalization/experimentation hook (at least one visible experiment)
 - [~] Performance pass: Core Web Vitals, image optimization, webhook revalidation (Vercel free)
