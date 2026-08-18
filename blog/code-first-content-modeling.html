@@ -1,0 +1,118 @@
+<!-- Code-First Content Modeling in Optimizely SaaS: A Team Guide -->
+<!-- Internal enablement post. Upload code-first-diagram.png to the media library and
+     replace the <img src> below with its uploaded URL before publishing. -->
+
+<h1>Code-First Content Modeling in Optimizely SaaS: A Team Guide</h1>
+
+<p>This one comes straight from a real moment on our project. An author opened Site Settings, switched the language to Arabic, tried to edit a navigation label, and the field would not budge. Then they opened the content type to change a setting, and half the options were greyed out with the Save button disabled. The natural reaction was, "It is a SaaS CMS, why can it not just let me edit this?"</p>
+
+<p>The answer is not a bug and not a permissions issue. It is the single most important concept to understand about how we build on Optimizely SaaS: we model content <em>code-first</em>. Once the team understands what that means, every greyed-out field, every push step, and every "why is it like this" question answers itself. This guide is the explanation I wish everyone had on day one.</p>
+
+<h2>The one idea: two layers, two owners</h2>
+
+<p>Every CMS has two different things inside it, and people constantly confuse them:</p>
+
+<table>
+  <thead>
+    <tr><th>Layer</th><th>What it is</th><th>Who owns it</th><th>Edited where</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Model (schema)</strong></td>
+      <td>Content types, their fields, field kinds, validation, and whether a field is per-language</td>
+      <td><strong>Code</strong> (our repo)</td>
+      <td>In the repo, then pushed</td>
+    </tr>
+    <tr>
+      <td><strong>Content (values)</strong></td>
+      <td>The actual text, images, references, and translations authors type</td>
+      <td><strong>Authors</strong></td>
+      <td>In the CMS UI, freely</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Code-first only touches the first layer. It means we define the <em>shape</em> of content in version-controlled code and sync that shape to the CMS. It does not lock authoring. Authors still create, edit, translate, and publish content in the SaaS UI exactly as they expect. The only thing that is fixed in the UI is the shape.</p>
+
+<p>So when a field is greyed out, read it as a label: "this belongs to the model, so change it in the repo, not here."</p>
+
+<div style="border-left:4px solid #2456a6;background:#eff6ff;padding:12px 18px;margin:20px 0;">
+<strong>Quick test to tell the layers apart:</strong> if you are typing words a visitor will read, that is content, and the CMS is the right place. If you are deciding what fields exist or how they behave, that is the model, and code is the right place.
+</div>
+
+<h2>Why the SaaS CMS refuses to edit the model</h2>
+
+<p>When a content type is managed by code, Optimizely deliberately locks its structure in the admin UI. Look closely at that Properties screen: the display name and help text stay editable (they are cosmetic), but the field type, the "List" flag, "value must be entered", "unique value per language", and indexing are all disabled, and Save is off.</p>
+
+<p>That split is intentional. If the CMS let you change the structure in one place while the code said something different, the two would drift apart, and the next sync would silently overwrite your UI change. Rather than let that happen, Optimizely makes the structure read-only wherever code owns it. The platform is protecting you from a conflict you cannot win, because the code always gets the final say.</p>
+
+<h2>"But it is SaaS, should it not let me edit directly?"</h2>
+
+<p>You can edit directly, for content. That is most of what happens in the CMS every day. What you cannot do in the UI is redefine the model, and that is a choice we made, not a limitation of SaaS. Optimizely supports two styles:</p>
+
+<ul>
+  <li><strong>UI-first:</strong> click content types together in the admin. Fast to start, but the definition exists only inside that one CMS instance. It is invisible to Git, hard to review, and hard to reproduce on another environment.</li>
+  <li><strong>Code-first (our choice):</strong> define types in code and push them. They live in the repo, go through pull-request review, carry a history, and reproduce identically across Development and Production with no manual clicking.</li>
+</ul>
+
+<p>For a real project with more than one environment and more than one person, code-first wins on repeatability and governance. The cost is that model edits go through a small workflow instead of a click. That trade is the whole point.</p>
+
+<h2>How this connects to a "backend Optimizely developer"</h2>
+
+<p>If your background is Optimizely or Sitecore on .NET, you already do this. A PaaS developer writes C# classes decorated with content type attributes, deploys the app, and the CMS syncs the model on startup. The model lives in code, and authors fill in the content afterward.</p>
+
+<p>SaaS is the same idea with a different toolchain. Instead of C# classes we write TypeScript definitions, and instead of a build-and-deploy we run a push command that calls Optimizely's management API. The mental model is identical: developers own the model in source control, and the CMS is the runtime where authors work and where the delivery layer serves content. Nobody has to relearn the concept, only the syntax and the sync command.</p>
+
+<h2>The pipeline, end to end</h2>
+
+<p>Here is the loop we run, and the one you would hand to a new team member.</p>
+
+<p style="text-align:center;">
+  <img src="assets/code-first-diagram.png" alt="Code-first content modeling in Optimizely SaaS: the repo pushes the model to the CMS via opti-push, authors edit content per language in the CMS, publishing sends content to Optimizely Graph, and the Next.js app renders it. Model changes go back through code." style="max-width:100%;height:auto;" />
+</p>
+
+<ol>
+  <li><strong>Authenticate once</strong> per environment so the push tool can talk to that instance.</li>
+  <li><strong>Define or edit the content type in code.</strong> This is where you decide fields, kinds, and per-language behaviour.</li>
+  <li><strong>Register it and build its component</strong> so the app knows how to render the type.</li>
+  <li><strong>Push the model.</strong> This sync is the real validator. A local dry run bundles the config but does not catch what the CMS will reject, so treat the push itself as the source of truth for "did this actually work".</li>
+  <li><strong>Authors edit and translate content</strong> in the CMS against the new model.</li>
+  <li><strong>Publish.</strong> The delivery index picks it up and the front-end renders it, mapping each content type to its component.</li>
+</ol>
+
+<h2>Not all model changes are equal: safe versus breaking</h2>
+
+<p>This is the part teams learn the hard way, so here it is up front. When you push a model change, Optimizely sorts it into one of two buckets.</p>
+
+<ul>
+  <li><strong>Safe changes</strong> apply immediately. Adding a new optional field, editing help text, adding a content type: these carry no risk to existing content, so the push just does it.</li>
+  <li><strong>Breaking changes</strong> are blocked and require an explicit force flag, because they could lose or move existing data.</li>
+</ul>
+
+<p>We hit a textbook example. To let authors translate the navigation, we needed a field to switch from "shared across all languages" to "one value per language". The push accepted the change but stopped with a warning that flipping shared to per-language is breaking and could result in data loss, and asked for the force flag. That is correct behaviour: an existing single value has to be migrated into a specific language, and the platform will not gamble with your content silently. The lesson for the team is simple. Before forcing a breaking change, back up the current values, then force it, then verify nothing was lost.</p>
+
+<div style="border-left:4px solid #b45309;background:#fffbeb;padding:12px 18px;margin:20px 0;">
+<strong>Field note:</strong> a greyed-out "unique value per language" checkbox in the UI does not mean the platform cannot do it. It means the setting is code-owned. We set it in code, pushed, and the platform accepted it (as a guarded breaking change). The UI was never the place to look.
+</div>
+
+<h2>Governance: the short list of rules</h2>
+
+<ul>
+  <li>Code-managed content types are read-only in the UI for structure. Never try to change a field's shape or behaviour there. Change the code and push.</li>
+  <li>Treat a model push like a deploy. It goes through pull-request review, the same as any code change.</li>
+  <li>Keep environments in sync by pushing the same config to each one.</li>
+  <li>Expect breaking changes on anything that alters or removes existing data. Plan a backup and a verification step around the force flag.</li>
+  <li>When in doubt about "why can I not edit this", ask which layer it belongs to. Model goes to code. Content stays in the CMS.</li>
+</ul>
+
+<h2>Takeaways</h2>
+
+<ul>
+  <li>Two layers, two owners: the model belongs to code, the content belongs to authors.</li>
+  <li>Greyed-out structure fields are a feature, not a fault. They keep the CMS from drifting away from the repo.</li>
+  <li>Code-first is a deliberate trade of a click for repeatability, review, and clean multi-environment setup.</li>
+  <li>It is the same discipline a .NET Optimizely developer already practises, just expressed in TypeScript and a push command.</li>
+  <li>Model changes flow through code and a push, and breaking ones deserve a backup and a verify.</li>
+</ul>
+
+<p>Once the team internalises the two-layer split, the CMS stops feeling restrictive and starts feeling predictable. You always know where a change belongs, and you always know why a field behaves the way it does.</p>

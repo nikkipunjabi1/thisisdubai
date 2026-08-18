@@ -1,0 +1,119 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1680" height="1020" viewBox="0 0 1680 1020" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#334155"/>
+    </marker>
+    <marker id="arrowLoop" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#2456a6"/>
+    </marker>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="115%">
+      <feDropShadow dx="0" dy="3" stdDeviation="6" flood-color="#0f172a" flood-opacity="0.10"/>
+    </filter>
+  </defs>
+
+  <rect width="1680" height="1020" fill="#f8fafc"/>
+
+  <!-- Title -->
+  <text x="60" y="78" font-size="44" font-weight="700" fill="#0f172a">Code-First Content Modeling in Optimizely SaaS</text>
+  <text x="60" y="118" font-size="23" fill="#475569">The <tspan font-weight="700" fill="#b45309">model</tspan> lives in code. The <tspan font-weight="700" fill="#15803d">content</tspan> lives in the CMS. Knowing which is which explains everything.</text>
+
+  <!-- ===================== STAGE 1: REPO ===================== -->
+  <g filter="url(#shadow)">
+    <rect x="60" y="170" width="360" height="420" rx="16" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5"/>
+  </g>
+  <rect x="60" y="170" width="360" height="56" rx="16" fill="#1e293b"/>
+  <rect x="60" y="200" width="360" height="26" fill="#1e293b"/>
+  <text x="84" y="206" font-size="22" font-weight="700" fill="#ffffff">1 · Your Repo (Git)</text>
+
+  <g>
+    <rect x="88" y="252" width="304" height="72" rx="10" fill="#f1f5f9" stroke="#cbd5e1"/>
+    <text x="108" y="284" font-size="20" font-weight="600" fill="#0f172a">TypeScript content types</text>
+    <text x="108" y="308" font-size="16" fill="#64748b">contentType({ key, properties… })</text>
+
+    <rect x="88" y="338" width="304" height="72" rx="10" fill="#f1f5f9" stroke="#cbd5e1"/>
+    <text x="108" y="370" font-size="20" font-weight="600" fill="#0f172a">React components</text>
+    <text x="108" y="394" font-size="16" fill="#64748b">how each type renders</text>
+
+    <rect x="88" y="424" width="304" height="72" rx="10" fill="#f1f5f9" stroke="#cbd5e1"/>
+    <text x="108" y="456" font-size="20" font-weight="600" fill="#0f172a">Registry</text>
+    <text x="108" y="480" font-size="16" fill="#64748b">wires type → component</text>
+  </g>
+  <text x="240" y="540" font-size="17" font-weight="700" fill="#b45309" text-anchor="middle">SOURCE OF TRUTH</text>
+  <text x="240" y="562" font-size="16" fill="#64748b" text-anchor="middle">for the model · reviewed in PRs</text>
+
+  <!-- Arrow Repo -> CMS -->
+  <line x1="424" y1="380" x2="516" y2="380" stroke="#334155" stroke-width="3.5" marker-end="url(#arrow)"/>
+  <text x="470" y="360" font-size="18" font-weight="700" fill="#2456a6" text-anchor="middle">opti-push</text>
+  <text x="470" y="404" font-size="15" fill="#64748b" text-anchor="middle">via CMA</text>
+
+  <!-- ===================== STAGE 2: CMS ===================== -->
+  <g filter="url(#shadow)">
+    <rect x="520" y="170" width="620" height="540" rx="16" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5"/>
+  </g>
+  <rect x="520" y="170" width="620" height="56" rx="16" fill="#2456a6"/>
+  <rect x="520" y="200" width="620" height="26" fill="#2456a6"/>
+  <text x="544" y="206" font-size="22" font-weight="700" fill="#ffffff">2 · Optimizely SaaS CMS</text>
+
+  <!-- Lane A: model -->
+  <rect x="548" y="252" width="564" height="196" rx="12" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+  <text x="574" y="296" font-size="30">🔒</text>
+  <text x="620" y="290" font-size="24" font-weight="700" fill="#92400e">MODEL / SCHEMA</text>
+  <text x="620" y="318" font-size="18" fill="#78350f">Owned by code · Read-only in the CMS UI</text>
+  <line x1="574" y1="338" x2="1086" y2="338" stroke="#f59e0b" stroke-opacity="0.5" stroke-width="1"/>
+  <text x="574" y="368" font-size="17" fill="#78350f">• content types, fields, field kinds</text>
+  <text x="574" y="396" font-size="17" fill="#78350f">• validation, “unique value per language”</text>
+  <text x="574" y="428" font-size="16.5" font-style="italic" fill="#b45309">This is why those config checkboxes are greyed out.</text>
+
+  <!-- Lane B: content -->
+  <rect x="548" y="470" width="564" height="216" rx="12" fill="#dcfce7" stroke="#22c55e" stroke-width="1.5"/>
+  <text x="574" y="516" font-size="28">✏️</text>
+  <text x="620" y="510" font-size="24" font-weight="700" fill="#166534">CONTENT / VALUES</text>
+  <text x="620" y="538" font-size="18" fill="#14532d">Owned by authors · Edited freely in the CMS UI</text>
+  <line x1="574" y1="558" x2="1086" y2="558" stroke="#22c55e" stroke-opacity="0.5" stroke-width="1"/>
+  <text x="574" y="588" font-size="17" fill="#14532d">• the actual text, images, references</text>
+  <text x="574" y="616" font-size="17" fill="#14532d">• one value per language:</text>
+  <rect x="820" y="600" width="70" height="30" rx="15" fill="#ffffff" stroke="#16a34a"/>
+  <text x="855" y="621" font-size="16" font-weight="700" fill="#166534" text-anchor="middle">EN</text>
+  <rect x="902" y="600" width="70" height="30" rx="15" fill="#ffffff" stroke="#16a34a"/>
+  <text x="937" y="621" font-size="16" font-weight="700" fill="#166534" text-anchor="middle">AR</text>
+  <text x="574" y="660" font-size="16.5" font-style="italic" fill="#15803d">Authoring + translation happen here, against the fixed model.</text>
+
+  <!-- Arrow CMS -> Delivery -->
+  <line x1="1144" y1="380" x2="1236" y2="380" stroke="#334155" stroke-width="3.5" marker-end="url(#arrow)"/>
+  <text x="1190" y="360" font-size="18" font-weight="700" fill="#2456a6" text-anchor="middle">Publish</text>
+
+  <!-- ===================== STAGE 3: DELIVERY ===================== -->
+  <g filter="url(#shadow)">
+    <rect x="1240" y="170" width="380" height="420" rx="16" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5"/>
+  </g>
+  <rect x="1240" y="170" width="380" height="56" rx="16" fill="#1e293b"/>
+  <rect x="1240" y="200" width="380" height="26" fill="#1e293b"/>
+  <text x="1264" y="206" font-size="22" font-weight="700" fill="#ffffff">3 · Delivery</text>
+
+  <rect x="1268" y="252" width="324" height="76" rx="10" fill="#eef2ff" stroke="#c7d2fe"/>
+  <text x="1288" y="286" font-size="20" font-weight="600" fill="#0f172a">Optimizely Graph</text>
+  <text x="1288" y="310" font-size="16" fill="#64748b">indexes published content</text>
+  <line x1="1430" y1="330" x2="1430" y2="356" stroke="#334155" stroke-width="3" marker-end="url(#arrow)"/>
+
+  <rect x="1268" y="360" width="324" height="86" rx="10" fill="#eef2ff" stroke="#c7d2fe"/>
+  <text x="1288" y="392" font-size="20" font-weight="600" fill="#0f172a">Next.js app</text>
+  <text x="1288" y="416" font-size="15.5" fill="#64748b">registry maps</text>
+  <text x="1288" y="436" font-size="15.5" fill="#64748b">type → React component</text>
+  <line x1="1430" y1="448" x2="1430" y2="474" stroke="#334155" stroke-width="3" marker-end="url(#arrow)"/>
+
+  <rect x="1268" y="478" width="324" height="76" rx="10" fill="#f1f5f9" stroke="#cbd5e1"/>
+  <text x="1288" y="512" font-size="20" font-weight="600" fill="#0f172a">Rendered pages</text>
+  <text x="1288" y="536" font-size="16" fill="#64748b">/en/…   and   /ar/…</text>
+
+  <!-- ===================== FEEDBACK LOOP ===================== -->
+  <path d="M1430,590 L1430,760 Q1430,790 1400,790 L270,790 Q240,790 240,760 L240,600"
+        fill="none" stroke="#2456a6" stroke-width="3" stroke-dasharray="9 7" marker-end="url(#arrowLoop)"/>
+  <rect x="470" y="762" width="720" height="56" rx="12" fill="#eff6ff" stroke="#2456a6" stroke-width="1.5"/>
+  <text x="830" y="787" font-size="18" font-weight="700" fill="#1e3a8a" text-anchor="middle">Need a model change? Edit the code, then opti-push.</text>
+  <text x="830" y="809" font-size="16" fill="#334155" text-anchor="middle">Safe changes apply instantly · breaking ones (e.g. shared → localized) need --force.</text>
+
+  <!-- Footer strip -->
+  <text x="60" y="900" font-size="19" font-weight="700" fill="#0f172a">Rule of thumb</text>
+  <text x="60" y="930" font-size="18" fill="#334155">Greyed-out fields in the CMS are not broken and not a permission problem. They are code-owned. Change the model in the repo, not the UI.</text>
+  <text x="60" y="972" font-size="16" fill="#64748b">Same principle a .NET Optimizely developer already knows: define types in code, deploy, authors fill in content. SaaS just uses TypeScript + opti-push instead of C# + a build.</text>
+</svg>
