@@ -14,7 +14,7 @@ export const LayoutDisplayTemplate = displayTemplate({
   baseType: '_component',
   settings: {
     theme: {
-      editor: 'select',
+      editor: 'select' as const,
       displayName: 'Theme',
       sortOrder: 0,
       choices: {
@@ -24,7 +24,7 @@ export const LayoutDisplayTemplate = displayTemplate({
       },
     },
     width: {
-      editor: 'select',
+      editor: 'select' as const,
       displayName: 'Width',
       sortOrder: 1,
       choices: {
@@ -33,7 +33,7 @@ export const LayoutDisplayTemplate = displayTemplate({
       },
     },
     spacing: {
-      editor: 'select',
+      editor: 'select' as const,
       displayName: 'Spacing',
       sortOrder: 2,
       choices: {
