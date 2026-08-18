@@ -237,3 +237,19 @@ COMPONENT-STANDARDS.md, SEO.md, PREVIEW-WORKFLOW.md, QUALITY.md._
 - **A thumbnail is half the label** — ship a plain 16:9 wireframe per component, filename-matched.
 - Full playbook, category taxonomy, and worked examples (why we keep "Highlight Card" and
   "Curated Content"): **COMPONENT-NAMING.md**.
+
+### "Code-first" is the wrong word on SaaS
+
+Traditional Optimizely (PaaS / CMS 12) modelled content **code-first**, through C#/.NET classes.
+SaaS CMS does not work that way: it is decoupled, headless and versionless, and content modeling is
+**schema-first** — through the CMS UI (Settings → Content Types) or programmatically via the REST
+API. There is no backend class that becomes a content type.
+
+What a modern SaaS project does instead — and what this one does — is hold the **schema definitions
+in source control** and apply them from CI: TypeScript `contentType()` definitions in Git, pushed by
+`optimizely-cms-cli config push` (which wraps the Manifest API). Optimizely recommends exactly this.
+The discipline of the code-first workflow is preserved (version control, review, repeatable
+promotion); only the mechanism differs.
+
+Say **"schema-first, definitions in source control"**. Calling it "code-first" invites a correct
+objection that makes the rest of your argument look shaky.
