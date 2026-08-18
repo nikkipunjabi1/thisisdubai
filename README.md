@@ -5,7 +5,7 @@
 > **Next.js** frontend (targeting Vercel). All branding here is **original**; imagery is **royalty-free**
 > only (see `ASSETS.md`). Real place names/facts are used descriptively.
 
-Repo: https://github.com/nikkipunjabi1/thisisdubai · Deployment target: Vercel (Hobby/free tier) — planned; the app currently runs locally against the SaaS CMS while the site is built out.
+Repo: https://github.com/nikkipunjabi1/thisisdubai · Deployed on **Vercel**, one project per environment (DEV / UAT), each pointing at its own Optimizely SaaS instance. See [docs/ENVIRONMENTS.md](docs/ENVIRONMENTS.md).
 
 ## Why this project exists
 
@@ -27,7 +27,8 @@ Repo: https://github.com/nikkipunjabi1/thisisdubai · Deployment target: Vercel 
 - ✅ **SEO on every page, server-rendered** — title/meta/OG + JSON-LD in the initial HTML
 - ✅ **EN + AR localization** — `[locale]` routing, RTL shell, locale-aware data + strings, **hreflang/sitemap SEO**
 - ✅ **Stakeholder preview-before-publish** — durable, shareable, login-free preview links (signed token → Draft Mode → server-side draft read)
-- 🔜 **Full AR content translation** — done in the CMS UI with the built-in Opal/AI translate (no bulk translate-item API) + Blog #12
+- ✅ **Full AR content translation** — the whole corpus translated in the CMS via Opal, then bulk-published and slug-aligned by script (187 EN = 187 AR)
+- ✅ **Code-first content modeling + environment promotion** — content types live in Git and sync to each instance via `opti-push`; CI promotes DEV → UAT → PROD (model first, then deploy)
 - 🔜 **AI Search** (Claude-powered) over Events / Articles / Tours / Hotels / Places
 - 🔜 **AI Trip Planner** (outputs an `Itinerary`) + a reusable **community module/plugin**
 
@@ -58,9 +59,10 @@ Repo: https://github.com/nikkipunjabi1/thisisdubai · Deployment target: Vercel 
 
 ## Status
 
-🟢 **Phase 3 — a content-rich site on Optimizely SaaS + Next.js.** Built on the official
-`@optimizely/cms-sdk`, running locally against the SaaS CMS. Vercel deployment is planned once the
-site is feature-complete (the on-demand revalidation webhook is already built and waiting).
+🟢 **Phase 3 complete — a content-rich, fully bilingual site on Optimizely SaaS + Next.js.** Built on
+the official `@optimizely/cms-sdk`. Now deploying to Vercel across a DEV / UAT environment pipeline,
+with the content model promoted by CI (`opti-push`) ahead of each app deploy. Phase 4 (AI features)
+is next.
 
 **Shipped so far:**
 - **Content model + Visual Builder** — pages / experiences / components, a shared display-template
