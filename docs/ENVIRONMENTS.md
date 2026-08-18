@@ -19,11 +19,15 @@ only reference/seed data is scripted.
 
 ## The topology
 
-| Tier | CMS instance | Branch | Vercel project | Indexable |
-|---|---|---|---|---|
-| **DEV / Integration** | Instance 1 | `main` (trunk) | `thisisdubai-dev` | No |
-| **UAT** | Instance 2 | `uat` | `thisisdubai-uat` | No |
-| **Production** | Instance 3 | `production` | `thisisdubai` | **Yes** |
+| Tier | CMS instance | Branch | Vercel project | URL | Indexable |
+|---|---|---|---|---|---|
+| **DEV / Integration** | Instance 1 | `main` (trunk) | `thisisdubai-dev` | https://thisisdubai-dev.vercel.app | No |
+| **UAT** | Instance 2 | `uat` | `thisisdubai-uat` | _(to come)_ | No |
+| **Production** | Instance 3 | `production` | `thisisdubai` | _(to come)_ | **Yes** |
+
+**DEV is live and verified** (2026-08-18): EN/AR routes 200, Graph delivering real content, RTL correct
+(`<html lang="ar-AE" dir="rtl">`), locale-aligned slugs resolving in both languages, absolute canonical
++ hreflang, a 159-URL bilingual sitemap, and `robots.txt` returning `Disallow: /` so DEV is never indexed.
 
 Trunk-based with **forward-only promotion branches**: all PRs land on `main`; you promote by merging
 `main → uat → production`, never backwards and never by committing directly to an upper branch.
@@ -41,6 +45,17 @@ via a Deploy Hook after the model push succeeds.** That is what `promote.yml` do
 ```
 push branch → snapshot model → config push → wait for propagation → trigger Vercel deploy
 ```
+
+## A note on "code-first"
+
+On SaaS there is no C#/.NET class-driven content modeling, so "code-first" in the traditional
+Optimizely (PaaS / CMS 12) sense does not exist here — Optimizely's own docs are explicit that SaaS
+modeling is **schema-first**, via the UI or the REST API. The accurate description of what this
+project does is **schema-first with the definitions held in source control**: TypeScript
+`contentType()` definitions in Git, applied to each instance by the CLI. Optimizely recommends
+precisely that ("save the exported JSON schema files into your repository, or use CLI scripts, to
+version and deploy content models alongside your application code"). Same practice; "code-first" is
+just the wrong label for it on SaaS.
 
 ## An environment is an instance, not a folder
 
@@ -123,17 +138,90 @@ scoped-key) activity.
 **UAT does not need to mirror Production.** It needs *representative* content, enough to validate the
 model and the front end. Seed it with the scripts.
 
+## The two migration routes (and which to use when)
+
+Optimizely's own guidance for SaaS splits the job in two, and so do we:
+
+| What | Route | Trigger | Endpoint / tool |
+|---|---|---|---|
+| **Content model** (types, property groups, display templates) | **Manifest REST API or the CLI**, from CI | Automatic, every promotion | `optimizely-cms-cli config push` — the CLI wraps `GET/POST /v1/manifest` |
+| **Content data + media** (pages, blocks, assets, language variants) | **Export / Import package** | Manual, deliberate, per test cycle | Admin UI **Settings → Export Data / Import Data**, or `POST /v1/experimental/packages` |
+
+**Why the model is automated and the content is not.** The model is a deterministic function of the
+repo, so a machine should apply it on every promotion. Content is not: an environment's content is
+authored *in* that environment, and a pipeline that routinely copies DEV content into UAT will one
+day flatten a tester's work in the middle of a UAT cycle. Content movement is a decision, so it gets
+a human trigger.
+
+Optimizely recommends exactly this split: automate model deployment via the Manifest REST API or CLI,
+and use Export/Import for actual content data and media during testing cycles.
+
+### Route 1 — the model, from CI only
+
+Already built: [`promote.yml`](../.github/workflows/promote.yml). It runs on a push to
+`main`/`uat`/`production`, **and** on `workflow_dispatch` with an environment picker — so a model
+push to any instance can be run from the Actions tab with **nothing executed from a laptop**. The
+`npm run opti-push:uat` script stays in `package.json` as a local escape hatch for debugging; it is
+not the promotion path.
+
+Two useful details from the API docs:
+
+- **`cms-ignore-data-loss-warnings: true`** is the raw-API equivalent of the CLI's `--force`. Same
+  semantics, same danger, same rule: **never in CI.** A promotion that fails on a breaking change is
+  the safety net working.
+- A manifest export doubles as a **rollback reference**; the workflow already snapshots one to a
+  90-day artifact before every push.
+
+### Route 2 — content data, deliberately triggered
+
+`.episerverdata` packages carry content, definitions and assets. Import offers **"Update existing
+content items with matching ID"**, which preserves GUIDs across instances — that is what makes a
+*repeat* import an update rather than a duplicate. Always tick it.
+
+Limits: ~500MB via the UI, ~2GB via the API, plus an execution-time ceiling Optimizely
+acknowledges it is still working on.
+
+> ⚠️ **`POST /v1/experimental/packages` is marked *experimental*** — the word is in the URL. Good
+> enough for a bootstrap or a refresh you supervise; do **not** make it the unattended backbone of
+> production promotion until it leaves experimental.
+
+**Unknowns to verify empirically before trusting it** (the docs do not state these, and they matter
+most to this project):
+
+1. Do **language variants** survive the round trip? We have 187 EN + 187 AR.
+2. Does **publish state** survive, or does everything arrive as Draft?
+3. Do **`routeSegment` values** survive per language? Our AR slugs were hand-aligned; regenerating
+   them would reintroduce the 404s that S3.9 fixed.
+4. Does the CMS API key need broader scope to import content? Ours is deliberately **Forbidden from
+   creating content instances** — a restriction we want to keep, so if import needs more, the extra
+   scope belongs to a separate, tightly-held key.
+
+Answer these on the first UAT bootstrap and record the results here, rather than assuming.
+
+### Bootstrapping UAT content
+
+UAT does not need to mirror DEV. It needs **representative** content. Two options, in preference order:
+
+1. **Seed scripts** (`npm run seed:uat` and friends) — reproducible, reviewable, versioned, and they
+   already work. Best when you want a known baseline.
+2. **Export/Import package** — best when you specifically want *today's DEV corpus*, translations and
+   all, without re-running the whole content pipeline.
+
+Do one, verify counts in both languages, then leave UAT alone and let it diverge. Divergence is
+correct: it means people are testing.
+
 ## A promotion runbook
 
 1. **Feature branch** — change the content type → `npm run opti-push` against DEV → build the
    component → verify locally.
-2. **PR review** → merge to `main`. CI promotes the model to **DEV** and deploys `thisisdubai-dev`.
-3. **Promote to UAT** — `git checkout uat && git merge --ff-only main && git push`. CI snapshots
-   Instance 2, pushes the model, deploys `thisisdubai-uat`. Seed representative content once with
-   `npm run seed:uat`, then test.
-4. **Promote to Production** — `git checkout production && git merge --ff-only uat && git push`.
-   CI waits for an approving reviewer, snapshots Instance 3, pushes the model, deploys `thisisdubai`.
-   Author content is untouched, because only the schema moved.
+2. **PR review** → squash-merge to `main`. CI promotes the model to **DEV** and deploys
+   `thisisdubai-dev`. Verify it there.
+3. **Promote to UAT** — open a PR **`main → uat`** and **merge it with a merge commit** (never
+   squash: see CONTRIBUTING). CI snapshots Instance 2, pushes the model, deploys `thisisdubai-uat`.
+   Seed representative content once with `npm run seed:uat`, then test.
+4. **Promote to Production** — open a PR **`uat → production`**, same merge-commit rule. CI waits for
+   an approving reviewer, snapshots Instance 3, pushes the model, deploys `thisisdubai`. Author
+   content is untouched, because only the schema moved.
 
 If step 3 or 4 fails with a breaking-change error, that is the guard working: pull a snapshot, review
 what would be lost, and apply it by hand with `--force` during a maintenance window.
@@ -150,8 +238,8 @@ what would be lost, and apply it by hand with `--force` during a maintenance win
   race above). Vercel → Settings → Git → *Ignored Build Step* returning exit 0, or disconnect the
   branch and rely solely on the Deploy Hook.
 - Environment variables pointing at **that tier's instance**: `OPTIMIZELY_CMS_URL`,
-  `OPTIMIZELY_GRAPH_SINGLE_KEY`, `OPTIMIZELY_GRAPH_GATEWAY`, `APPLICATION_HOST` (that project's own
-  public host, so canonical/hreflang are correct), plus server-only secrets
+  `OPTIMIZELY_GRAPH_SINGLE_KEY`, `OPTIMIZELY_GRAPH_GATEWAY`, **`APPLICATION_HOST`** (that project's own
+  public host — see the gotcha below), plus server-only secrets
   (`PREVIEW_SIGNING_SECRET`, `PREVIEW_ADMIN_SECRET`, `REVALIDATE_SECRET`,
   `OPTIMIZELY_GRAPH_APP_KEY`/`SECRET`). **Generate fresh secrets per environment; never share them.**
 - `SITE_INDEXABLE`: **unset on dev and uat**, `true` only on production. A UAT site getting indexed is
@@ -159,6 +247,27 @@ what would be lost, and apply it by hand with `--force` during a maintenance win
 
 **Per CMS instance:** create its own least-privilege API key. Ours pushes content *types* but is
 Forbidden from creating content *instances* — keep that restriction; it is a feature, not a limitation.
+
+### Gotcha: a missing `APPLICATION_HOST` fails quietly
+
+Hit on the first DEV deploy. With it unset, the app does not crash, it silently degrades:
+
+- `canonical` and `hreflang` are emitted as **relative** URLs (`href="/en"`). hreflang requires
+  absolute URLs, so every alternate is invalid.
+- `sitemap.xml` returns a **valid but empty** urlset (the sitemap is gated on an absolute host).
+
+Both are easy to miss because every page still returns 200. Set it per Vercel project to that
+project's own public origin and redeploy. After the fix on DEV: absolute canonical/hreflang, and the
+sitemap went from 0 to **159** URLs. Verify with:
+
+```bash
+curl -s https://<host>/en | grep -oE '<link rel="(canonical|alternate)"[^>]*>'
+curl -s https://<host>/sitemap.xml | grep -c "<url>"
+```
+
+**Note the ordering trap:** on a brand-new Vercel project you do not know the final URL until after
+the first deploy, so `APPLICATION_HOST` is necessarily a second pass (set it, then redeploy). Attaching
+a custom domain up front avoids the round trip.
 
 ## Tearing down a throwaway environment
 

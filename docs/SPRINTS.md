@@ -68,17 +68,22 @@ with Visual Builder + live preview confirmed working — **before** we add This 
   CMS Application configured for preview at local HTTPS; on-page editing + live preview confirmed
   working. The stakeholder-preview module (S3.1) is built directly into this preview pane. **Exit
   met:** live preview refreshes on edit; no blank-screen/communication/CSP errors.
-- [ ] **S1.4 — Deploy to Vercel** 🟢 _(deferred — see note)_
-  Tasks: import repo to Vercel (Hobby); set env vars; deploy; wire the Graph publish webhook →
-  revalidation route. Deliverable: prod + preview URLs live. Exit: a publish in CMS revalidates
-  the live page.
-  ⏸ **Deliberately deferred.** We build the complete site locally against the SaaS CMS first, then
-  deploy to Vercel once it's feature-complete. The revalidation route (`/api/revalidate`) is already
-  built and waiting; deploying is a config step, not a code step.
+- [x] **S1.4 — Deploy to Vercel** ✅ _(DEV live, 2026-08-18)_
+  Deferred through Phases 2–3 by design (build the site locally against the SaaS CMS first), then
+  done as part of the environment pipeline. **Live DEV: https://thisisdubai-dev.vercel.app**
+  — Vercel project `thisisdubai-dev` → Instance 1, env vars set, EN/AR routes 200, Graph serving
+  real content, RTL correct, absolute canonical + hreflang, 159-URL bilingual sitemap,
+  `robots.txt` disallowing all (DEV is never indexed). Two fixes were needed to get there: SDK 2.2
+  type compatibility (PR #83) and a missing `APPLICATION_HOST` (documented as a quiet-failure gotcha
+  in [ENVIRONMENTS.md](ENVIRONMENTS.md)).
+  ⚠️ **One piece of the original exit check is still open:** the Graph publish webhook is not yet
+  pointed at the deployed DEV URL, so "publish in CMS revalidates the live page" is proven locally
+  but not on Vercel. `/api/revalidate` is built; it needs the CMS webhook target + `REVALIDATE_SECRET`
+  set per environment. Tracked as part of the UAT/environment work.
 - [ ] **S1.5 — Blog #2 outline** (official-SDK setup & gotchas). 🟢
 - 🏁 Phase-1 baseline **verified end-to-end locally** (SDK scaffold + CMS/Graph + live VB preview);
-  ARCHITECTURE.md updated with the real scaffold + SDK APIs. Vercel deploy (S1.4) is the one
-  remaining item, intentionally held until the site is complete.
+  ARCHITECTURE.md updated with the real scaffold + SDK APIs. Vercel deploy (S1.4) landed later,
+  with the environment pipeline; **S1.5 (Blog #2 outline) is the one remaining Phase-1 item.**
 
 ## 🚦 Phase 2 — Content model + multi-page site  _(ask before starting)_
 Goal: This is Dubai content types, the luxury design system, and all page templates — a real
@@ -267,6 +272,128 @@ downstream (semantic search tuning, AI retrieval, the MCP server) needs a realis
     `assets/code-first-content-modeling.pptx`).
   - **`scripts/README.md`** — plain-language index of all scripts (for PMs/BAs); README + CONTRIBUTING
     now enforce keeping it in sync.
+
+## 🚦 Phase 3.5 — Search relevance  _(before any AI work)_
+
+- [ ] **S3.10 — Semantic search relevance tuning** 🟡 _(next sprint; user-guided)_
+  **Why it comes before Phase 4:** the AI features (S4.1 AI Search, S4.2 Trip Planner, S4.3 MCP
+  server) all sit on top of the same retrieval layer. Feeding a weak result set into Claude just
+  produces confident answers built on irrelevant content, so retrieval quality is a prerequisite,
+  not a follow-up.
+
+  **The symptom.** A natural-language query returns results with no relevance at all. Reference case:
+  > `where can I see the world's tallest hotel in Dubai?`
+  returns Events, which have nothing to do with the question.
+
+  **Likely root cause (to confirm during the sprint).** `src/lib/search.ts` issues ONE federated
+  query with a **separate sub-query per type** (`places` / `events` / `neighbourhoods` / …), each
+  with its own `limit`. Every type therefore returns its own top-N *whatever the query is* — there
+  is no cross-type relevance floor and no cross-type ranking. Scores are also not comparable across
+  types, because Graph normalizes BM25 per index (already noted in the file's header comment). The
+  result: an unrelated Event can outrank the actual answer purely because it was the best Event.
+
+  **Candidate levers** (evaluate, do not assume):
+  - A **score threshold / relevance floor** per group, so a type contributes nothing when nothing clears the bar.
+  - Tune `_semanticWeight` (currently `SEMANTIC_WEIGHT = 0.5`) — the BM25 ↔ semantic blend.
+  - **Cross-type ranking** — normalize per-type scores before interleaving, instead of concatenating groups.
+  - **Query understanding** — strip question scaffolding ("where can I see…") before it reaches `_fulltext`.
+  - **Field weighting / indexing** — make sure the fields that actually answer questions are the searchable ones.
+  - Revisit **which types belong in a general search** at all.
+
+  **Exit check:** the reference query returns hotel/POI content and **zero irrelevant Events**;
+  a small regression set of EN + AR queries passes; no drop on the queries that already work today.
+
+  **Approach:** the user will guide this one — diagnose against live Graph responses first, change
+  nothing until the actual ranking behaviour is observed.
+
+  **Blog trigger:** strong candidate — "why semantic search returns confidently wrong results, and
+  how to tune it" is a genuinely under-written topic and pairs naturally with the AI-search post.
+
+- [ ] **S3.11 — "This is Dubai" as a starter kit / reusable library** 🔵 _(brainstorm first, then build)_
+  **The idea.** Someone clones the repo, fills in a handful of environment variables, runs **one
+  command**, and ends up with a fully working Optimizely SaaS CMS instance: content types pushed,
+  content items created, EN + AR language variants populated, everything published, and a Next.js
+  front end that renders it. A genuine kick-start for anyone learning the SaaS stack, instead of the
+  usual empty instance and a blank page.
+
+  Plus a **second command that tears the whole instance back down** (content, then types, and the
+  Graph index with it), so people can experiment freely and reset — or keep what they built and
+  carry on with it as a real project.
+
+  **Why this is worth doing.** It is the most reusable thing this project could give back to the
+  community, and it is a strong MVP artefact. Most of the parts already exist in `/scripts` —
+  `seed.mjs`, `create-section.mjs`, `attach-assets.mjs`, `source-images.mjs`, `seo-fill.mjs`,
+  `publish-ar.mjs`, `align-ar-slugs.mjs`, `teardown-env.mjs` — but they are a sequence a newcomer has
+  to know the order of. This sprint turns that sequence into a product.
+
+  **Open questions to brainstorm (do not pre-decide these):**
+  - **Shape:** a template repo ("Use this template"), an npm `create-` initializer, or a
+    documented clone + `npm run setup`? Each has different maintenance and versioning costs.
+  - **Idempotency + resumability:** the run is long and network-bound. Re-running after a failure
+    must not duplicate content. Does it checkpoint, or is every step naturally idempotent?
+  - **Ordering:** the model must land before anything queries it, and Graph indexing lags publish.
+    Where do the waits go, and how does the script report progress over several minutes?
+  - **Imagery:** we cannot ship royalty-free binaries for everyone. Source at setup time, ship a
+    small bundled set, or degrade gracefully to placeholders?
+  - **Content volume:** the full 187-item corpus, or a representative subset that is fast to
+    install and fast to tear down? Possibly a `--full` flag.
+  - **Teardown safety — the hard one.** `teardown-env.mjs` is destructive and today is protected by
+    four guards that assume *our* setup (a known primary host in `.env`). For a stranger's machine
+    the "protected host" concept does not exist. What replaces it? Probably: explicit
+    `--confirm-host` typed by hand, a dry run by default, a printed inventory of exactly what will
+    be deleted, and a refusal on any instance the setup script did not itself create (a marker item?).
+  - **The "keep it" path:** how does someone graduate from sandbox to real project cleanly?
+  - **Secrets hygiene:** `.env.example` must make it obvious which keys are needed and which CMS
+    API-key scopes to grant — our own key is deliberately Forbidden from creating content
+    *instances*, so a setup key needs broader scope. Document that trade-off honestly.
+  - **Licensing + branding:** all branding here is original and imagery is royalty-free; a
+    redistributable starter kit needs that stated explicitly, plus a clear "unofficial" notice.
+
+  **Exit check:** a clean clone on a fresh Optimizely SaaS instance, with only `.env` filled in,
+  reaches a browsable bilingual site in one command — verified by actually doing it on an unused
+  instance. Then the teardown command returns that instance to empty.
+
+  **Blog trigger:** yes, and a strong one — a runnable starter kit is the kind of contribution that
+  gets used rather than just read.
+
+- [ ] **S3.12 — Commerce feature + "ready-made theme" — is there a product here?** 🔵 _(brainstorm)_
+  **The idea.** Two related but separable ambitions:
+  1. **A Commerce feature** — Product listing + detail pages and **Stripe** checkout, shipped as an
+     *optional, toggleable feature* on top of the starter kit: content types, blocks, display
+     templates and routes that someone enables and configures rather than builds.
+  2. **A ready-made Optimizely SaaS theme** — enough polished, drag-and-drop components and page
+     templates that a team can compose real pages in Visual Builder and go live in days.
+
+  **Is it worth it? An honest read.** The theme half is the stronger idea and is *already most of the
+  way there* — we have a design system, a display-template system, a content-block library with
+  author-first naming, a listing engine, bilingual + RTL support, SEO and preview. Packaging that is
+  a genuine gap in the Optimizely SaaS ecosystem, where most public examples are thin scaffolds.
+  It also composes perfectly with the [S3.11] starter kit: the kit installs it, the theme is what
+  you get.
+
+  The commerce half is the riskier one, and worth being clear-eyed about before committing:
+  - **Optimizely already sells Configured Commerce.** A Stripe side-door is a demo pattern, not a
+    recommended architecture. Position it as "here is how you wire an external payment provider to
+    a headless SaaS CMS", never as a commerce platform.
+  - **Payments raise the stakes.** Real money means PCI scope, webhooks, idempotency, refunds, tax,
+    order state that does **not** belong in the CMS. The honest scope is **Stripe Checkout / Payment
+    Links** (Stripe hosts the payment page, we never touch card data) with the CMS owning the product
+    *catalogue* only.
+  - **Never bundle live keys or a live-mode default.** Test mode only, out of the box.
+
+  **Questions to settle in the brainstorm:**
+  - One deliverable or two? (theme first, commerce as an add-on, is the likely answer)
+  - What is the smallest commerce slice that teaches something real — catalogue + Checkout, and
+    where does order/inventory state live?
+  - Is "feature toggle" a build-time flag, a separate package, or just content types you can decline
+    to push? What does *not* installing it look like?
+  - How many components make a theme feel complete without becoming a maintenance burden?
+  - Distribution + versioning: how does someone take an update after they have customized it?
+
+  **Dependency:** this sits on top of [S3.11] — build the starter kit first, then the theme it
+  installs, then commerce as an optional feature. Do not start it in parallel.
+
+  **Blog trigger:** yes, and probably the strongest MVP artefact of the whole project.
 
 ## 🚦 Phase 4 — AI features (Claude)  _(ask before starting)_
 - [ ] **S4.1 — AI Search** (Graph retrieval → Claude → cards) 🔴 — AI-SEARCH.md
