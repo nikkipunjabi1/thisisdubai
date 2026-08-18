@@ -1,0 +1,137 @@
+# Promote the CONTENT MODEL to a CMS instance, then trigger the app deploy.
+#
+# Branch → environment (trunk-based with forward-only promotion branches):
+#   main        → dev          (Instance 1)
+#   uat         → uat          (Instance 2)
+#   production  → production   (Instance 3, protected: require a reviewer)
+#
+# WHY THIS ORDER: the app queries the content types, so the model must exist on the
+# instance BEFORE the new frontend deploys, or delivery queries fail on unknown types.
+# Vercel's Git auto-deploy would race that, so auto-deploy is disabled for these branches
+# and the deploy is triggered here, via a Deploy Hook, only after the push succeeds.
+#
+# SAFETY:
+#   • Never `--force` here. `config push` is additive/upsert and NEVER deletes types, so a
+#     routine promotion cannot destroy content. A BREAKING change (required field added,
+#     field removed/retyped, shared → per-language) is refused and fails this job on purpose:
+#     a human then snapshots, reviews, and applies it deliberately. Do not "fix" that by
+#     adding --force to this file.
+#   • A JSON snapshot of the instance's CURRENT types is taken first and uploaded as an
+#     artifact, so every promotion has a rollback reference.
+#   • Content items are never touched by a model push.
+#
+# SETUP (per environment, in GitHub → Settings → Environments):
+#   secrets: OPTIMIZELY_CMS_URL, OPTIMIZELY_CMS_CLIENT_ID, OPTIMIZELY_CMS_CLIENT_SECRET
+#   optional secret: VERCEL_DEPLOY_HOOK_URL  (Vercel → Project → Settings → Git → Deploy Hooks)
+#   For `production`, also add a Required reviewer so promotion needs approval.
+# Until an environment's secrets exist, the job SKIPS cleanly instead of failing.
+
+name: Promote model
+
+on:
+  push:
+    branches: [main, uat, production]
+    # Only run when something that affects the model or this pipeline changes.
+    paths:
+      - 'src/components/**'
+      - 'optimizely.config.mjs'
+      - '.github/workflows/promote.yml'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment'
+        required: true
+        type: choice
+        options: [dev, uat, production]
+
+jobs:
+  resolve:
+    runs-on: ubuntu-latest
+    outputs:
+      environment: ${{ steps.pick.outputs.environment }}
+    steps:
+      - id: pick
+        run: |
+          if [ -n "${{ inputs.environment }}" ]; then
+            echo "environment=${{ inputs.environment }}" >> "$GITHUB_OUTPUT"
+          else
+            case "${{ github.ref_name }}" in
+              main)       echo "environment=dev"        >> "$GITHUB_OUTPUT" ;;
+              uat)        echo "environment=uat"        >> "$GITHUB_OUTPUT" ;;
+              production) echo "environment=production" >> "$GITHUB_OUTPUT" ;;
+              *)          echo "environment=dev"        >> "$GITHUB_OUTPUT" ;;
+            esac
+          fi
+
+  push-model:
+    needs: resolve
+    runs-on: ubuntu-latest
+    # Binds this job to the GitHub Environment: its secrets, and its protection rules
+    # (production requires an approving reviewer before the job starts).
+    environment: ${{ needs.resolve.outputs.environment }}
+    env:
+      OPTIMIZELY_CMS_URL: ${{ secrets.OPTIMIZELY_CMS_URL }}
+      OPTIMIZELY_CMS_CLIENT_ID: ${{ secrets.OPTIMIZELY_CMS_CLIENT_ID }}
+      OPTIMIZELY_CMS_CLIENT_SECRET: ${{ secrets.OPTIMIZELY_CMS_CLIENT_SECRET }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+
+      # Configured yet? If not, skip the rest rather than failing a legitimate push.
+      - id: creds
+        name: Check credentials
+        run: |
+          if [ -z "$OPTIMIZELY_CMS_CLIENT_ID" ] || [ -z "$OPTIMIZELY_CMS_CLIENT_SECRET" ]; then
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::No credentials for '${{ needs.resolve.outputs.environment }}' yet - skipping model promotion."
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Verify credentials reach the instance
+        if: steps.creds.outputs.configured == 'true'
+        run: npx optimizely-cms-cli login
+
+      # Rollback reference. Runs before any change; `|| true` so a brand-new empty
+      # instance (nothing to pull) does not fail the promotion.
+      - name: Snapshot current content types
+        if: steps.creds.outputs.configured == 'true'
+        run: npx optimizely-cms-cli config pull --json > model-snapshot.json || true
+
+      - name: Upload snapshot
+        if: steps.creds.outputs.configured == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: model-snapshot-${{ needs.resolve.outputs.environment }}-${{ github.sha }}
+          path: model-snapshot.json
+          if-no-files-found: ignore
+          retention-days: 90
+
+      # No --force, deliberately. See SAFETY above.
+      - name: Push content model
+        if: steps.creds.outputs.configured == 'true'
+        run: npx optimizely-cms-cli config push optimizely.config.mjs
+
+      # Schema propagation is not instant; give Graph a moment before the app builds
+      # against the new types.
+      - name: Wait for schema propagation
+        if: steps.creds.outputs.configured == 'true'
+        run: sleep 45
+
+      # The hook is checked inside the script, not in `if:` — a step's own `env:` is not
+      # available to its own condition.
+      - name: Trigger app deploy
+        if: steps.creds.outputs.configured == 'true'
+        env:
+          DEPLOY_HOOK: ${{ secrets.VERCEL_DEPLOY_HOOK_URL }}
+        run: |
+          if [ -z "$DEPLOY_HOOK" ]; then
+            echo "::notice::No VERCEL_DEPLOY_HOOK_URL for this environment - skipping deploy trigger."
+            exit 0
+          fi
+          curl -fsSL -X POST "$DEPLOY_HOOK" -o /dev/null
+          echo "Deploy triggered."

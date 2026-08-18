@@ -3,8 +3,32 @@
 Our DevOps branching/merging process. **`main` is protected and always deployable; all changes
 land via reviewed Pull Requests.**
 
-## Branching model (trunk-based, PR-per-unit-of-work)
-- **`main`** — protected, always deployable, production source of truth. No direct pushes.
+## Branching model (trunk-based + forward-only promotion branches)
+
+`main` is the trunk. Two long-lived **promotion branches** sit above it, one per upper environment,
+so each environment is pinned to a known, auditable commit:
+
+| Branch | Environment | CMS instance | Deploys to |
+|---|---|---|---|
+| `main` | DEV / Integration | Instance 1 | `thisisdubai-dev` |
+| `uat` | UAT | Instance 2 | `thisisdubai-uat` |
+| `production` | Production | Instance 3 | `thisisdubai` |
+
+**Promote by merging FORWARD only: `main → uat → production`.** Never commit directly to `uat` or
+`production`, and never merge backwards. That one rule is what stops the classic environment-branch
+drift: every upper branch is always an ancestor-consistent snapshot of the trunk.
+
+```bash
+git checkout uat && git merge --ff-only main && git push     # promote DEV → UAT
+git checkout production && git merge --ff-only uat && git push  # promote UAT → PROD
+```
+
+A push to any of the three runs [`.github/workflows/promote.yml`](.github/workflows/promote.yml):
+snapshot the target instance's model → `config push` (**never** `--force`) → trigger the app deploy.
+`production` is a protected GitHub Environment, so promotion there needs an approving reviewer.
+Full detail and the reasoning: [`docs/ENVIRONMENTS.md`](docs/ENVIRONMENTS.md).
+
+- **`main`** — protected, always deployable. No direct pushes; everything lands via PR.
 - **Feature branches** — one per sprint or self-contained unit of work, branched off `main`.
 - **Naming:** `type/short-kebab-description`
   - `feat/…` new feature · `fix/…` bug fix · `docs/…` documentation ·
