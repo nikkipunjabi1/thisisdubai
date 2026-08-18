@@ -250,6 +250,23 @@ downstream (semantic search tuning, AI retrieval, the MCP server) needs a realis
   All 5 screenshots captured + wired. Also proved (and documented in §12 / COMPONENT-NAMING.md) that
   Optimizely SaaS has **no component-picker thumbnail** — the CMA rejects a thumbnail field on push.
 - 🏁 + Blog #5–#8 outlines.
+- [x] **S3.9 — AR localization operations + code-first enablement** ✅ (branches
+  `feat/ar-nav-localization-code-first` PR #78, `feat/ar-slug-alignment`)
+  Operational tooling + fixes uncovered while the user runs the L6 AR translation in the CMS:
+  - **Nav model per-language:** `SiteConfiguration.headerMenu` + `footerGroups` set `isLocalized`
+    (localize the LIST, not the nested block); `opti-push --force`. EN nav intact; AR falls back to
+    the localized default nav. See LOCALIZATION.md (L6).
+  - **`npm run publish:ar`** — bulk-publish every AR draft in one pass (dry-run by default).
+  - **`npm run align:ar-slugs`** — align AR URL segments to EN (fixes the auto-generated-slug 404,
+    e.g. `/ar/neighbourhoods/al-marmoom` was 404). Run as the last step of a translation batch.
+    Applied live: 20 leaf pages realigned; 5 VB campaign pages remain WIP.
+  - Two gotchas documented (OPTIMIZELY-BEST-PRACTICES.md §12 + LOCALIZATION.md): AR slug auto-divergence;
+    never machine-translate enum/select values (`places`→`أماكن` etc. fails validation).
+  - **Team enablement:** "Code-First Content Modeling in Optimizely SaaS" — blog + diagram + PPT under
+    `blog/` (`code-first-content-modeling.html`, `assets/code-first-diagram.png|svg`,
+    `assets/code-first-content-modeling.pptx`).
+  - **`scripts/README.md`** — plain-language index of all scripts (for PMs/BAs); README + CONTRIBUTING
+    now enforce keeping it in sync.
 
 ## 🚦 Phase 4 — AI features (Claude)  _(ask before starting)_
 - [ ] **S4.1 — AI Search** (Graph retrieval → Claude → cards) 🔴 — AI-SEARCH.md

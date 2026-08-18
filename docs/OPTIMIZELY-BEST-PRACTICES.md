@@ -202,6 +202,22 @@ COMPONENT-STANDARDS.md, SEO.md, PREVIEW-WORKFLOW.md, QUALITY.md._
   authority, so a *real* `config push` is the true validator (a good reminder for any model change).
   Optimizely support confirmed it needs a feature request or a custom solution. Until the platform
   adds it, lean on author-first names (and per-property `description`). See COMPONENT-NAMING.md.
+- **To localize a component-LIST property, set `isLocalized` on the LIST, not the nested block.** A
+  list of inline components (e.g. `SiteSettings.headerMenu`, an array of `NavMenuItem`) is stored as
+  ONE value, so its per-language switch lives on the list property. `isLocalized: true` on the nested
+  `NavMenuItem.label` has no effect while the parent list is shared — the CMS shows the value greyed
+  out (uneditable) in the non-master language. Flip it on the list, `opti-push --force` (shared→
+  localized is breaking), and each language then owns its own list. See LOCALIZATION.md (L6).
+- **Optimizely auto-generates a translated version's URL segment from its display name.** Wherever
+  the master slug was hand-shortened (`dubai-mall`, `jbr`, `al-marmoom`), the Arabic version lands on
+  a DIFFERENT path (`al-marmoom--the-desert`) and 404s when the app only swaps the locale prefix (as
+  hreflang/routing assume). Fix: set the AR `routeSegment` to match EN and republish — `npm run
+  align:ar-slugs`. Make it the last step of every translation batch.
+- **Never let a translation tool translate enum/select VALUES, references, or URLs.** Machine
+  translation of a Visual Builder composition will happily turn `places`→`أماكن`, `latest`→`أحدث`,
+  `imageLeft`→`صورة يسارية` — all invalid, so the page won't publish (`The value '…' for property
+  'collection' is not valid`). Enum values are machine tokens, not display text. Scope the tool to
+  translate ONLY visible text (headings, rich text, CTA labels, meta); leave selects/refs/URLs as-is.
 
 > These gotchas are prime blog material (BLOG-PLAN.md #2/#3) — they're exactly what the community
 > searches for.
