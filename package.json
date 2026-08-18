@@ -23,7 +23,8 @@
     "attach-assets": "node --env-file=.env scripts/attach-assets.mjs",
     "source-images": "node --env-file=.env scripts/source-images.mjs",
     "seo:fill": "node --env-file=.env scripts/seo-fill.mjs",
-    "publish:ar": "node --env-file=.env scripts/publish-ar.mjs"
+    "publish:ar": "node --env-file=.env scripts/publish-ar.mjs",
+    "align:ar-slugs": "node --env-file=.env scripts/align-ar-slugs.mjs"
   },
   "dependencies": {
     "@opentelemetry/api": "^1.9.0",

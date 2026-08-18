@@ -53,6 +53,7 @@ Repo: https://github.com/nikkipunjabi1/thisisdubai · Deployment target: Vercel 
 | [docs/OPTIMIZELY-BEST-PRACTICES.md](docs/OPTIMIZELY-BEST-PRACTICES.md) | Playbook: modeling, VB, Graph, SEO, perf, security, gotchas |
 | [docs/QUALITY.md](docs/QUALITY.md) | Testing/CI strategy + quality gates |
 | [docs/BLOG-PLAN.md](docs/BLOG-PLAN.md) | Community blogging cadence toward MVP |
+| [scripts/README.md](scripts/README.md) | Plain-language index of every automation script (for PMs/BAs/new joiners) |
 
 ## Status
 
