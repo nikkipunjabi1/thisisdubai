@@ -158,6 +158,9 @@ export const SiteSettingsContentType = contentType({
       description: 'The privacy/cookie policy page (picked from the content tree).',
       group: 'cookieConsent',
       sortOrder: 6,
+      // SDK 2.2 requires a contentReference to declare allowedTypes or restrictedTypes.
+      // `_page` keeps the picker to routable pages without naming every concrete type.
+      allowedTypes: ['_page'],
     },
 
     // --- Announcement Bar (the "Announcement Bar" tab) ---
@@ -204,6 +207,8 @@ export const SiteSettingsContentType = contentType({
       description: 'Where the announcement links to (picked from the content tree).',
       group: 'announcementBar',
       sortOrder: 5,
+      // See cookiePolicyPage: SDK 2.2 requires allowedTypes/restrictedTypes here.
+      allowedTypes: ['_page'],
     },
     announcementDismissible: {
       type: 'boolean',
