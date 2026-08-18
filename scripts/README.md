@@ -80,6 +80,21 @@ Helpers for running the site in English and Arabic.
 
 ---
 
+## 6. Environments (promotion & teardown)
+
+Moving work between CMS instances (Dev → UAT → Production). Full runbook: [docs/ENVIRONMENTS.md](../docs/ENVIRONMENTS.md).
+
+| Command | What it does | Status |
+|---------|--------------|--------|
+| `npm run opti-push` / `opti-push:uat` | Sends the **content model** (field definitions) to an instance. Same code, different credentials: `.env` targets the primary instance, `.env.uat` targets a second one. | 🟢 Reusable |
+| `npm run opti-snapshot` / `opti-snapshot:uat` | Saves a JSON snapshot of an instance's current content types. Run this **before** any risky model change so you have a rollback reference. | 🔵 Read-only |
+| `npm run seed:uat` | Seeds the core content tree into the second instance (so UAT has representative content to test against). | 🟢 Reusable |
+| **teardown-env** — `npm run teardown:env -- --env=uat` | ⚠️ **Deletes all content items** from a throwaway instance, for cleaning up a demo/sandbox environment. Dry-run by default; needs `--apply` **and** a matching `--confirm-host`, and flatly refuses to run against the primary instance. Delete content types afterwards with the CLI's `danger delete-all-content-types`. | 🔴 Destructive |
+
+> 🔴 **Destructive** means irreversible. `teardown-env` is only ever for a throwaway environment, never the live one.
+
+---
+
 ## 6. One-time migrations (historical record)
 
 These were each run **once** to restructure content during the project's evolution. They are kept so the history is auditable and reproducible, but they are **not** part of normal operations. Do not run them unless you are deliberately redoing that specific migration.

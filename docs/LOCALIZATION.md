@@ -1,8 +1,8 @@
 # Localization — EN + AR (Arabic) on Optimizely SaaS + Next.js
 
-_Status: **L0–L5 + L-mod complete** (foundations, content-model `isLocalized`, routing/RTL, data
-layer, string catalog, AR semantic search, hreflang/SEO). Only **L6** (bulk AR translation via Opal,
-user-driven in the CMS) remains._
+_Status: **COMPLETE (L0–L6 + L-mod).** Full bilingual EN/AR site is live: the whole corpus is
+translated and published (187 EN = 187 AR, verified via Graph), every AR page slug matches its EN
+twin, and language switching works site-wide with no 404s. Operational tooling and gotchas below._
 
 This is the plan and the record of decisions for adding Arabic alongside English. It exists
 because the routing, RTL, data, search, and SEO layers all touch each other — the map is worth
@@ -53,7 +53,7 @@ Success = `ar` (or `ar_AE`) appears in the enum.
 | **L3 · UI string catalog** | `src/lib/i18n/messages/{en,ar}.ts` + `t()`; extract nav/footer/search/controls/breadcrumb strings; AR translations of chrome. | No (chrome strings are ours). |
 | **L4 · AR semantic search** | `locale` into the 3 search sub-queries + `$loc` var + keyParts; AR stop-word path (the English `STOP_WORDS` list must not strip AR); localize search UI + group labels + hrefs. → **Blog #7.** | **Yes** (needs AR content to search). |
 | **L5 · SEO** | `hreflang` alternates (en↔ar), per-locale canonical, `og:locale`, per-locale sitemap entries. | Partial — markup can land pre-content. |
-| **L6 · Full AR translation** | ~250 items translated in the CMS via **Opal (user-driven)**. → **Blog #10.** | **Yes.** |
+| **L6 · Full AR translation** ✅ | ~250 items translated in the CMS via **Opal (user-driven)**, published (`publish:ar`) + slugs aligned (`align:ar-slugs`). 187 EN = 187 AR. → **Blog #10.** | **Yes.** |
 
 ## Known touch-points (from the L0 codebase map)
 
@@ -235,5 +235,49 @@ a new `src/app/sitemap.ts`:
   fully in prod where `APPLICATION_HOST` is set; empty-but-valid locally where it isn't). Tests: 14
   passing (5 new `localeAlternates` cases); `tsc` clean.
 
+## L6 — bulk AR translation + operational tooling — DONE
+
+Translation itself happens in the CMS (Opal, user-driven). What the app side owns is the **operational
+tooling** to get a translated corpus live cleanly, plus the gotchas that surfaced doing it.
+**Outcome:** 187 EN = 187 AR published (Graph parity), all slugs aligned (`align:ar-slugs` reports 0 to
+fix), locale switch has no 404s. The 2 `ThingsToDoPage` experiences' AR slugs were corrected in the CMS
+(the script skips experiences on purpose, to avoid overwriting fresher published content with a stale draft).
+
+### Nav model is now per-language (`headerMenu` / `footerGroups`)
+The header menu and footer columns are lists of inline components (`NavMenuItem` / `NavGroup`) held on
+`SiteConfiguration`. A component **list is stored as one value**, so its per-language switch lives on
+the **list property**, not on the nested block. `isLocalized` on `NavMenuItem.label` alone did nothing
+(the CMS showed the Arabic label greyed out); the fix was `isLocalized: true` on `headerMenu` and
+`footerGroups` in [`SiteSettings.tsx`](../src/components/content/SiteSettings.tsx), then
+`opti-push --force` (shared→localized is breaking). After the flip, EN keeps its authored nav; the AR
+version starts empty and **falls back to the built-in default nav** (`src/lib/navigation.ts`), which
+is already localized via page names / the string catalog — so AR nav reads correctly with no manual
+authoring. (Header item labels are `isRequired`, so there's no "empty → page name" shortcut for the top
+bar; author them per language only if you want custom AR labels.)
+
+### Scripts (both dry-run by default, idempotent — see [scripts/README.md](../scripts/README.md))
+- **`npm run publish:ar`** — after translators leave AR versions as **drafts**, this discovers every
+  content key via Graph and publishes each newest AR draft in one pass (`--apply`). Skips items already
+  published; `--type` / `--locale` filters.
+- **`npm run align:ar-slugs`** — makes each AR page's URL segment match its EN one. Run it as the
+  **last step of every translation batch** (see gotcha below). Only rewrites the PUBLISHED AR version;
+  unfinished translations (no published AR version, incl. VB experiences being worked on) are skipped;
+  publishes a specific version id and polls for it (safe against CMA read-after-write lag). Experiences
+  are skipped from the rewrite path (their composition doesn't round-trip through the properties bag) —
+  set those slugs in the CMS on publish.
+
+### Gotchas found (also in OPTIMIZELY-BEST-PRACTICES.md §12)
+1. **AR URL segments auto-diverge.** Optimizely generates a translated version's `routeSegment` from
+   its display name, so any hand-shortened EN slug (`dubai-mall`, `jbr`, `al-marmoom`) gets a different
+   AR path (`al-marmoom--the-desert`) and 404s when the app swaps only the locale prefix. `align-ar-slugs`
+   normalises them. Root cause is by design (localized URLs are a platform feature); we standardise on
+   shared slugs because the routing + hreflang assume identical paths across locales.
+2. **Don't machine-translate enum/select values.** Translating a VB composition turned `collection`
+   `places`→`أماكن`, `source` `latest`→`أحدث`, `layout` `imageLeft`→`صورة يسارية` — all invalid, so the
+   page refused to publish (`The value '…' for property 'collection' is not valid`). Enum values are
+   machine tokens; scope the translation to visible text only (headings, rich text, CTA labels, meta)
+   and leave selects/references/URLs untouched. Fix corrupted ones by re-selecting the dropdowns in the
+   CMS to match the English page.
+
 ## Related docs
-- `docs/ROADMAP.md` (Phase 3 — Localization), `docs/SPRINTS.md` (S4.5 Opal), `docs/OPTIMIZELY-RESEARCH.md:113–124` (Graph 28-language semantic support + `locale` recipe), `docs/OPTIMIZELY-BEST-PRACTICES.md:91` (`hreflang`), `docs/BLOG-PLAN.md` (#7, #10).
+- `docs/ROADMAP.md` (Phase 3 — Localization), `docs/SPRINTS.md` (S4.5 Opal), `docs/OPTIMIZELY-RESEARCH.md:113–124` (Graph 28-language semantic support + `locale` recipe), `docs/OPTIMIZELY-BEST-PRACTICES.md:91` (`hreflang`), `docs/BLOG-PLAN.md` (#7, #10), `scripts/README.md` (script index).

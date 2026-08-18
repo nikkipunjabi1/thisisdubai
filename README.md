@@ -53,6 +53,7 @@ Repo: https://github.com/nikkipunjabi1/thisisdubai · Deployment target: Vercel 
 | [docs/OPTIMIZELY-BEST-PRACTICES.md](docs/OPTIMIZELY-BEST-PRACTICES.md) | Playbook: modeling, VB, Graph, SEO, perf, security, gotchas |
 | [docs/QUALITY.md](docs/QUALITY.md) | Testing/CI strategy + quality gates |
 | [docs/BLOG-PLAN.md](docs/BLOG-PLAN.md) | Community blogging cadence toward MVP |
+| [docs/ENVIRONMENTS.md](docs/ENVIRONMENTS.md) | Dev → UAT → Prod promotion: what moves with code, what doesn't, and environment teardown |
 | [scripts/README.md](scripts/README.md) | Plain-language index of every automation script (for PMs/BAs/new joiners) |
 
 ## Status
@@ -78,12 +79,11 @@ site is feature-complete (the on-demand revalidation webhook is already built an
 - **Server-rendered SEO** — title/meta/OG + JSON-LD on every page, plus **hreflang alternates and a
   bilingual sitemap**; EN `metaTitle`/`metaDescription` populated across all routable items.
 - **Localization (EN + AR)** — `[locale]` routing, RTL shell, locale-aware data layer, a UI string
-  catalog, Arabic search, and localization SEO. (**L0–L5 complete**; `isLocalized` content-model pass done.)
+  catalog, Arabic search, and localization SEO. **Complete (L0–L6):** the full corpus is translated
+  and published (187 EN = 187 AR), slugs aligned across locales, language switch has no 404s.
+  Publish + slug-align run via `npm run publish:ar` / `npm run align:ar-slugs` ([scripts/README.md](scripts/README.md)).
 
 **In progress / next:**
-- **L6 · Full AR content translation** — done in the CMS UI with the built-in Opal/AI translate
-  (there is no bulk translate-item API); the master (EN) content and all localization plumbing are
-  in place.
 - **AI features** — Claude-powered search + trip planner, and a reusable community module.
 - **Packaging the preview module** for other teams — see
   [docs/PREVIEW-MODULE-PACKAGING.md](docs/PREVIEW-MODULE-PACKAGING.md).
