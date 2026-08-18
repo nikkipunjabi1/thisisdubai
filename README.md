@@ -86,6 +86,9 @@ is next.
   Publish + slug-align run via `npm run publish:ar` / `npm run align:ar-slugs` ([scripts/README.md](scripts/README.md)).
 
 **In progress / next:**
+- **Semantic search relevance (S3.10)** — tune retrieval before any AI work: today a
+  natural-language query can surface unrelated types, because each type is queried with its own
+  limit and no cross-type relevance floor. AI answers are only as good as what retrieval feeds them.
 - **AI features** — Claude-powered search + trip planner, and a reusable community module.
 - **Packaging the preview module** for other teams — see
   [docs/PREVIEW-MODULE-PACKAGING.md](docs/PREVIEW-MODULE-PACKAGING.md).

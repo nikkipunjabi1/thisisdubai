@@ -268,6 +268,42 @@ downstream (semantic search tuning, AI retrieval, the MCP server) needs a realis
   - **`scripts/README.md`** — plain-language index of all scripts (for PMs/BAs); README + CONTRIBUTING
     now enforce keeping it in sync.
 
+## 🚦 Phase 3.5 — Search relevance  _(before any AI work)_
+
+- [ ] **S3.10 — Semantic search relevance tuning** 🟡 _(next sprint; user-guided)_
+  **Why it comes before Phase 4:** the AI features (S4.1 AI Search, S4.2 Trip Planner, S4.3 MCP
+  server) all sit on top of the same retrieval layer. Feeding a weak result set into Claude just
+  produces confident answers built on irrelevant content, so retrieval quality is a prerequisite,
+  not a follow-up.
+
+  **The symptom.** A natural-language query returns results with no relevance at all. Reference case:
+  > `where can I see the world's tallest hotel in Dubai?`
+  returns Events, which have nothing to do with the question.
+
+  **Likely root cause (to confirm during the sprint).** `src/lib/search.ts` issues ONE federated
+  query with a **separate sub-query per type** (`places` / `events` / `neighbourhoods` / …), each
+  with its own `limit`. Every type therefore returns its own top-N *whatever the query is* — there
+  is no cross-type relevance floor and no cross-type ranking. Scores are also not comparable across
+  types, because Graph normalizes BM25 per index (already noted in the file's header comment). The
+  result: an unrelated Event can outrank the actual answer purely because it was the best Event.
+
+  **Candidate levers** (evaluate, do not assume):
+  - A **score threshold / relevance floor** per group, so a type contributes nothing when nothing clears the bar.
+  - Tune `_semanticWeight` (currently `SEMANTIC_WEIGHT = 0.5`) — the BM25 ↔ semantic blend.
+  - **Cross-type ranking** — normalize per-type scores before interleaving, instead of concatenating groups.
+  - **Query understanding** — strip question scaffolding ("where can I see…") before it reaches `_fulltext`.
+  - **Field weighting / indexing** — make sure the fields that actually answer questions are the searchable ones.
+  - Revisit **which types belong in a general search** at all.
+
+  **Exit check:** the reference query returns hotel/POI content and **zero irrelevant Events**;
+  a small regression set of EN + AR queries passes; no drop on the queries that already work today.
+
+  **Approach:** the user will guide this one — diagnose against live Graph responses first, change
+  nothing until the actual ranking behaviour is observed.
+
+  **Blog trigger:** strong candidate — "why semantic search returns confidently wrong results, and
+  how to tune it" is a genuinely under-written topic and pairs naturally with the AI-search post.
+
 ## 🚦 Phase 4 — AI features (Claude)  _(ask before starting)_
 - [ ] **S4.1 — AI Search** (Graph retrieval → Claude → cards) 🔴 — AI-SEARCH.md
 - [ ] **S4.2 — AI Trip Planner** (→ `Itinerary`) 🔴
