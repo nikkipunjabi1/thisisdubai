@@ -76,6 +76,10 @@ export const SiteSettingsContentType = contentType({
         'The primary navigation. Drag to reorder. Add “Dropdown links” to an item to turn it into a mega-menu dropdown. Leave the whole list empty to use the built-in default nav.',
       group: 'topNavigation',
       sortOrder: 1,
+      // Localized so each language owns its own menu (labels + structure). A component-LIST
+      // stores all its items as one value, so the per-language switch must live on the list
+      // property; `isLocalized` on the nested NavMenuItem.label alone has no effect.
+      isLocalized: true,
       items: { type: 'component', contentType: NavMenuItemContentType },
     },
     showSearch: {
@@ -104,6 +108,8 @@ export const SiteSettingsContentType = contentType({
         'Each entry is a footer column (a heading plus its links). Leave empty to use the built-in default footer.',
       group: 'footer',
       sortOrder: 1,
+      // Localized for the same reason as `headerMenu`: the list is one value per language.
+      isLocalized: true,
       items: { type: 'component', contentType: NavGroupContentType },
     },
 
