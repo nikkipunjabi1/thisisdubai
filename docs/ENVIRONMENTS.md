@@ -210,6 +210,23 @@ UAT does not need to mirror DEV. It needs **representative** content. Two option
 Do one, verify counts in both languages, then leave UAT alone and let it diverge. Divergence is
 correct: it means people are testing.
 
+### Verifying a content migration
+
+Do not eyeball 187 items in two languages. `npm run verify:content` prints a per-type, per-locale
+inventory of everything **published** on an instance, and flags the two failure modes that matter:
+items with no counterpart in the other locale, and URLs that differ between locales (the S3.9
+language-switch 404).
+
+```bash
+npm run verify:content -- --out=dev.json      # BEFORE: inventory the source
+# ... run the migration ...
+npm run verify:content:uat -- --compare=dev.json   # AFTER: prove the target matches
+```
+
+It reads Optimizely Graph, which only ever returns **published** content — so an item appearing in
+the inventory *is* the proof it is published, and a draft is simply absent. That is what makes the
+count a sufficient answer to "did publish state survive the import?".
+
 ## A promotion runbook
 
 1. **Feature branch** — change the content type → `npm run opti-push` against DEV → build the
