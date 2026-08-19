@@ -45,6 +45,20 @@ Every post follows the same standards. This is the contract.
 - **Personal blog + dev.to** — reach and SEO (long-form home for each article).
 - **LinkedIn** — a short teaser linking to the long-form; visibility in the Opti ecosystem.
 
+## Published so far
+
+**3 articles published** while building this project:
+
+| # | Article | Draft in repo |
+|---|---|---|
+| 6 | Semantic search with Optimizely Graph | [`blog/06-semantic-search-optimizely-graph.md`](../blog/06-semantic-search-optimizely-graph.md) |
+| 7 | Localizing an Optimizely SaaS site to a new language | [`blog/07-en-ar-localization-optimizely-saas-nextjs.md`](../blog/07-en-ar-localization-optimizely-saas-nextjs.md) |
+| 18 | Component naming conventions for a CMS website | [`blog/component-naming-conventions-cms-website.html`](../blog/component-naming-conventions-cms-website.html) |
+
+Written as internal team enablement rather than published to the community:
+[`blog/code-first-content-modeling.html`](../blog/code-first-content-modeling.html), plus a diagram
+and a deck under `blog/assets/`.
+
 ## Publishing status
 
 | Status | Meaning |
@@ -78,6 +92,8 @@ build.
 | 15 | **Live Visual Builder preview for a headless app** on Optimizely SaaS | Wiring on-page/live preview end to end: preview tokens, local HTTPS, and the registry-must-mirror-the-model drift | 📝 Draft ready |
 | 16 | **Building a reference project on Optimizely SaaS in the open** | How and why to run a public learning project: the official-tooling decision, responsible-assets guardrails, and a sprint/PR/blogging workflow | 📝 Draft ready |
 | 17 | **Security best practices with Optimizely SaaS CMS** | Securing a SaaS CMS + headless build: API keys and secrets handling, preview/token scope, webhook and revalidation auth, least-privilege access, and safe content-write scripts | 💡 Planned |
+| 18 | **Component naming conventions for a CMS website** | Author-facing component names that make the "Add Section" picker self-explanatory, and when renaming a shipped component is not worth the migration | ✅ Published |
+| 19 | **Dev, UAT, Production on Optimizely SaaS** — what moves with your code and what doesn't | Standing up an environment pipeline: which of the three layers promote, the deploy-ordering race, batched content import, and four misconfigurations that fail completely silently | ✍️ Drafting |
 
 ## Backlog / candidate angles
 
