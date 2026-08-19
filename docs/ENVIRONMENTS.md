@@ -11,7 +11,12 @@ automatically, what does not, and the rules that keep a promotion from going wro
 | Layer | What it is | How it promotes | Where it lives |
 |---|---|---|---|
 | **Model (content types)** | Types, fields, validation, per-language flags | **Through code.** Same repo, pushed at each instance | Git → `opti-push` |
+| **Instance settings** | Enabled **languages**, API keys, users | **It does not.** Configured by hand, per instance | The CMS instance |
 | **Content (items)** | The actual pages, text, images, translations | **It does not.** Authored where it lives; only *reference* content is scripted | The CMS instance |
+
+The middle row is the one people forget. A content type can declare `isLocalized: true` and promote
+perfectly, while the target instance has no Arabic at all — the model is ready for a language the
+instance does not have.
 
 The common and expensive mistake is treating content like code and trying to sync it up the chain.
 Content types flow upward through code. Content is authored where it lives (usually Production), and
@@ -184,6 +189,25 @@ acknowledges it is still working on.
 > ⚠️ **`POST /v1/experimental/packages` is marked *experimental*** — the word is in the URL. Good
 > enough for a bootstrap or a refresh you supervise; do **not** make it the unattended backbone of
 > production promotion until it leaves experimental.
+
+#### Prerequisite: enable the languages FIRST
+
+**Languages are an instance setting, and `opti-push` does not promote them.** A freshly promoted
+instance has the complete content model and only its default language. `verify:content` against a
+new UAT instance fails with:
+
+```
+Graph 400: Value "ar" does not exist in "Locales" enum.
+```
+
+That is the instance telling you Arabic does not exist there. Import content in that state and the
+translated variants have nowhere to land.
+
+**Before any content migration, on the target instance:**
+`CMS → Settings → Languages → enable each language → set it Available`
+
+Match the source instance exactly, including the language codes (`en`, `ar`) — the code is what
+Graph and `routeSegment` key off.
 
 **Unknowns to verify empirically before trusting it** (the docs do not state these, and they matter
 most to this project):

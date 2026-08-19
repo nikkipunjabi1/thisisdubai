@@ -45,6 +45,13 @@ if (!GRAPH_GATEWAY || !GRAPH_KEY) {
 // normalises both `https://host` and `https://host/content/v2` to one endpoint.
 const endpoint = `${new URL('/content/v2', GRAPH_GATEWAY).href}?auth=${GRAPH_KEY}`;
 
+class LocaleNotEnabled extends Error {
+  constructor(locale) {
+    super(`Locale '${locale}' is not enabled on this instance`);
+    this.locale = locale;
+  }
+}
+
 async function inventory(locale) {
   const query = `query($skip:Int!){
     _Content(locale: ${locale}, limit: 100, skip: $skip) {
@@ -63,9 +70,24 @@ async function inventory(locale) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ query, variables: { skip } }),
     });
-    if (!res.ok) throw new Error(`Graph ${res.status}: ${(await res.text()).slice(0, 200)}`);
-    const json = await res.json();
-    if (json.errors) throw new Error(`Graph error: ${JSON.stringify(json.errors).slice(0, 300)}`);
+    const raw = await res.text();
+    let json;
+    try {
+      json = JSON.parse(raw);
+    } catch {
+      throw new Error(`Graph ${res.status}: ${raw.slice(0, 200)}`);
+    }
+
+    // A locale the instance does not have is reported as an unknown enum value. That is a
+    // configuration fact, not a script failure: LANGUAGES ARE AN INSTANCE SETTING and are NOT
+    // carried over by `opti-push`, so a freshly promoted instance has the model but only its
+    // default language. Surface it plainly and keep going with the locales that do exist.
+    const errs = json.errors ?? [];
+    if (errs.some((e) => /does not exist in .*Locales.* enum/i.test(e?.message ?? ''))) {
+      throw new LocaleNotEnabled(locale);
+    }
+    if (errs.length) throw new Error(`Graph error: ${JSON.stringify(errs).slice(0, 300)}`);
+    if (!res.ok) throw new Error(`Graph ${res.status}: ${raw.slice(0, 200)}`);
 
     const page = json.data._Content;
     total = page.total;
@@ -99,11 +121,33 @@ function countByType(items) {
 const pad = (s, n) => String(s).padEnd(n);
 
 async function main() {
-  console.log(`\nInstance: ${new URL(GRAPH_GATEWAY).host}`);
+  // The Graph gateway host is the SAME for every instance — the single key is what selects
+  // one. Printing the host alone would make two different instances look identical, so
+  // identify the instance by a fingerprint of its key instead.
+  const keyId = `…${GRAPH_KEY.slice(-6)}`;
+  console.log(`\nGateway:  ${new URL(GRAPH_GATEWAY).host}  (shared across instances)`);
+  console.log(`Instance: single key ${keyId}`);
   console.log('Source:   Optimizely Graph (PUBLISHED content only — drafts are invisible here)\n');
 
   const byLocale = {};
-  for (const locale of LOCALES) byLocale[locale] = await inventory(locale);
+  const disabled = [];
+  for (const locale of LOCALES) {
+    try {
+      byLocale[locale] = await inventory(locale);
+    } catch (e) {
+      if (!(e instanceof LocaleNotEnabled)) throw e;
+      disabled.push(locale);
+      byLocale[locale] = new Map();
+    }
+  }
+
+  if (disabled.length) {
+    console.log(`⚠ Locale(s) not enabled on this instance: ${disabled.join(', ')}`);
+    console.log('  Languages are an INSTANCE setting — `opti-push` promotes the content model but');
+    console.log('  NOT the language configuration. Enable them in the CMS before importing content,');
+    console.log('  or the translated variants have nowhere to land:');
+    console.log('    CMS → Settings → Languages → enable the language → set it Available.\n');
+  }
 
   // ── Per-type counts, locales side by side ────────────────────────────────
   const types = [...new Set(LOCALES.flatMap((l) => [...byLocale[l].values()].map((i) => i.type)))].sort();
@@ -155,7 +199,9 @@ async function main() {
   }
 
   const snapshot = {
-    host: new URL(GRAPH_GATEWAY).host,
+    gateway: new URL(GRAPH_GATEWAY).host,
+    instance: `single key …${GRAPH_KEY.slice(-6)}`,
+    localesNotEnabled: disabled,
     totals: Object.fromEntries(LOCALES.map((l) => [l, byLocale[l].size])),
     byType: Object.fromEntries(LOCALES.map((l) => [l, countByType(byLocale[l])])),
   };
@@ -164,7 +210,7 @@ async function main() {
   if (COMPARE) {
     const { readFileSync } = await import('node:fs');
     const before = JSON.parse(readFileSync(COMPARE, 'utf8'));
-    console.log(`Comparing against ${COMPARE} (${before.host})\n`);
+    console.log(`Comparing against ${COMPARE} (${before.instance ?? before.host ?? 'unknown source'})\n`);
     console.log(`${pad('TYPE', 34)}${pad('SOURCE', 10)}${pad('THIS', 10)}DELTA`);
     console.log('─'.repeat(62));
     let clean = true;
