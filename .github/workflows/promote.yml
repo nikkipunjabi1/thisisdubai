@@ -31,11 +31,15 @@ name: Promote model
 on:
   push:
     branches: [main, uat, production]
-    # Only run when something that affects the model or this pipeline changes.
-    paths:
-      - 'src/components/**'
-      - 'optimizely.config.mjs'
-      - '.github/workflows/promote.yml'
+    # NO paths filter, deliberately. This workflow is the ONLY thing that deploys these
+    # environments (Vercel's own git builds are disabled to stop them racing the model
+    # push), so filtering it means app changes silently never ship. We learned this the
+    # direct way: a merge to main that touched only scripts/ and docs/ matched no path,
+    # the workflow never ran, and DEV quietly stayed on the previous build.
+    #
+    # The cost of running every time is one idempotent no-op `config push` (~15s) on
+    # pushes that did not change the model. That is a fair price for "merged means
+    # deployed" being true without exception.
   workflow_dispatch:
     inputs:
       environment:

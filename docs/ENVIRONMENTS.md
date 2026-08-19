@@ -265,6 +265,30 @@ what would be lost, and apply it by hand with `--force` during a maintenance win
 **Per CMS instance:** create its own least-privilege API key. Ours pushes content *types* but is
 Forbidden from creating content *instances* — keep that restriction; it is a feature, not a limitation.
 
+### Gotcha: disabling Vercel's git builds makes CI the ONLY deploy path
+
+Turning off Vercel's Ignored Build Step ("Don't build anything") is the right call — it stops
+Vercel racing the model push. But it also means **`promote.yml` is now the only thing that can
+deploy**, and the workflow originally had a `paths:` filter limiting it to model-relevant files.
+
+The result: a merge to `main` that touched only `scripts/` and `docs/` matched no path, the
+workflow never ran, Vercel did not build either, and DEV silently stayed on the previous
+deployment. Nothing failed; nothing shipped.
+
+The filter is now removed. Every push to `main`/`uat`/`production` runs the full pipeline, so
+"merged means deployed" holds without exception. The cost is one idempotent no-op `config push`
+(~15s) on pushes that did not change the model — cheap insurance.
+
+**Trade-off to be aware of:** "Don't build anything" also disables **PR preview deployments**. If
+you want those back, switch the Ignored Build Step to a *Custom* command that skips only the
+tracked branch, e.g.:
+
+```bash
+[ "$VERCEL_GIT_COMMIT_REF" = "main" ] && exit 0 || exit 1
+```
+
+(exit 0 = skip the build, exit 1 = build it — the reverse of the usual convention.)
+
 ### Gotcha: Environment *variables* are not Environment *secrets*
 
 The first UAT dispatch reported **Success** and promoted nothing. The credentials had been added to

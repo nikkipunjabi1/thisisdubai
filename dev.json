@@ -1,0 +1,39 @@
+{
+  "host": "cg.optimizely.com",
+  "totals": {
+    "en": 187,
+    "ar": 187
+  },
+  "byType": {
+    "en": {
+      "Area": 19,
+      "ArticlePost": 10,
+      "Articles": 1,
+      "Event": 20,
+      "Events": 1,
+      "HighlightCard": 3,
+      "HomePage": 1,
+      "Neighbourhoods": 1,
+      "PlacesToVisit": 1,
+      "PointOfInterest": 100,
+      "SiteConfiguration": 1,
+      "TagTerm": 24,
+      "ThingsToDoPage": 5
+    },
+    "ar": {
+      "Area": 19,
+      "ArticlePost": 10,
+      "Articles": 1,
+      "Event": 20,
+      "Events": 1,
+      "HighlightCard": 3,
+      "HomePage": 1,
+      "Neighbourhoods": 1,
+      "PlacesToVisit": 1,
+      "PointOfInterest": 100,
+      "SiteConfiguration": 1,
+      "TagTerm": 24,
+      "ThingsToDoPage": 5
+    }
+  }
+}
