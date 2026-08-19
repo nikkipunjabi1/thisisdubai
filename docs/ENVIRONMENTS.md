@@ -248,6 +248,22 @@ what would be lost, and apply it by hand with `--force` during a maintenance win
 **Per CMS instance:** create its own least-privilege API key. Ours pushes content *types* but is
 Forbidden from creating content *instances* — keep that restriction; it is a feature, not a limitation.
 
+### Gotcha: Environment *variables* are not Environment *secrets*
+
+The first UAT dispatch reported **Success** and promoted nothing. The credentials had been added to
+the `uat` GitHub Environment, but on the **Variables** tab rather than the **Secrets** tab.
+`promote.yml` reads `secrets.*`, so they were invisible to it, and the workflow's
+skip-when-unconfigured branch did its job a little too well.
+
+Two fixes, both shipped:
+
+- Put `OPTIMIZELY_CMS_URL`, `OPTIMIZELY_CMS_CLIENT_ID` and `OPTIMIZELY_CMS_CLIENT_SECRET` under
+  **Settings → Environments → `<env>` → Environment secrets**. If you can read the value back, it is
+  a variable, not a secret.
+- `promote.yml` now **fails loudly on a manual dispatch** with missing credentials (a human asked for
+  a promotion, so silence is wrong) while still **skipping cleanly on an ordinary push** (a branch may
+  legitimately have no instance yet). The error names the likely cause in the job summary.
+
 ### Gotcha: a missing `APPLICATION_HOST` fails quietly
 
 Hit on the first DEV deploy. With it unset, the app does not crash, it silently degrades:

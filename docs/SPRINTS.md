@@ -395,6 +395,40 @@ downstream (semantic search tuning, AI retrieval, the MCP server) needs a realis
 
   **Blog trigger:** yes, and probably the strongest MVP artefact of the whole project.
 
+- [ ] **S3.13 — Make all site copy CMS-manageable (no hardcoded strings)** 🟡
+  _(scheduled: **after** the UAT setup and the promotion blog are done)_
+  Spotted on a fresh instance, where an unpopulated site exposes every string the code supplies
+  rather than the CMS. Editors should be able to change any visible text without a deploy.
+
+  **Audit first — the strings fall into three groups, and they are not all the same problem:**
+
+  1. **Genuinely hardcoded copy that should move to the CMS.** The footer description, the
+     unofficial-demo disclaimer and the copyright line live in `src/lib/messages.ts`. These are real
+     site copy and belong on `SiteConfiguration` (already the home of `siteName`, `titleTagline`,
+     the nav and the cookie/announcement text), localized per language.
+  2. **UI chrome** — button labels, "Search", pagination, filter labels, aria-labels. Also in
+     `src/lib/messages.ts`. Arguably these are *correctly* in code: they are product UI, not
+     editorial content, and moving hundreds of micro-labels into the CMS creates an editing surface
+     nobody wants to maintain. **Decide deliberately, per string, and write the rule down.**
+  3. **Fallbacks that CANNOT come from the CMS.** `src/app/[locale]/page.tsx:54` renders
+     "This is Dubai — coming together / The Home experience isn't published yet" when nothing is
+     published. By definition this cannot be read from the CMS, because the CMS is what is empty.
+     The fix is not to make it editable; it is to make it a **deliberate, presentable empty state**
+     rather than developer scaffolding leaking to visitors — and, on a public environment, to
+     consider whether it should be a 404 instead.
+
+  **Tasks:** sweep the codebase for user-visible literals; classify each into the three groups;
+  move group 1 onto `SiteConfiguration` (localized, `opti-push`) with the current text as the
+  fallback default; redesign group 3's empty state; document the rule ("what belongs in the CMS vs
+  what belongs in `messages.ts`") in COMPONENT-STANDARDS.md so it does not drift back.
+
+  **Exit check:** on a freshly-seeded instance, every string a visitor can read is either editable in
+  the CMS or a consciously-designed fallback — nothing is accidental developer copy.
+
+  **Note:** this also directly improves [S3.11] (the starter kit) and [S3.12] (the theme). Anyone
+  installing the kit gets an empty instance first, so what they see in that state *is* their first
+  impression of the product.
+
 ## 🚦 Phase 4 — AI features (Claude)  _(ask before starting)_
 - [ ] **S4.1 — AI Search** (Graph retrieval → Claude → cards) 🔴 — AI-SEARCH.md
 - [ ] **S4.2 — AI Trip Planner** (→ `Itinerary`) 🔴
