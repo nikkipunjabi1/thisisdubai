@@ -27,7 +27,7 @@ only reference/seed data is scripted.
 | Tier | CMS instance | Branch | Vercel project | URL | Indexable |
 |---|---|---|---|---|---|
 | **DEV / Integration** | Instance 1 | `main` (trunk) | `thisisdubai-dev` | https://thisisdubai-dev.vercel.app | No |
-| **UAT** | Instance 2 | `uat` | `thisisdubai-uat` | _(to come)_ | No |
+| **UAT** | Instance 2 | `uat` | `thisisdubai-uat` | https://thisisdubai-uat.vercel.app | No |
 | **Production** | Instance 3 | `production` | `thisisdubai` | _(to come)_ | **Yes** |
 
 **DEV is live and verified** (2026-08-18): EN/AR routes 200, Graph delivering real content, RTL correct
@@ -208,6 +208,57 @@ translated variants have nowhere to land.
 
 Match the source instance exactly, including the language codes (`en`, `ar`) — the code is what
 Graph and `routeSegment` key off.
+
+#### Import in BATCHES, in dependency order — a whole-tree import fails
+
+A single export of the entire tree is the obvious thing to try, and it does not work. It fails with:
+
+```
+EXCEPTION: CONTENT TYPE 'SYSCONTENTFOLDER' IS NOT ALLOWED TO BE CREATED
+UNDER PARENT OF CONTENT TYPE 'HOMEPAGE'.
+```
+
+The import does not resolve the tree top-down, so it attempts to create children before their parent
+exists, and the placement is rejected. The fix is to import in **dependency order**, in separate
+passes. This is the sequence that worked here, start to finish:
+
+| # | Import | Why this order |
+|---|---|---|
+| 1 | **Content model** (types) | Nothing can be created before its type exists. `opti-push` may already have done this. |
+| 2 | **Home page** | The root of the tree. Everything else is placed beneath it. |
+| 3 | *(not an import)* **Create the Application** in the CMS, set the environment's **hostname**, and enable **language-specific assets** | Routing and per-language media depend on it, and it is instance configuration, so nothing promotes it. |
+| 4 | **"For This Application" assets** | Shared blocks and media that pages reference. |
+| 5 | **Section by section:** Places to Visit + children, Neighbourhoods + children, Articles + children, Events + children, Things to Do + children | Each section's landing page must exist before its child pages. One section per pass keeps a failure small and re-runnable. |
+
+Because "Update existing content items with matching ID" preserves GUIDs, a pass that fails partway
+can simply be repeated: already-imported items update rather than duplicate.
+
+**Step 3 is easy to miss and nothing warns you about it.** The Application, its hostname and the
+language-specific asset setting are *instance configuration* — the same category as enabled
+languages. Neither `opti-push` nor a content import creates them.
+
+#### Verified result
+
+Run on 2026-08-19, DEV (Instance 1) → UAT (Instance 2), batched as above:
+
+```
+TOTAL   EN 187   AR 187
+✓ Every en item has a published counterpart in: ar
+✓ URLs align across locales — no language-switch 404s
+✓ Identical to the source snapshot — migration is complete
+```
+
+Live UAT checks: `/en` and `/ar` 200, deep AR routes resolving, `<html lang="ar-AE" dir="rtl">`,
+absolute canonical, 159-URL sitemap, `robots.txt` returning `Disallow: /`.
+
+**So the four unknowns, answered:**
+
+| # | Question | Answer |
+|---|---|---|
+| 1 | Do language variants survive? | **Yes — but only if the language is enabled on the target first.** See the prerequisite above. |
+| 2 | Does publish state survive? | **Yes.** All 187 appear in Graph, and Graph only returns published content. No re-publish pass was needed. |
+| 3 | Does per-language `routeSegment` survive? | **Yes.** URLs align across locales; `align:ar-slugs` was not needed. |
+| 4 | Does the key need broader scope? | **Not for the UI route** — the CMS UI import runs as the signed-in user. The API route (`POST /v1/experimental/packages`) was not exercised, so key scope for an automated import remains untested. |
 
 **Unknowns to verify empirically before trusting it** (the docs do not state these, and they matter
 most to this project):
