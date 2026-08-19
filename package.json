@@ -34,7 +34,9 @@
     "source-images": "node --env-file=.env scripts/source-images.mjs",
     "seo:fill": "node --env-file=.env scripts/seo-fill.mjs",
     "publish:ar": "node --env-file=.env scripts/publish-ar.mjs",
-    "align:ar-slugs": "node --env-file=.env scripts/align-ar-slugs.mjs"
+    "align:ar-slugs": "node --env-file=.env scripts/align-ar-slugs.mjs",
+    "verify:content": "node --env-file=.env scripts/verify-content.mjs",
+    "verify:content:uat": "node --env-file=.env.uat scripts/verify-content.mjs"
   },
   "dependencies": {
     "@opentelemetry/api": "^1.9.0",
