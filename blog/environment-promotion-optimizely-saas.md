@@ -127,6 +127,52 @@ Which gives one rule that belongs in your team's documentation:
 Resist the temptation to "just add force so the pipeline goes green". The green tick is not the
 goal.
 
+## Drift: when the schema changes underneath you
+
+Here is the failure I did not see coming, and the one that most cleanly justifies everything above.
+
+A routine promotion to the integration environment failed. Not a flaky pipeline, not a credentials
+problem: the tool reported that changes to one content type were breaking and could result in data
+loss, and refused to continue.
+
+Nothing in the repository had changed. The *instance* had.
+
+Someone (me) had opened the CMS during translation work and switched one field on one content type
+from shared to per-language, directly in the interface. It was a two-second click that solved an
+immediate problem. Weeks later, the pipeline tried to apply the repository's version of that type,
+which still said shared, and correctly recognised that going from per-language back to shared would
+delete that field's values in every language.
+
+This is **model drift**, and it is structural rather than careless. If your schema lives in source
+control but the CMS interface can still edit it, you have two sources of truth and no lock between
+them. Sooner or later they disagree, and you find out at promotion time.
+
+Diagnosing it is straightforward once you know to look: pull the instance's current model and
+compare the property in question. Most platforms record who last modified a type and when, which
+turns "why is this breaking" into "ah, that Tuesday".
+
+You then have three options, and it is worth knowing all three before you are under pressure:
+
+- **Revert the drift.** Force the change once, by hand, against that environment. Right when the UI
+  edit was accidental. Check what the forced change actually deletes before you run it.
+- **Adopt the drift.** Change the code to match the instance. No data loss, but you are promoting an
+  accidental click to a deliberate design decision.
+- **Apply it everywhere on purpose.** Change the code and accept a manual forced push per
+  environment. Only worth it if you genuinely want the change.
+
+We reverted. The field was an editor-only label that never appears on the page, so the entire loss
+was one hidden string in one language, and the environments went back to being consistent.
+
+But notice what the pipeline actually did here, because it is the whole argument in miniature.
+**It refused, and refusing was the correct and valuable behaviour.** Had we followed the tempting
+path of adding a force flag to make the pipeline reliably green, that value would have been deleted
+silently, on every environment, and we would never have learned the model had drifted at all.
+
+Which gives the most useful policy in this entire article, and it costs nothing to adopt:
+
+> **Treat content types in the CMS interface as read-only.** Anything you would change there belongs
+> in a pull request. Tell the team, and write it down.
+
 ## Moving content, honestly
 
 Content is the part everyone wants automated and mostly should not be.
@@ -289,6 +335,7 @@ If you take one thing from this, take this list.
   the model lands.
 - No path filter on the pipeline that owns deployment.
 - Fail safe on automatic triggers, fail loud on manual ones.
+- Treat content types in the CMS interface as read-only. Schema changes go through pull requests.
 
 **Verify**
 - Inventory published content per type and per language, before and after.
