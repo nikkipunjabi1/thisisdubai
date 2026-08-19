@@ -253,3 +253,21 @@ promotion); only the mechanism differs.
 
 Say **"schema-first, definitions in source control"**. Calling it "code-first" invites a correct
 objection that makes the rest of your argument look shaky.
+
+### Content types in the CMS UI are read-only
+
+When the schema lives in source control and is applied by CI, the CMS UI's ability to edit content
+types is a second source of truth with no lock between them. Editing a type there creates drift that
+the next promotion either silently reverts or refuses.
+
+Real case: a field flipped from shared to per-language in the UI during translation work. Weeks
+later the promotion failed, because applying the repo's version (still shared) would have deleted
+that field's values in every language. Diagnose with `npm run opti-snapshot` and check the type's
+`lastModified` / `lastModifiedBy`; resolve by reverting the drift, adopting it into the repo, or
+applying it deliberately everywhere.
+
+The pipeline refusing is the feature. This is the concrete reason `--force` must never live in CI:
+a forced pipeline would have deleted that data silently on every environment, and nobody would have
+learned the model had drifted.
+
+**Rule: anything you would change in Settings → Content Types belongs in a pull request.**

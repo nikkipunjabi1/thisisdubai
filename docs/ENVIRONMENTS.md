@@ -340,6 +340,50 @@ what would be lost, and apply it by hand with `--force` during a maintenance win
 **Per CMS instance:** create its own least-privilege API key. Ours pushes content *types* but is
 Forbidden from creating content *instances* — keep that restriction; it is a feature, not a limitation.
 
+### Gotcha: editing a content type in the CMS UI creates drift the pipeline may refuse
+
+The repo is the source of truth for the model. The CMS UI can still edit content types, and when
+someone does, the next promotion will either silently revert their change or fail outright.
+
+Hit on DEV, 2026-08-19. A routine promotion failed with:
+
+```
+The changes to 'Neighbourhoods' are considered breaking and could potentially
+result in data loss. Use the '--force' flag to apply the changes anyway.
+```
+
+Nothing in the repo had changed. The *instance* had: `Neighbourhoods.internalTitle` had been
+switched to per-language in the CMS UI during the AR translation work, while the repo still
+declared it shared. The push was therefore attempting ON → OFF, the destructive direction, and the
+CLI refused.
+
+**Diagnose drift by pulling the instance model and diffing the property in question:**
+
+```bash
+npm run opti-snapshot > /tmp/instance.json    # read-only
+```
+
+The type's `lastModified` / `lastModifiedBy` tell you when it drifted and who did it.
+
+**Three ways out, in the order worth considering them:**
+
+1. **Revert the drift** — force the push once, by hand, against that instance. Correct when the UI
+   change was accidental. Weigh what the forced change deletes first.
+2. **Adopt the drift into the repo** — make the code match the instance. Zero data loss, but it
+   enshrines an accidental click as a modeling decision.
+3. **Apply it deliberately everywhere** — change the repo *and* accept a manual forced push per
+   instance. Only worth it if the change is genuinely wanted.
+
+We took option 1: the field was an editor-only label, never rendered, so the only loss was one
+hidden Arabic string, and all four section experiences went back to being consistent.
+
+**The wider lesson:** this is exactly why `--force` must never live in CI. Had the pipeline forced
+routinely, it would have deleted that value silently on every environment and nobody would have
+learned that the model had drifted at all. The failure *was* the feature.
+
+**Prevention:** treat content types in the CMS UI as read-only, and say so to the team. Anything you
+would change there belongs in a PR.
+
 ### Gotcha: disabling Vercel's git builds makes CI the ONLY deploy path
 
 Turning off Vercel's Ignored Build Step ("Don't build anything") is the right call — it stops
