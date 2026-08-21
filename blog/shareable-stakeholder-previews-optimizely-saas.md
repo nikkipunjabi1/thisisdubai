@@ -162,5 +162,6 @@ time", checked honestly on every request until the clock runs out.
 Get the defaults right, keep the real key on the server, and it stays a small, well-behaved feature
 rather than a liability. Plan it in from the start, and nobody ever has to ask you for it.
 
-I would be glad to hear how other teams handle cancelling links early, and tracking who created
-them, when the reviewers sit outside your organisation.
+Now I would like to hear from you. **How do you handle stakeholder review, or external review
+links, on Optimizely SaaS?** Have you built something similar, taken a different route, or found a
+way around the problem entirely? I am always glad to compare notes.
