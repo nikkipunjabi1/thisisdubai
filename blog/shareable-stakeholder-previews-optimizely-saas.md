@@ -110,21 +110,6 @@ and check it on every request.
 and dangerous for a draft: the first reviewer loads it, it lands in a shared cache, and the public
 gets served an unpublished page. Draft reads have to skip the shared cache completely.
 
-## The bit I got most wrong
-
-Everything above makes the link work. What I underestimated was making it easy to get.
-
-My first version was a small admin page with a shared password. It worked, and it was still wrong.
-Asking authors to keep a password is a smell, and asking them to leave the CMS to find the page they
-were already looking at is a workflow nobody uses twice.
-
-The better answer was already on screen. The CMS shows your app inside its preview pane, so that
-frame is your interface, inside their CMS, on the exact page they are editing. Put the button there.
-Their CMS login is the authentication, so there is no second password to hand out.
-
-The measure is not "can we produce a link". It is "does the author reach for it instead of messaging
-a developer".
-
 ## Why we build this before handover
 
 We now treat this as part of delivering an Optimizely solution, not as an optional extra a client
@@ -170,8 +155,9 @@ fails rather than showing an error, and refuse to work at all if the configurati
 3. A preview switch is not a permission. Carry the scope yourself and re-check it every request.
 4. Treat every shared cache as a way to accidentally publish.
 5. Default to the safe option, and fail closed when configuration is missing.
-6. Run the whole flow in your second language, and design the route to the button before you build
-   the button.
+6. Run the whole flow in your second language, and decide where the author will click before
+   building anything. The best place is inside the CMS preview pane, on the page they are already
+   editing, so their CMS login is the only authentication needed.
 
 ## In short
 
