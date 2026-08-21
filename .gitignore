@@ -62,3 +62,11 @@ certificates/
 # Local CMS backups/snapshots — not project artifacts
 # Local CMS backups/snapshots (e.g. pre-cleanup manifests) — not project artifacts
 backups/
+
+# Content inventory snapshots written by `npm run verify:content -- --out=<file>`.
+# Generated, environment-specific, and only meaningful for the migration you are
+# running right now. Keep them local.
+*.inventory.json
+dev.json
+uat.json
+prod.json

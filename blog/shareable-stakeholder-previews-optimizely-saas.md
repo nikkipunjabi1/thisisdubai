@@ -11,7 +11,7 @@ on. It is not one. **Optimizely SaaS does not ship this out of the box, and on a
 have to develop it yourself.** It is a small feature with a fair amount going on underneath, and it
 matters more to the business than its size suggests.
 
-Here is how it works, what caught me out, and the decisions worth making early.
+Here is how it works, what I got wrong, and the decisions worth making early.
 
 ## The request
 
@@ -21,6 +21,8 @@ A few weeks before go-live, someone always asks:
 
 The reviewer is usually a legal contact, a brand manager, or a client sponsor. They will not get a
 CMS account, they will not be trained, and they will open the link on their phone.
+
+![The CMS preview pane showing the page while it is still in Draft. This is the built-in author preview, and it is the one Optimizely gives you](https://blog.nikkipunjabi.com/wp-content/uploads/2026/08/01-Draft-Published-Content-2048x1041.png)
 
 ## There are two previews, and people mix them up
 
@@ -47,6 +49,15 @@ The reason is architectural rather than an oversight. In a traditional CMS the s
 page, so it can render the draft too. Go headless and your app does the rendering. Nothing shows a
 draft unless you write the code that asks for one.
 
+> **On Optimizely 12 / DXP, you may not need to build it at all.** There is an excellent open-source
+> add-on, [Advanced Reviews](https://github.com/barteksekula/advanced-reviews) by Bartosz Sekuła and
+> Grzegorz Wiecheć (Apache 2.0, `Advanced.CMS.AdvancedReviews` on NuGet). It gives external reviewers
+> time-limited review links with optional PIN protection, plus pin-based commenting directly on the
+> page and integration with the built-in approval workflows. We use it on a live project and it works
+> well. Check it before writing anything yourself. The rest of this post is about the SaaS and
+> headless case, where that add-on does not apply because there is no server-side rendering pipeline
+> to plug into.
+
 There is also a credential problem. Optimizely Graph gives you two keys:
 
 - a **public key** that reads published content only, and is safe in a browser
@@ -57,7 +68,7 @@ is "let this reviewer see this one draft, without any powerful key leaving my se
 
 ## How it works
 
-![How a stakeholder preview link works: the author clicks Share inside the CMS preview pane, the server mints a signed token, the reviewer opens the link, the app checks the network, signature, expiry and item scope, and only then reads the draft with credentials that never leave the server](assets/stakeholder-preview-flow.png)
+![How a stakeholder preview link works: the author clicks Share inside the CMS preview pane, the server mints a signed token, the reviewer opens the link, the app checks the network, signature, expiry and item scope, and only then reads the draft with credentials that never leave the server](https://blog.nikkipunjabi.com/wp-content/uploads/2026/08/stakeholder-preview-flow-2048x1123.jpg)
 
 The author clicks a button. Your server creates a **signed link**. The reviewer opens it, your server
 checks the link is genuine, and then your server (not the browser) fetches the draft and renders it.
@@ -81,25 +92,6 @@ So links are **Internal** by default: they only open from the office or the VPN.
 from anywhere) is a deliberate choice, made per link, for a genuine external reviewer.
 
 That one default has saved more trouble than any of the clever parts.
-
-## Three things that broke
-
-**The newest draft is not the highest version number.** I sorted versions and took the highest. The
-preview loaded, the banner appeared, everything looked right. It was showing the published page,
-because the draft happened to carry a lower number. Sort by status, not by number.
-
-The lesson is bigger than the bug: **test for a difference, not for a page load.** Make an edit, then
-check the preview shows it and the live page does not. A preview quietly showing published content
-passes every other test you would think to write.
-
-**Turning on preview mode unlocked everything.** Most frameworks have a "this visitor can see drafts"
-switch. I turned it on, browsed to another page, and saw that draft too. One link had opened the
-whole site. The switch has no idea which page the link was for, so you have to carry that yourself
-and check it on every request.
-
-**The cache nearly published a draft for me.** Caching pages by URL is right for published content
-and dangerous for a draft: the first reviewer loads it, it lands in a shared cache, and the public
-gets served an unpublished page. Draft reads have to skip the shared cache completely.
 
 ## The bit I got most wrong
 
@@ -139,30 +131,20 @@ So it is a small feature that quietly removes a recurring source of friction fro
 process, and it costs a few days if you plan for it. That is an easy trade to recommend to a client,
 and a harder conversation to have six months after go-live.
 
+![The "Share with a stakeholder" panel inside the CMS preview pane, showing who can open the link, when it expires, and the generated link itself](https://blog.nikkipunjabi.com/wp-content/uploads/2026/08/02-share-link-with-a-stakeholder.png)
+
 ## Decide these on purpose
 
 The build takes a few days. These questions outlast it, and they are far easier to answer now than
 later:
 
 - How long should a link last? Whatever you pick is what almost everyone will use.
-- Can a link be cancelled before it expires?
 - Do you log who created which link? "No" tends not to survive an audit.
 - What happens once the page goes live? Ideally the link quietly becomes the real page.
 
 A few guardrails are cheap now and awkward later: force `noindex` on anything showing a draft, keep
 the link read-only so a reviewer can never trigger a publish, fall back to the live page if anything
 fails rather than showing an error, and refuse to work at all if the configuration is missing.
-
-## What I would tell the next team
-
-1. Check which credential your SDK actually sends before you design anything. Half an hour, read
-   only, against the real service.
-2. Test that the preview shows something the live page does not.
-3. A preview switch is not a permission. Carry the scope yourself and re-check it every request.
-4. Treat every shared cache as a way to accidentally publish.
-5. Default to the safe option, and fail closed when configuration is missing.
-6. Run the whole flow in your second language, and design the route to the button before you build
-   the button.
 
 ## In short
 
@@ -176,5 +158,6 @@ time", checked honestly on every request until the clock runs out.
 Get the defaults right, keep the real key on the server, and it stays a small, well-behaved feature
 rather than a liability. Plan it in from the start, and nobody ever has to ask you for it.
 
-I would be glad to hear how other teams handle cancelling links early, and tracking who created
-them, when the reviewers sit outside your organisation.
+Now I would like to hear from you. **How do you handle stakeholder review, or external review
+links, on Optimizely SaaS?** Have you built something similar, taken a different route, or found a
+way around the problem entirely? I am always glad to compare notes.
