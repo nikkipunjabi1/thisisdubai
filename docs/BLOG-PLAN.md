@@ -47,13 +47,14 @@ Every post follows the same standards. This is the contract.
 
 ## Published so far
 
-**3 articles published** while building this project:
+**4 articles published** while building this project:
 
 | # | Article | Draft in repo |
 |---|---|---|
 | 6 | Semantic search with Optimizely Graph | [`blog/06-semantic-search-optimizely-graph.md`](../blog/06-semantic-search-optimizely-graph.md) |
 | 7 | Localizing an Optimizely SaaS site to a new language | [`blog/07-en-ar-localization-optimizely-saas-nextjs.md`](../blog/07-en-ar-localization-optimizely-saas-nextjs.md) |
 | 18 | Component naming conventions for a CMS website | [`blog/component-naming-conventions-cms-website.html`](../blog/component-naming-conventions-cms-website.html) |
+| 13 | Shareable stakeholder previews on Optimizely SaaS CMS (headless) | [`blog/shareable-stakeholder-previews-optimizely-saas.md`](../blog/shareable-stakeholder-previews-optimizely-saas.md) |
 
 Written as internal team enablement rather than published to the community:
 [`blog/code-first-content-modeling.html`](../blog/code-first-content-modeling.html), plus a diagram
@@ -87,7 +88,7 @@ build.
 | 10 | **A reusable, server-rendered listing engine** on Optimizely SaaS + Visual Builder | Section/listing pages with server-side pagination, sort, and faceted filters | 📝 Draft ready |
 | 11 | **From CMP/DAM to Optimizely SaaS CMS** — a bulk imagery pipeline (source → upload → attach) | Getting binaries into the CMS at scale when the content API can't upload them | 📝 Draft ready |
 | 12 | **Automating content translation in Optimizely SaaS** — what "Translate with AI" (Opal) actually does, and how to script the rest | Bulk-translating a site to a second language when there's no translate-item API | 💡 Planned |
-| 13 | **Shareable stakeholder previews** for Optimizely SaaS + a headless frontend | Durable, login-free preview-before-publish links for reviewers | 📝 Publish-ready (2 CMS screenshots outstanding) |
+| 13 | **Shareable stakeholder previews** for Optimizely SaaS + a headless frontend | Durable, login-free preview-before-publish links for reviewers | ✅ Published |
 | 14 | **Building an AI content assistant on Optimizely Graph** (content as tools for an LLM) | Grounding an AI feature — search, a planner, an MCP server — in your live content | 💡 Planned |
 | 15 | **Live Visual Builder preview for a headless app** on Optimizely SaaS | Wiring on-page/live preview end to end: preview tokens, local HTTPS, and the registry-must-mirror-the-model drift | 📝 Draft ready |
 | 16 | **Building a reference project on Optimizely SaaS in the open** | How and why to run a public learning project: the official-tooling decision, responsible-assets guardrails, and a sprint/PR/blogging workflow | 📝 Draft ready |

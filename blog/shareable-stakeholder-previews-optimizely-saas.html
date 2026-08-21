@@ -65,15 +65,15 @@
 <p>That one default has saved more trouble than any of the clever parts.</p>
 
 <hr>
-<h2 style="margin-top:38px;">Three things that broke</h2>
+<h2 style="margin-top:38px;">The bit I got most wrong</h2>
 
-<p><strong>The newest draft is not the highest version number.</strong> I sorted versions and took the highest. The preview loaded, the banner appeared, everything looked right. It was showing the published page, because the draft happened to carry a lower number. Sort by status, not by number.</p>
+<p>Everything above makes the link work. What I underestimated was making it easy to get.</p>
 
-<p>The lesson is bigger than the bug: <strong>test for a difference, not for a page load.</strong> Make an edit, then check the preview shows it and the live page does not. A preview quietly showing published content passes every other test you would think to write.</p>
+<p>My first version was a small admin page with a shared password. It worked, and it was still wrong. Asking authors to keep a password is a smell, and asking them to leave the CMS to find the page they were already looking at is a workflow nobody uses twice.</p>
 
-<p><strong>Turning on preview mode unlocked everything.</strong> Most frameworks have a "this visitor can see drafts" switch. I turned it on, browsed to another page, and saw that draft too. One link had opened the whole site. The switch has no idea which page the link was for, so you have to carry that yourself and check it on every request.</p>
+<p>The better answer was already on screen. The CMS shows your app inside its preview pane, so that frame is your interface, inside their CMS, on the exact page they are editing. Put the button there. Their CMS login is the authentication, so there is no second password to hand out.</p>
 
-<p><strong>The cache nearly published a draft for me.</strong> Caching pages by URL is right for published content and dangerous for a draft: the first reviewer loads it, it lands in a shared cache, and the public gets served an unpublished page. Draft reads have to skip the shared cache completely.</p>
+<p>The measure is not "can we produce a link". It is "does the author reach for it instead of messaging a developer".</p>
 
 <hr>
 <h2 style="margin-top:38px;">Why we build this before handover</h2>

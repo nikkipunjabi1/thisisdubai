@@ -93,24 +93,20 @@ from anywhere) is a deliberate choice, made per link, for a genuine external rev
 
 That one default has saved more trouble than any of the clever parts.
 
-## Three things that broke
+## The bit I got most wrong
 
-**The newest draft is not the highest version number.** I sorted versions and took the highest. The
-preview loaded, the banner appeared, everything looked right. It was showing the published page,
-because the draft happened to carry a lower number. Sort by status, not by number.
+Everything above makes the link work. What I underestimated was making it easy to get.
 
-The lesson is bigger than the bug: **test for a difference, not for a page load.** Make an edit, then
-check the preview shows it and the live page does not. A preview quietly showing published content
-passes every other test you would think to write.
+My first version was a small admin page with a shared password. It worked, and it was still wrong.
+Asking authors to keep a password is a smell, and asking them to leave the CMS to find the page they
+were already looking at is a workflow nobody uses twice.
 
-**Turning on preview mode unlocked everything.** Most frameworks have a "this visitor can see drafts"
-switch. I turned it on, browsed to another page, and saw that draft too. One link had opened the
-whole site. The switch has no idea which page the link was for, so you have to carry that yourself
-and check it on every request.
+The better answer was already on screen. The CMS shows your app inside its preview pane, so that
+frame is your interface, inside their CMS, on the exact page they are editing. Put the button there.
+Their CMS login is the authentication, so there is no second password to hand out.
 
-**The cache nearly published a draft for me.** Caching pages by URL is right for published content
-and dangerous for a draft: the first reviewer loads it, it lands in a shared cache, and the public
-gets served an unpublished page. Draft reads have to skip the shared cache completely.
+The measure is not "can we produce a link". It is "does the author reach for it instead of messaging
+a developer".
 
 ## Why we build this before handover
 
