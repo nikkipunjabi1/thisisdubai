@@ -11,7 +11,7 @@ on. It is not one. **Optimizely SaaS does not ship this out of the box, and on a
 have to develop it yourself.** It is a small feature with a fair amount going on underneath, and it
 matters more to the business than its size suggests.
 
-Here is how it works, what caught me out, and the decisions worth making early.
+Here is how it works, what I got wrong, and the decisions worth making early.
 
 ## The request
 
