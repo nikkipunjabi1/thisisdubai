@@ -22,6 +22,8 @@ A few weeks before go-live, someone always asks:
 The reviewer is usually a legal contact, a brand manager, or a client sponsor. They will not get a
 CMS account, they will not be trained, and they will open the link on their phone.
 
+![The CMS preview pane showing the page while it is still in Draft. This is the built-in author preview, and it is the one Optimizely gives you](https://blog.nikkipunjabi.com/wp-content/uploads/2026/08/01-Draft-Published-Content-2048x1041.png)
+
 ## There are two previews, and people mix them up
 
 Optimizely SaaS already gives you a preview: the CMS shows your site in a frame while the author
@@ -66,7 +68,7 @@ is "let this reviewer see this one draft, without any powerful key leaving my se
 
 ## How it works
 
-![How a stakeholder preview link works: the author clicks Share inside the CMS preview pane, the server mints a signed token, the reviewer opens the link, the app checks the network, signature, expiry and item scope, and only then reads the draft with credentials that never leave the server](assets/stakeholder-preview-flow.png)
+![How a stakeholder preview link works: the author clicks Share inside the CMS preview pane, the server mints a signed token, the reviewer opens the link, the app checks the network, signature, expiry and item scope, and only then reads the draft with credentials that never leave the server](https://blog.nikkipunjabi.com/wp-content/uploads/2026/08/stakeholder-preview-flow-2048x1123.jpg)
 
 The author clicks a button. Your server creates a **signed link**. The reviewer opens it, your server
 checks the link is genuine, and then your server (not the browser) fetches the draft and renders it.
@@ -133,6 +135,8 @@ So it is a small feature that quietly removes a recurring source of friction fro
 process, and it costs a few days if you plan for it. That is an easy trade to recommend to a client,
 and a harder conversation to have six months after go-live.
 
+![The "Share with a stakeholder" panel inside the CMS preview pane, showing who can open the link, when it expires, and the generated link itself](https://blog.nikkipunjabi.com/wp-content/uploads/2026/08/02-share-link-with-a-stakeholder.png)
+
 ## Decide these on purpose
 
 The build takes a few days. These questions outlast it, and they are far easier to answer now than
@@ -145,18 +149,6 @@ later:
 A few guardrails are cheap now and awkward later: force `noindex` on anything showing a draft, keep
 the link read-only so a reviewer can never trigger a publish, fall back to the live page if anything
 fails rather than showing an error, and refuse to work at all if the configuration is missing.
-
-## What I would tell the next team
-
-1. Check which credential your SDK actually sends before you design anything. Half an hour, read
-   only, against the real service.
-2. Test that the preview shows something the live page does not.
-3. A preview switch is not a permission. Carry the scope yourself and re-check it every request.
-4. Treat every shared cache as a way to accidentally publish.
-5. Default to the safe option, and fail closed when configuration is missing.
-6. Run the whole flow in your second language, and decide where the author will click before
-   building anything. The best place is inside the CMS preview pane, on the page they are already
-   editing, so their CMS login is the only authentication needed.
 
 ## In short
 
