@@ -82,6 +82,11 @@ There is no database behind any of this either. Nothing is stored, so there is n
 The one honest downside: you cannot cancel a single link early. You lean on short expiry dates
 instead, and if you ever need to kill every link at once, you change the signing secret.
 
+That trade is fine for ordinary review. If your content is embargoed or regulated and you genuinely
+need to pull one link back, you have to store the links somewhere and check them on every request.
+Decide that before you build, because it is the one choice here that changes the shape of the whole
+thing.
+
 ## Default to the boring option
 
 The realistic risk here is not an attacker. It is an email forwarded one hop too far.
@@ -139,7 +144,6 @@ The build takes a few days. These questions outlast it, and they are far easier 
 later:
 
 - How long should a link last? Whatever you pick is what almost everyone will use.
-- Can a link be cancelled before it expires?
 - Do you log who created which link? "No" tends not to survive an audit.
 - What happens once the page goes live? Ideally the link quietly becomes the real page.
 

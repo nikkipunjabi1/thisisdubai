@@ -55,6 +55,8 @@
 
 <p>There is no database behind any of this either. Nothing is stored, so there is nothing to clean up. The one honest downside: you cannot cancel a single link early. You lean on short expiry dates instead, and if you ever need to kill every link at once, you change the signing secret.</p>
 
+<p>That trade is fine for ordinary review. If your content is embargoed or regulated and you genuinely need to pull one link back, you have to store the links somewhere and check them on every request. Decide that before you build, because it is the one choice here that changes the shape of the whole thing.</p>
+
 <hr>
 <h2 style="margin-top:38px;">Default to the boring option</h2>
 
@@ -95,7 +97,7 @@
 
 <p>The build takes a few days. These questions outlast it, and they are far easier to answer now than later:</p>
 
-<ul style="padding-left:22px;line-height:1.7;"><li style="margin-bottom:9px;">How long should a link last? Whatever you pick is what almost everyone will use.</li><li style="margin-bottom:9px;">Can a link be cancelled before it expires?</li><li style="margin-bottom:9px;">Do you log who created which link? "No" tends not to survive an audit.</li><li style="margin-bottom:9px;">What happens once the page goes live? Ideally the link quietly becomes the real page.</li></ul>
+<ul style="padding-left:22px;line-height:1.7;"><li style="margin-bottom:9px;">How long should a link last? Whatever you pick is what almost everyone will use.</li><li style="margin-bottom:9px;">Do you log who created which link? "No" tends not to survive an audit.</li><li style="margin-bottom:9px;">What happens once the page goes live? Ideally the link quietly becomes the real page.</li></ul>
 
 <p>A few guardrails are cheap now and awkward later: force <code style="background:rgba(43,75,114,0.07);padding:2px 5px;border-radius:3px;font-size:0.92em;">noindex</code> on anything showing a draft, keep the link read-only so a reviewer can never trigger a publish, fall back to the live page if anything fails rather than showing an error, and refuse to work at all if the configuration is missing.</p>
 
