@@ -47,6 +47,15 @@ The reason is architectural rather than an oversight. In a traditional CMS the s
 page, so it can render the draft too. Go headless and your app does the rendering. Nothing shows a
 draft unless you write the code that asks for one.
 
+> **On Optimizely 12 / DXP, you may not need to build it at all.** There is an excellent open-source
+> add-on, [Advanced Reviews](https://github.com/barteksekula/advanced-reviews) by Bartosz Sekuła and
+> Grzegorz Wiecheć (Apache 2.0, `Advanced.CMS.AdvancedReviews` on NuGet). It gives external reviewers
+> time-limited review links with optional PIN protection, plus pin-based commenting directly on the
+> page and integration with the built-in approval workflows. We use it on a live project and it works
+> well. Check it before writing anything yourself. The rest of this post is about the SaaS and
+> headless case, where that add-on does not apply because there is no server-side rendering pipeline
+> to plug into.
+
 There is also a credential problem. Optimizely Graph gives you two keys:
 
 - a **public key** that reads published content only, and is safe in a browser
