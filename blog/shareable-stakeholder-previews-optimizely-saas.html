@@ -1,0 +1,111 @@
+<p>Hello Digital Team,</p>
+
+<p>Here is a small request that turns out to be a bigger job than it sounds: letting someone outside the CMS see a page before it goes live. Short post, mostly the decisions and the things that caught me out.</p>
+
+<h2 style="margin-top:38px;">The request</h2>
+
+<p>A few weeks before go-live, someone always asks:</p>
+
+<blockquote style="border-left:4px solid #eeae56;background:rgba(238,174,86,0.07);padding:14px 20px;margin:26px 0;border-radius:0 6px 6px 0;"><p style="margin:0;">"Can you send the client a link so they can see the page before we publish it?"</p></blockquote>
+
+<p>It sounds like a setting. It is not. On a headless build it is a small feature with a surprising amount going on underneath, and it is worth understanding before you promise a date.</p>
+
+<p>The reviewer is usually a legal contact, a brand manager, or a client sponsor. They will not get a CMS account, they will not be trained, and they will open the link on their phone.</p>
+
+<div style="border:1px dashed rgba(43,75,114,0.45);background:rgba(43,75,114,0.04);padding:16px 20px;margin:26px 0;border-radius:6px;color:#2b4b72;"><strong>[ SCREENSHOT ]</strong> The CMS preview pane with the page still in Draft. This is the built-in author preview.</div>
+
+<hr>
+<h2 style="margin-top:38px;">There are two previews, and people mix them up</h2>
+
+<p>Optimizely SaaS already gives you a preview: the CMS shows your site in a frame while the author edits, updating as they type. It is great, and it is for the author.</p>
+
+<p>It is tied to that editing session, so you cannot paste that URL into an email on Tuesday and expect it to work on Thursday.</p>
+
+<table style="width:100%;border-collapse:collapse;margin:26px 0;font-size:0.95em;">
+<thead><tr><th style="text-align:left;padding:10px 12px;border-bottom:2px solid #2b4b72;background:rgba(43,75,114,0.05);"></th><th style="text-align:left;padding:10px 12px;border-bottom:2px solid #2b4b72;background:rgba(43,75,114,0.05);">Editor preview</th><th style="text-align:left;padding:10px 12px;border-bottom:2px solid #2b4b72;background:rgba(43,75,114,0.05);">Stakeholder link</th></tr></thead><tbody>
+<tr><td style="padding:10px 12px;border-bottom:1px solid rgba(43,75,114,0.14);vertical-align:top;">Who is it for?</td><td style="padding:10px 12px;border-bottom:1px solid rgba(43,75,114,0.14);vertical-align:top;">The author, while editing</td><td style="padding:10px 12px;border-bottom:1px solid rgba(43,75,114,0.14);vertical-align:top;">A reviewer with no account</td></tr>
+<tr><td style="padding:10px 12px;border-bottom:1px solid rgba(43,75,114,0.14);vertical-align:top;">How long does it last?</td><td style="padding:10px 12px;border-bottom:1px solid rgba(43,75,114,0.14);vertical-align:top;">Minutes</td><td style="padding:10px 12px;border-bottom:1px solid rgba(43,75,114,0.14);vertical-align:top;">Days, you decide</td></tr>
+<tr><td style="padding:10px 12px;border-bottom:1px solid rgba(43,75,114,0.14);vertical-align:top;">Comes with the CMS?</td><td style="padding:10px 12px;border-bottom:1px solid rgba(43,75,114,0.14);vertical-align:top;">Yes</td><td style="padding:10px 12px;border-bottom:1px solid rgba(43,75,114,0.14);vertical-align:top;">No, you build it</td></tr>
+</tbody></table>
+
+<hr>
+<h2 style="margin-top:38px;">Why you have to build it</h2>
+
+<p>In a traditional CMS the server renders the page, so it can render the draft too. Go headless and your app does the rendering. Nothing shows a draft unless you write the code that asks for one.</p>
+
+<p>There is also a credential problem. Optimizely Graph gives you two keys:</p>
+
+<ul style="padding-left:22px;line-height:1.7;"><li style="margin-bottom:9px;">a <strong>public key</strong> that reads published content only, safe in a browser</li><li style="margin-bottom:9px;">an <strong>app key and secret</strong> that can read every unpublished draft you have</li></ul>
+
+<p>Only the second one can see a draft, and you absolutely do not want it in a browser. So the real request is "let this reviewer see this draft, without any powerful key leaving my server".</p>
+
+<hr>
+<h2 style="margin-top:38px;">How it works</h2>
+
+<figure style="margin:32px 0;"><img src="assets/stakeholder-preview-flow.png" alt="How a stakeholder preview link works: the author clicks Share inside the CMS preview pane, the server mints a signed token, the reviewer opens the link, the app checks the network, signature, expiry and item scope, and only then reads the draft with credentials that never leave the server" style="width:100%;height:auto;border:1px solid rgba(43,75,114,0.18);border-radius:8px;" /></figure>
+
+<p>The author clicks a button. Your server creates a <strong>signed link</strong>. The reviewer opens it, your server checks the link is genuine, and then your server (not the browser) fetches the draft and renders it.</p>
+
+<p>The important idea: <strong>the link is a permission slip, not a key.</strong> It says "show the bearer this one page, until this time". It contains no credentials. The key that reads drafts stays on your server and never travels.</p>
+
+<p>Because the link is signed, nobody can edit the URL to see a different page or extend the expiry. Anyone can read what it says, which is fine, but nobody can change it.</p>
+
+<p>There is also no database behind any of this. Nothing is stored, so there is nothing to clean up. The one honest downside: you cannot cancel a single link early. You lean on short expiry dates instead, and if you ever need to kill everything at once, you change the signing secret.</p>
+
+<hr>
+<h2 style="margin-top:38px;">Default to the boring option</h2>
+
+<p>The realistic risk here is not a hacker. It is an email forwarded one hop too far.</p>
+
+<p>So links are <strong>Internal</strong> by default: they only open from your office or VPN. <strong>Shareable</strong> (opens from anywhere) is a deliberate choice per link, for a genuine external reviewer.</p>
+
+<p>That one default has saved more trouble than any of the clever parts.</p>
+
+<hr>
+<h2 style="margin-top:38px;">Three things that broke</h2>
+
+<p><strong>The newest draft is not the highest version number.</strong> I sorted versions and took the highest. The preview loaded, the banner appeared, everything looked right. It was showing the published page, because the draft happened to have a lower number. Sort by status, not by number.</p>
+
+<p>The lesson is bigger than the bug: <strong>test for a difference, not for a page load.</strong> Make an edit, then check the preview shows it and the live page does not. A preview quietly showing published content passes every other test you would think to write.</p>
+
+<p><strong>Turning on preview mode unlocked everything.</strong> Most frameworks have a "this visitor can see drafts" switch. I turned it on, browsed to another page, and saw that draft too. One link had opened the whole site. The switch does not know which page the link was for, so you have to carry that yourself and check it on every request.</p>
+
+<p><strong>The cache nearly published a draft for me.</strong> Caching pages by URL is right for published content and dangerous for a draft: the first reviewer loads it, it lands in a shared cache, and the public gets served an unpublished page. Draft reads have to skip the shared cache completely.</p>
+
+<hr>
+<h2 style="margin-top:38px;">The bit I got most wrong</h2>
+
+<p>All of the above makes the link work. What I underestimated was making it easy to get.</p>
+
+<p>My first version was a small admin page with a shared password. It worked. It was still wrong. Asking authors to keep a password is a smell, and asking them to leave the CMS to find the page they were already looking at is a workflow nobody uses twice.</p>
+
+<p>The better answer was already on screen. The CMS shows your app inside its preview pane, so that frame is your interface, inside their CMS, on the exact page they are editing. Put the button there. Their CMS login is the authentication, so there is no second password to hand out.</p>
+
+<p>The measure is not "can we produce a link". It is "does the author reach for it instead of messaging a developer".</p>
+
+<div style="border:1px dashed rgba(43,75,114,0.45);background:rgba(43,75,114,0.04);padding:16px 20px;margin:26px 0;border-radius:6px;color:#2b4b72;"><strong>[ SCREENSHOT ]</strong> The "Share with a stakeholder" panel in the preview pane: Internal / Shareable, the expiry, and the generated link.</div>
+
+<hr>
+<h2 style="margin-top:38px;">Decide these on purpose</h2>
+
+<p>The build takes a few days. These questions outlast it, and they are much easier to answer now than later:</p>
+
+<ul style="padding-left:22px;line-height:1.7;"><li style="margin-bottom:9px;">How long should a link last? Whatever you pick is what almost everyone will use.</li><li style="margin-bottom:9px;">Can a link be cancelled before it expires?</li><li style="margin-bottom:9px;">Do you log who created which link? "No" tends not to survive an audit.</li><li style="margin-bottom:9px;">What happens when the page goes live? Ideally the link quietly becomes the real page.</li></ul>
+
+<p>And a few guardrails that are cheap now and awkward later: force <code style="background:rgba(43,75,114,0.07);padding:2px 5px;border-radius:3px;font-size:0.92em;">noindex</code> on anything showing a draft, make the link read-only so a reviewer can never trigger a publish, fall back to the live page if anything fails rather than showing an error, and refuse to work at all if the configuration is missing.</p>
+
+<hr>
+<h2 style="margin-top:38px;">What I would tell the next team</h2>
+
+<ol style="padding-left:22px;line-height:1.7;"><li style="margin-bottom:9px;">Check which credential your SDK actually sends before you design anything. Half an hour, read only, against the real service.</li><li style="margin-bottom:9px;">Test that the preview shows something the live page does not.</li><li style="margin-bottom:9px;">A preview switch is not a permission. Carry the scope yourself and re-check it every request.</li><li style="margin-bottom:9px;">Treat every shared cache as a way to accidentally publish.</li><li style="margin-bottom:9px;">Default to the safe option, and fail closed when configuration is missing.</li><li style="margin-bottom:9px;">Run the whole thing in your second language, and design the route to the button before you build the button.</li></ol>
+
+<hr>
+<h2 style="margin-top:38px;">In short</h2>
+
+<p>"Can you just send them a link" turns into a feature that touches authentication, caching, localization, search indexing and publishing policy. But it leaves almost nothing behind: no table of links, no cleanup job, nothing to sync.</p>
+
+<p>A link is just a signed sentence saying "show this one draft, to someone on this network, until this time", checked honestly on every request until the clock runs out.</p>
+
+<p>Get the defaults right, keep the real key on the server, and it stays a small, well-behaved feature instead of a liability.</p>
+
+<p>I would love to hear how other teams handle cancelling links early, and tracking who created them, when the reviewers are outside your organisation.</p>
