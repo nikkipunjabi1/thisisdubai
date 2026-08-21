@@ -1,145 +1,108 @@
-<p>Hello Digital Team,</p>
-
-<p>This one is about a request that sounds trivial and is not: letting someone outside the CMS see a page before it goes live. It comes up on every project, usually a few weeks before go-live, and the answer touches authentication, caching, localization, search indexing and publishing governance. Here is how it works, what broke on the way, and the decisions worth making on purpose.</p>
-
-<h2 style="margin-top:38px;">The request that has no button</h2>
-
-<p>Every content team I have worked with eventually asks the same thing, a few weeks before go-live:</p>
-
-<blockquote style="border-left:4px solid #eeae56;background:rgba(238,174,86,0.07);padding:14px 20px;margin:26px 0;border-radius:0 6px 6px 0;"><p style="margin:0;">"Can you send the client a link so they can see the new page before we publish it?"</p></blockquote>
-
-<p>It sounds like a settings toggle. It is not. On a headless Optimizely SaaS build it is a small feature with a surprising amount of architecture behind it, and the way you answer it says a lot about how your publishing governance actually works.</p>
-
-<p>The reviewer here is almost never a CMS user. They are a legal reviewer, a brand manager, a client sponsor. They will not be given an account, they will not be trained, and they will open the link on a phone. They need to see the page as it will look, know that it is not live yet, and reply "approved".</p>
-
-<div style="border:1px dashed rgba(43,75,114,0.45);background:rgba(43,75,114,0.04);padding:18px 20px;margin:28px 0;border-radius:6px;color:#2b4b72;"><strong>[ SCREENSHOT ]</strong> The CMS preview pane with the content still in Draft status (the built-in author preview, Layer 1).</div>
+<p style="font-size:1.12em;line-height:1.65;color:#3d4a5c;">Letting someone outside the CMS review a page before it goes live sounds like a setting you switch on. On a headless Optimizely SaaS build it is a small feature with a fair amount going on underneath. Here is how it works, what caught me out, and the decisions worth making early.</p>
 
 <hr>
-<h2 style="margin-top:38px;">Two previews, not one</h2>
+<h2 style="margin-top:38px;">The request</h2>
 
-<p>Optimizely SaaS gives you a genuine on-page preview: the CMS iframes your application and passes a short-lived token so your app renders the draft, updating live as the author types. It is excellent, and it is the right tool for the person doing the editing. It is also bound to the editing session, so you cannot copy that URL into an email on Tuesday and expect it to work on Thursday. The external-reviewer case is a different feature, not the same one used differently.</p>
+<p>A few weeks before go-live, someone always asks:</p>
+
+<blockquote style="border-left:4px solid #eeae56;background:rgba(238,174,86,0.07);padding:14px 20px;margin:26px 0;border-radius:0 6px 6px 0;"><p style="margin:0;">"Can you send the client a link so they can see the page before we publish it?"</p></blockquote>
+
+<p>The reviewer is usually a legal contact, a brand manager, or a client sponsor. They will not get a CMS account, they will not be trained, and they will open the link on their phone.</p>
+
+<div style="border:1px dashed rgba(43,75,114,0.45);background:rgba(43,75,114,0.04);padding:16px 20px;margin:26px 0;border-radius:6px;color:#2b4b72;"><strong>[ SCREENSHOT ]</strong> The CMS preview pane with the page still in Draft. This is the built-in author preview.</div>
+
+<hr>
+<h2 style="margin-top:38px;">There are two previews, and people mix them up</h2>
+
+<p>Optimizely SaaS already gives you a preview: the CMS shows your site in a frame while the author edits, updating as they type. It is genuinely good, and it is for the author.</p>
+
+<p>It is also tied to that editing session, so you cannot paste that URL into an email on Tuesday and expect it to work on Thursday.</p>
 
 <table style="width:100%;border-collapse:collapse;margin:26px 0;font-size:0.95em;">
-<thead><tr><th style="text-align:left;padding:10px 12px;border-bottom:2px solid #2b4b72;background:rgba(43,75,114,0.05);"></th><th style="text-align:left;padding:10px 12px;border-bottom:2px solid #2b4b72;background:rgba(43,75,114,0.05);">Layer 1: editor preview</th><th style="text-align:left;padding:10px 12px;border-bottom:2px solid #2b4b72;background:rgba(43,75,114,0.05);">Layer 2: stakeholder link</th></tr></thead><tbody>
-<tr><td style="padding:10px 12px;border-bottom:1px solid rgba(43,75,114,0.14);vertical-align:top;">Who is it for?</td><td style="padding:10px 12px;border-bottom:1px solid rgba(43,75,114,0.14);vertical-align:top;">The author, while editing</td><td style="padding:10px 12px;border-bottom:1px solid rgba(43,75,114,0.14);vertical-align:top;">A reviewer with no CMS account</td></tr>
-<tr><td style="padding:10px 12px;border-bottom:1px solid rgba(43,75,114,0.14);vertical-align:top;">How long does it last?</td><td style="padding:10px 12px;border-bottom:1px solid rgba(43,75,114,0.14);vertical-align:top;">Minutes, tied to the session</td><td style="padding:10px 12px;border-bottom:1px solid rgba(43,75,114,0.14);vertical-align:top;">Days, chosen when the link is created</td></tr>
-<tr><td style="padding:10px 12px;border-bottom:1px solid rgba(43,75,114,0.14);vertical-align:top;">Where does it live?</td><td style="padding:10px 12px;border-bottom:1px solid rgba(43,75,114,0.14);vertical-align:top;">Inside the CMS editor</td><td style="padding:10px 12px;border-bottom:1px solid rgba(43,75,114,0.14);vertical-align:top;">Any browser, any device</td></tr>
-<tr><td style="padding:10px 12px;border-bottom:1px solid rgba(43,75,114,0.14);vertical-align:top;">Ships out of the box?</td><td style="padding:10px 12px;border-bottom:1px solid rgba(43,75,114,0.14);vertical-align:top;">Yes</td><td style="padding:10px 12px;border-bottom:1px solid rgba(43,75,114,0.14);vertical-align:top;">No, you build it</td></tr>
+<thead><tr><th style="text-align:left;padding:10px 12px;border-bottom:2px solid #2b4b72;background:rgba(43,75,114,0.05);"></th><th style="text-align:left;padding:10px 12px;border-bottom:2px solid #2b4b72;background:rgba(43,75,114,0.05);">Editor preview</th><th style="text-align:left;padding:10px 12px;border-bottom:2px solid #2b4b72;background:rgba(43,75,114,0.05);">Stakeholder link</th></tr></thead><tbody>
+<tr><td style="padding:10px 12px;border-bottom:1px solid rgba(43,75,114,0.14);vertical-align:top;">Who is it for?</td><td style="padding:10px 12px;border-bottom:1px solid rgba(43,75,114,0.14);vertical-align:top;">The author, while editing</td><td style="padding:10px 12px;border-bottom:1px solid rgba(43,75,114,0.14);vertical-align:top;">A reviewer with no account</td></tr>
+<tr><td style="padding:10px 12px;border-bottom:1px solid rgba(43,75,114,0.14);vertical-align:top;">How long does it last?</td><td style="padding:10px 12px;border-bottom:1px solid rgba(43,75,114,0.14);vertical-align:top;">Minutes</td><td style="padding:10px 12px;border-bottom:1px solid rgba(43,75,114,0.14);vertical-align:top;">Days, you decide</td></tr>
+<tr><td style="padding:10px 12px;border-bottom:1px solid rgba(43,75,114,0.14);vertical-align:top;">Comes with the CMS?</td><td style="padding:10px 12px;border-bottom:1px solid rgba(43,75,114,0.14);vertical-align:top;">Yes</td><td style="padding:10px 12px;border-bottom:1px solid rgba(43,75,114,0.14);vertical-align:top;">No, you build it</td></tr>
 </tbody></table>
 
-<p>One more distinction worth putting in a glossary: a deployment preview shows <em>unreleased code against published content</em>; a stakeholder preview shows <em>released code against unpublished content</em>. Conflating them leads to someone approving a page nobody can actually ship.</p>
+<hr>
+<h2 style="margin-top:38px;">Why you have to build it</h2>
+
+<p>In a traditional CMS the server renders the page, so it can render the draft too. Go headless and your app does the rendering. Nothing shows a draft unless you write the code that asks for one.</p>
+
+<p>There is also a credential problem. Optimizely Graph gives you two keys:</p>
+
+<ul style="padding-left:22px;line-height:1.7;"><li style="margin-bottom:9px;">a <strong>public key</strong> that reads published content only, and is safe in a browser</li><li style="margin-bottom:9px;">an <strong>app key and secret</strong> that can read every unpublished draft you have</li></ul>
+
+<p>Only the second can see a draft, and you really do not want it in a browser. So the actual request is "let this reviewer see this one draft, without any powerful key leaving my server".</p>
 
 <hr>
-<h2 style="margin-top:38px;">Why it is your problem, and the credential that makes it delicate</h2>
+<h2 style="margin-top:38px;">How it works</h2>
 
-<p>In a coupled CMS the server renders the page, so it can render a draft of it. Go headless and your application owns rendering: nothing renders a draft unless you write the code that asks for one.</p>
+<figure style="margin:32px 0;"><img src="assets/stakeholder-preview-flow.png" alt="How a stakeholder preview link works: the author clicks Share inside the CMS preview pane, the server mints a signed token, the reviewer opens the link, the app checks the network, signature, expiry and item scope, and only then reads the draft with credentials that never leave the server" style="width:100%;height:auto;border:1px solid rgba(43,75,114,0.18);border-radius:8px;" /></figure>
 
-<p>And Optimizely Graph gives you two very different credentials:</p>
+<p>The author clicks a button. Your server creates a <strong>signed link</strong>. The reviewer opens it, your server checks the link is genuine, and then your server (not the browser) fetches the draft and renders it.</p>
 
-<ul style="padding-left:22px;line-height:1.7;"><li style="margin-bottom:9px;">a <strong>public delivery key</strong>, read-only and published-content-only, safe in a browser, and</li><li style="margin-bottom:9px;">an <strong>application key plus secret</strong>, which reads unpublished content and can write the index.</li></ul>
+<p>The key idea: <strong>the link is a permission slip, not a key.</strong> It says "show the bearer this one page, until this time". It contains no credentials. The key that reads drafts stays on your server and never travels.</p>
 
-<p>Only the second can see a draft, and it is effectively a super-user credential. So the request "let this reviewer see the draft" quietly contains "without letting anything that can read every draft on the estate reach the browser". That constraint drives the whole design.</p>
+<p>Because the link is signed, nobody can edit the URL to reach a different page or extend the expiry. Anyone can read what it says, which is fine, but nobody can change it.</p>
 
-<hr>
-<h2 style="margin-top:38px;">The approach: a signed link plus a server-side read</h2>
-
-<figure style="margin:32px 0;"><img src="assets/stakeholder-preview-flow.png" alt="How a stakeholder preview link works: the author clicks Share in the CMS preview pane, the server mints a signed token, the reviewer opens the link, the edge verifies mode, network, signature, expiry and item scope, and only then does the server read the draft with credentials that never leave it" style="width:100%;height:auto;border:1px solid rgba(43,75,114,0.18);border-radius:8px;" /></figure>
-
-<p><em>The token is a signed permission slip, not a credential. It authorises the server to make one privileged read on the bearer's behalf, for one item, until one timestamp.</em></p>
-
-<p>The token is a signed statement, not a credential. It says "the bearer may view this one item, in this locale, until this timestamp". It carries no keys. It authorises the <em>server</em> to do the privileged read on the bearer's behalf, and only for that one item. The keys never move.</p>
-
-<h3 style="margin-top:34px;">What is in the link</h3>
-
-<p>The token is two base64url segments joined by a dot: <code style="background:rgba(43,75,114,0.07);padding:2px 5px;border-radius:3px;font-size:0.92em;">base64url(payload).base64url(HMAC-SHA256(payload, secret))</code>. The payload is plain claims: which item, locale, version, where to land, the access mode, and an expiry. Two properties matter most:</p>
-
-<ul style="padding-left:22px;line-height:1.7;"><li style="margin-bottom:9px;"><strong>It is signed, not encrypted.</strong> Anyone can read the claims, which is fine because they are not secret. What must not be forgeable is their content, and the HMAC (computed with a server-only secret) guarantees nobody edited them. You cannot escalate a link by editing its URL.</li><li style="margin-bottom:9px;"><strong>It grants no data access on its own.</strong> It is a permission slip, not a key to the vault. The credential that actually reads drafts stays on the server and never travels to the browser.</li></ul>
-
-<h3 style="margin-top:34px;">Where the link lives (nowhere you would expect)</h3>
-
-<table style="width:100%;border-collapse:collapse;margin:26px 0;font-size:0.95em;">
-<thead><tr><th style="text-align:left;padding:10px 12px;border-bottom:2px solid #2b4b72;background:rgba(43,75,114,0.05);">Location</th><th style="text-align:left;padding:10px 12px;border-bottom:2px solid #2b4b72;background:rgba(43,75,114,0.05);">What lives there</th><th style="text-align:left;padding:10px 12px;border-bottom:2px solid #2b4b72;background:rgba(43,75,114,0.05);">How long</th></tr></thead><tbody>
-<tr><td style="padding:10px 12px;border-bottom:1px solid rgba(43,75,114,0.14);vertical-align:top;">The share URL (<code style="background:rgba(43,75,114,0.07);padding:2px 5px;border-radius:3px;font-size:0.92em;">?token=…</code>)</td><td style="padding:10px 12px;border-bottom:1px solid rgba(43,75,114,0.14);vertical-align:top;">the token, while the author sends it</td><td style="padding:10px 12px;border-bottom:1px solid rgba(43,75,114,0.14);vertical-align:top;">wherever it is pasted</td></tr>
-<tr><td style="padding:10px 12px;border-bottom:1px solid rgba(43,75,114,0.14);vertical-align:top;">The reviewer's browser cookie</td><td style="padding:10px 12px;border-bottom:1px solid rgba(43,75,114,0.14);vertical-align:top;">the same token (http-only, secure)</td><td style="padding:10px 12px;border-bottom:1px solid rgba(43,75,114,0.14);vertical-align:top;">until the token expires</td></tr>
-<tr><td style="padding:10px 12px;border-bottom:1px solid rgba(43,75,114,0.14);vertical-align:top;">A second cookie</td><td style="padding:10px 12px;border-bottom:1px solid rgba(43,75,114,0.14);vertical-align:top;">a "draft mode is on" flag, no payload</td><td style="padding:10px 12px;border-bottom:1px solid rgba(43,75,114,0.14);vertical-align:top;">same</td></tr>
-<tr><td style="padding:10px 12px;border-bottom:1px solid rgba(43,75,114,0.14);vertical-align:top;">A database</td><td style="padding:10px 12px;border-bottom:1px solid rgba(43,75,114,0.14);vertical-align:top;">nothing at all</td><td style="padding:10px 12px;border-bottom:1px solid rgba(43,75,114,0.14);vertical-align:top;">there is no database</td></tr>
-</tbody></table>
-
-<p>The design is deliberately <strong>stateless</strong>: the token is minted, handed out, and the server keeps no record of it. Every page view re-verifies the signature, the expiry, and that the token's item matches the page being rendered. That buys no table to migrate, no rows to expire, no shared database, and free horizontal scaling. It has one honest cost, below.</p>
-
-<h3 style="margin-top:34px;">When a link stops working</h3>
-
-<p>Five ways, and the last is your emergency lever:</p>
-
-<ol style="padding-left:22px;line-height:1.7;"><li style="margin-bottom:9px;"><strong>Expiry</strong> is signed into the token, so it cannot be extended without issuing a new link.</li><li style="margin-bottom:9px;">The <strong>cookie</strong> is given the token's lifetime, so it drops itself when the token dies.</li><li style="margin-bottom:9px;">An <strong>exit preview</strong> action clears the cookie and returns to the published site.</li><li style="margin-bottom:9px;">The <strong>network gate</strong> refuses it (next section).</li><li style="margin-bottom:9px;"><strong>Rotating the signing secret</strong> invalidates every outstanding link at once.</li></ol>
-
-<p>The honest cost of statelessness: you cannot revoke a <em>single</em> link without rotating the secret. For stakeholder review that is a fair trade, and you lean on the short expiry, the single-item scope, and the network gate to keep the blast radius small. Add a stored deny-list only when per-link revocation becomes a hard requirement (embargoed or regulated content).</p>
+<p>There is no database behind any of this either. Nothing is stored, so there is nothing to clean up. The one honest downside: you cannot cancel a single link early. You lean on short expiry dates instead, and if you ever need to kill every link at once, you change the signing secret.</p>
 
 <hr>
-<h2 style="margin-top:38px;">Access, by default: Internal versus Shareable</h2>
+<h2 style="margin-top:38px;">Default to the boring option</h2>
 
-<p>The most common failure mode for these links is not a clever attacker; it is an email forwarded one hop too far. So the default is <strong>Internal</strong>: the link opens only from an allow-listed set of network addresses (office egress, VPN), and an off-network request is refused at the edge <em>before any draft is read</em>. <strong>Shareable</strong> (login-free from anywhere) is an explicit, per-link opt-in for a genuine external reviewer with no CMS login and no way onto the network.</p>
+<p>The realistic risk here is not an attacker. It is an email forwarded one hop too far.</p>
 
-<p>The mode is a signed claim, so it cannot be escalated by editing the URL. The allow-list fails safe (empty list denies), and it is strict by design (a request to <code style="background:rgba(43,75,114,0.07);padding:2px 5px;border-radius:3px;font-size:0.92em;">localhost</code> carries no forwarded address, so it must itself be allow-listed to pass). Trust only the client address your own platform stamps, never one a client could type.</p>
+<p>So links are <strong>Internal</strong> by default: they only open from the office or the VPN. <strong>Shareable</strong> (opens from anywhere) is a deliberate choice, made per link, for a genuine external reviewer.</p>
 
-<hr>
-<h2 style="margin-top:38px;">What broke (the useful part)</h2>
-
-<p>Six things went wrong building this, four of them silently. The sharpest ones:</p>
-
-<p><strong>The newest draft is not the highest version number.</strong> Listing versions and taking the highest looked correct: the preview rendered, the banner showed. It was rendering the <em>published</em> page, because the draft carried a lower version number than the published one. Select on the version's <strong>status</strong> and break ties on last-modified, never on the number. And write the acceptance test on a <em>difference</em>: make an unpublished edit and assert the preview shows it while the live URL does not. A preview that silently shows published content passes every other test you would think to write.</p>
-
-<p><strong>Draft mode is a boolean, and you need a scope.</strong> Most frameworks have a draft-mode cookie that says "this visitor may see drafts". Turn it on and browse to another page and it shows <em>that</em> draft too: one link had unlocked the whole estate. The flag has no idea what the link was for. Keep the signed token in an http-only cookie alongside the flag, re-verify it every request, and serve unpublished content only when the token's item matches the page. You only find this by deliberately wandering off the page you were sent.</p>
-
-<p><strong>The cache would have published the draft for you.</strong> A shared, path-keyed content cache is right for published content and a leak for a draft: the first reviewer writes the unpublished version into a cache the anonymous public then reads. Draft reads must bypass the shared cache completely. The rule: any cache keyed on something less specific than the viewer's authorization is a leak waiting for privileged content.</p>
-
-<p><strong>The localhost trap (from the access work).</strong> An Internal link opened against a local dev server was refused, and the instinct was "the gate is broken". It was not: a request to <code style="background:rgba(43,75,114,0.07);padding:2px 5px;border-radius:3px;font-size:0.92em;">localhost</code> is loopback, so it carries no forwarded address, and the office IP can never match it. The allow-list only means anything once the app sits behind a proxy that stamps the real client address. Decide the local rule on purpose and write it down, or someone files a bug against a feature that is working correctly.</p>
-
-<p>Two smaller ones, in one line each: the official SDK authenticates only as the public key or the editor's token, so the privileged read needed a small transport-layer override; and on a multilingual site the CMS path already carries its language segment, so passing it straight through double-prefixes the URL. Every preview test has to be run in the second language too.</p>
+<p>That one default has saved more trouble than any of the clever parts.</p>
 
 <hr>
-<h2 style="margin-top:38px;">The part I got most wrong: who pushes the button</h2>
+<h2 style="margin-top:38px;">Three things that broke</h2>
 
-<p>Everything above makes the link work. The thing I underestimated is making it <em>obtainable</em>, and it is what your content team judges you on. My first answer was a small admin page with a shared secret. It worked, and it was wrong: asking authors to hold a secret is a smell, and asking them to leave the CMS to find the page they were already editing is a workflow nobody uses twice. The measure is not "can a link be produced", it is "does the author reach for it instead of asking a developer".</p>
+<p><strong>The newest draft is not the highest version number.</strong> I sorted versions and took the highest. The preview loaded, the banner appeared, everything looked right. It was showing the published page, because the draft happened to carry a lower number. Sort by status, not by number.</p>
 
-<p>On a SaaS CMS you probably cannot build the CMS-12-style add-on (no UI extensibility), so check that early. The seam you <em>do</em> have is the preview pane itself: the CMS renders your app in an iframe while the author edits, which is your UI, inside their CMS, on the page they are looking at. A single button there gets you most of the way. The detail that makes it good: the CMS appends a short-lived preview token to that iframe, issued to an authenticated editor. Send it back to your content API and see whether it is accepted, and you have proof the request came from someone logged into the CMS. The CMS login <em>is</em> the authentication: no second login, no shared password.</p>
+<p>The lesson is bigger than the bug: <strong>test for a difference, not for a page load.</strong> Make an edit, then check the preview shows it and the live page does not. A preview quietly showing published content passes every other test you would think to write.</p>
 
-<p>Two cautions: validate that token against the documented contract (that the content API accepts it), not against an undocumented signing-key relationship that can change without notice; and be honest about what it proves, which is a live editor session, not a specific person or rights to the item.</p>
+<p><strong>Turning on preview mode unlocked everything.</strong> Most frameworks have a "this visitor can see drafts" switch. I turned it on, browsed to another page, and saw that draft too. One link had opened the whole site. The switch has no idea which page the link was for, so you have to carry that yourself and check it on every request.</p>
 
-<div style="border:1px dashed rgba(43,75,114,0.45);background:rgba(43,75,114,0.04);padding:18px 20px;margin:28px 0;border-radius:6px;color:#2b4b72;"><strong>[ SCREENSHOT ]</strong> The "Share with a stakeholder" panel inside the CMS preview pane: the Internal / Shareable selector, the expiry option, and a generated link.</div>
+<p><strong>The cache nearly published a draft for me.</strong> Caching pages by URL is right for published content and dangerous for a draft: the first reviewer loads it, it lands in a shared cache, and the public gets served an unpublished page. Draft reads have to skip the shared cache completely.</p>
 
 <hr>
-<h2 style="margin-top:38px;">Guardrails and the governance conversation</h2>
+<h2 style="margin-top:38px;">The bit I got most wrong</h2>
 
-<p>Cheap at design time, awkward to retrofit:</p>
+<p>Everything above makes the link work. What I underestimated was making it easy to get.</p>
 
-<table style="width:100%;border-collapse:collapse;margin:26px 0;font-size:0.95em;">
-<thead><tr><th style="text-align:left;padding:10px 12px;border-bottom:2px solid #2b4b72;background:rgba(43,75,114,0.05);">Guardrail</th><th style="text-align:left;padding:10px 12px;border-bottom:2px solid #2b4b72;background:rgba(43,75,114,0.05);">Why</th></tr></thead><tbody>
-<tr><td style="padding:10px 12px;border-bottom:1px solid rgba(43,75,114,0.14);vertical-align:top;">Force <code style="background:rgba(43,75,114,0.07);padding:2px 5px;border-radius:3px;font-size:0.92em;">noindex</code> on any draft response, at the edge</td><td style="padding:10px 12px;border-bottom:1px solid rgba(43,75,114,0.14);vertical-align:top;">An unpublished page must never reach a search index</td></tr>
-<tr><td style="padding:10px 12px;border-bottom:1px solid rgba(43,75,114,0.14);vertical-align:top;">Make the link read-only</td><td style="padding:10px 12px;border-bottom:1px solid rgba(43,75,114,0.14);vertical-align:top;">A reviewer with no login should never be able to trigger a publish</td></tr>
-<tr><td style="padding:10px 12px;border-bottom:1px solid rgba(43,75,114,0.14);vertical-align:top;">Fail closed on missing config</td><td style="padding:10px 12px;border-bottom:1px solid rgba(43,75,114,0.14);vertical-align:top;">No signing secret, no allow-list: mint nothing, allow nothing</td></tr>
-<tr><td style="padding:10px 12px;border-bottom:1px solid rgba(43,75,114,0.14);vertical-align:top;">Fall back to published on any error</td><td style="padding:10px 12px;border-bottom:1px solid rgba(43,75,114,0.14);vertical-align:top;">A preview link should degrade to the live page, never to a 500</td></tr>
-<tr><td style="padding:10px 12px;border-bottom:1px solid rgba(43,75,114,0.14);vertical-align:top;">Keep privileged credentials server-side</td><td style="padding:10px 12px;border-bottom:1px solid rgba(43,75,114,0.14);vertical-align:top;">The reason the whole design exists</td></tr>
-<tr><td style="padding:10px 12px;border-bottom:1px solid rgba(43,75,114,0.14);vertical-align:top;">Separate signing domains</td><td style="padding:10px 12px;border-bottom:1px solid rgba(43,75,114,0.14);vertical-align:top;">If share links and any admin session share a secret, add a distinguishing prefix, or a share token a reviewer holds for weeks is byte-for-byte a valid admin session</td></tr>
-</tbody></table>
+<p>My first version was a small admin page with a shared password. It worked, and it was still wrong. Asking authors to keep a password is a smell, and asking them to leave the CMS to find the page they were already looking at is a workflow nobody uses twice.</p>
 
-<p>The engineering is a few days; the policy questions outlast it. Decide, on purpose: who can generate a link (attribution), the default lifetime (whatever you set is what almost every link uses), whether a link can be revoked before expiry, whether generated links are logged (a "no" that will not survive a regulated audit), and what happens on publish (the link should quietly become the live page, which is free if your cache invalidates on publish). I would rather ship a small feature with the gaps written down than a bigger one with them assumed away.</p>
+<p>The better answer was already on screen. The CMS shows your app inside its preview pane, so that frame is your interface, inside their CMS, on the exact page they are editing. Put the button there. Their CMS login is the authentication, so there is no second password to hand out.</p>
 
-<figure style="margin:32px 0;"><img src="assets/previewed-page-banner.png" alt="A previewed page: the golden &quot;Preview: you are viewing unpublished draft content. Exit preview&quot; banner across the top, above the normal page" style="width:100%;height:auto;border:1px solid rgba(43,75,114,0.18);border-radius:8px;" /></figure>
+<p>The measure is not "can we produce a link". It is "does the author reach for it instead of messaging a developer".</p>
+
+<div style="border:1px dashed rgba(43,75,114,0.45);background:rgba(43,75,114,0.04);padding:16px 20px;margin:26px 0;border-radius:6px;color:#2b4b72;"><strong>[ SCREENSHOT ]</strong> The "Share with a stakeholder" panel in the preview pane: Internal / Shareable, the expiry, and the generated link.</div>
+
+<hr>
+<h2 style="margin-top:38px;">Decide these on purpose</h2>
+
+<p>The build takes a few days. These questions outlast it, and they are far easier to answer now than later:</p>
+
+<ul style="padding-left:22px;line-height:1.7;"><li style="margin-bottom:9px;">How long should a link last? Whatever you pick is what almost everyone will use.</li><li style="margin-bottom:9px;">Can a link be cancelled before it expires?</li><li style="margin-bottom:9px;">Do you log who created which link? "No" tends not to survive an audit.</li><li style="margin-bottom:9px;">What happens once the page goes live? Ideally the link quietly becomes the real page.</li></ul>
+
+<p>A few guardrails are cheap now and awkward later: force <code style="background:rgba(43,75,114,0.07);padding:2px 5px;border-radius:3px;font-size:0.92em;">noindex</code> on anything showing a draft, keep the link read-only so a reviewer can never trigger a publish, fall back to the live page if anything fails rather than showing an error, and refuse to work at all if the configuration is missing.</p>
 
 <hr>
 <h2 style="margin-top:38px;">What I would tell the next team</h2>
 
-<ol style="padding-left:22px;line-height:1.7;"><li style="margin-bottom:9px;"><strong>Spike the credentials before you design.</strong> Which credential does your SDK actually send, and what does the privileged one change about your queries? Half an hour, read-only, against the real service.</li><li style="margin-bottom:9px;"><strong>Test for a difference, not for a page load.</strong> A preview that silently renders published content passes everything else.</li><li style="margin-bottom:9px;"><strong>A preview-mode flag is not an authorization scope.</strong> Carry the scope yourself, signed, and re-check it every request.</li><li style="margin-bottom:9px;"><strong>Assume every shared cache is a publishing mechanism</strong> for privileged content.</li><li style="margin-bottom:9px;"><strong>Default to the safe option and fail closed.</strong> Internal by default; no config means nothing opens.</li><li style="margin-bottom:9px;"><strong>Run the whole flow in your second language</strong>, and design the author's route to the button before you build the button.</li></ol>
+<ol style="padding-left:22px;line-height:1.7;"><li style="margin-bottom:9px;">Check which credential your SDK actually sends before you design anything. Half an hour, read only, against the real service.</li><li style="margin-bottom:9px;">Test that the preview shows something the live page does not.</li><li style="margin-bottom:9px;">A preview switch is not a permission. Carry the scope yourself and re-check it every request.</li><li style="margin-bottom:9px;">Treat every shared cache as a way to accidentally publish.</li><li style="margin-bottom:9px;">Default to the safe option, and fail closed when configuration is missing.</li><li style="margin-bottom:9px;">Run the whole flow in your second language, and design the route to the button before you build the button.</li></ol>
 
 <hr>
-<h2 style="margin-top:38px;">Closing</h2>
+<h2 style="margin-top:38px;">In short</h2>
 
-<p>The feature that starts as "can you just send them a link" ends up touching authentication, caching, localization, search indexing, and publishing governance, and it leaves almost nothing behind: no table of links, no job to expire them, no sync between systems. A link is a signed sentence that says "show this one draft, to someone on this network, until this time", read honestly on every request until the clock runs out. Get the defaults right, fail closed, and keep the real credential on the server, and a one-click share button turns out to be a small, well-behaved piece of security engineering rather than a liability.</p>
+<p>"Can you just send them a link" turns into a feature that touches authentication, caching, localization, search indexing and publishing policy. Yet it leaves almost nothing behind: no table of links, no cleanup job, nothing to keep in sync.</p>
 
-<p>I would like to hear how other teams have handled per-link revocation and attribution when the reviewers are external and the authors are not all in the same organization.</p>
+<p>A link is a signed sentence saying "show this one draft, to someone on this network, until this time", checked honestly on every request until the clock runs out.</p>
 
-<hr>
-<h2 style="margin-top:38px;">Related</h2>
+<p>Get the defaults right, keep the real key on the server, and it stays a small, well-behaved feature rather than a liability.</p>
 
-<ul style="padding-left:22px;line-height:1.7;"><li style="margin-bottom:9px;">Securing a headless Optimizely SaaS build: which credential does what, and where each one may live</li><li style="margin-bottom:9px;">Live Visual Builder preview for a headless application: wiring the editor-side preview end to end</li><li style="margin-bottom:9px;">Fast and fresh: content caching and on-demand revalidation on publish</li></ul>
+<p>I would be glad to hear how other teams handle cancelling links early, and tracking who created them, when the reviewers sit outside your organisation.</p>
