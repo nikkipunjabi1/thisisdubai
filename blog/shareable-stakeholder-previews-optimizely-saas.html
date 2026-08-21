@@ -1,4 +1,6 @@
-<p style="font-size:1.12em;line-height:1.65;color:#3d4a5c;">Letting someone outside the CMS review a page before it goes live sounds like a setting you switch on. On a headless Optimizely SaaS build it is a small feature with a fair amount going on underneath. Here is how it works, what caught me out, and the decisions worth making early.</p>
+<p style="font-size:1.12em;line-height:1.65;color:#3d4a5c;">Letting someone outside the CMS review a page before it goes live sounds like a setting you switch on. It is not one. <strong>Optimizely SaaS does not ship this out of the box, and on a headless build you have to develop it yourself.</strong> It is a small feature with a fair amount going on underneath, and it matters more to the business than its size suggests.</p>
+
+<p>Here is how it works, what caught me out, and the decisions worth making early.</p>
 
 <hr>
 <h2 style="margin-top:38px;">The request</h2>
@@ -28,7 +30,9 @@
 <hr>
 <h2 style="margin-top:38px;">Why you have to build it</h2>
 
-<p>In a traditional CMS the server renders the page, so it can render the draft too. Go headless and your app does the rendering. Nothing shows a draft unless you write the code that asks for one.</p>
+<p>This is the part that surprises people, so it is worth being direct about it. The editor preview is included. A durable, login-free link for someone with no CMS account is not, and no amount of looking through the settings will find it. It is custom development, and you should scope it as such.</p>
+
+<p>The reason is architectural rather than an oversight. In a traditional CMS the server renders the page, so it can render the draft too. Go headless and your app does the rendering. Nothing shows a draft unless you write the code that asks for one.</p>
 
 <p>There is also a credential problem. Optimizely Graph gives you two keys:</p>
 
@@ -80,6 +84,19 @@
 
 <p>The measure is not "can we produce a link". It is "does the author reach for it instead of messaging a developer".</p>
 
+<hr>
+<h2 style="margin-top:38px;">Why we build this before handover</h2>
+
+<p>We now treat this as part of delivering an Optimizely solution, not as an optional extra a client might ask for later. It goes into the plan at the start, and it is built and tested before the site is handed over.</p>
+
+<p>That is a deliberate choice, and the reasoning is simple. Every organisation has someone who has to see a page before it goes live: a legal reviewer, a compliance team, a brand owner, an agency client, a director who wants a look on their phone before Monday. If there is no clean way to show them, the team invents a messy one. Screenshots pasted into email. A staging site with a shared password. Publishing the page quietly and hoping nobody notices, then unpublishing it. Or, most commonly, the whole approval step just moves into a meeting.</p>
+
+<p>None of those are good, and all of them are slower than a link.</p>
+
+<p>Retrofitting it later is also more expensive than it looks, because the decisions it depends on (caching, indexing, where credentials live, how authors reach the feature) get baked in during the main build. Doing it at the end means unpicking some of them.</p>
+
+<p>So it is a small feature that quietly removes a recurring source of friction from the publishing process, and it costs a few days if you plan for it. That is an easy trade to recommend to a client, and a harder conversation to have six months after go-live.</p>
+
 <div style="border:1px dashed rgba(43,75,114,0.45);background:rgba(43,75,114,0.04);padding:16px 20px;margin:26px 0;border-radius:6px;color:#2b4b72;"><strong>[ SCREENSHOT ]</strong> The "Share with a stakeholder" panel in the preview pane: Internal / Shareable, the expiry, and the generated link.</div>
 
 <hr>
@@ -103,6 +120,6 @@
 
 <p>A link is a signed sentence saying "show this one draft, to someone on this network, until this time", checked honestly on every request until the clock runs out.</p>
 
-<p>Get the defaults right, keep the real key on the server, and it stays a small, well-behaved feature rather than a liability.</p>
+<p>Get the defaults right, keep the real key on the server, and it stays a small, well-behaved feature rather than a liability. Plan it in from the start, and nobody ever has to ask you for it.</p>
 
 <p>I would be glad to hear how other teams handle cancelling links early, and tracking who created them, when the reviewers sit outside your organisation.</p>
