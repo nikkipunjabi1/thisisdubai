@@ -64,21 +64,10 @@ the estate reach the browser". That constraint drives the whole design.
 
 ## The approach: a signed link plus a server-side read
 
-```
-Author                      Your app (server)                 CMS / Graph
-  |                              |                                |
-  |-- create link ------------> | sign {item, locale, version,   |
-  |<-- https://…/share?token=…  |       path, mode, expiry}      |
-  |== send to reviewer ==>      |                                |
-                          Reviewer opens link                     |
-                                 | edge: check mode + network     |
-                                 | verify signature + expiry      |
-                                 | enable draft mode (cookie)     |
-                                 | redirect to the page           |
-                                 |-- read draft (server creds) -> |
-                                 |<-- unpublished version --------|
-                                 | render, uncached, noindex      |
-```
+![How a stakeholder preview link works: the author clicks Share in the CMS preview pane, the server mints a signed token, the reviewer opens the link, the edge verifies mode, network, signature, expiry and item scope, and only then does the server read the draft with credentials that never leave it](assets/stakeholder-preview-flow.png)
+
+*The token is a signed permission slip, not a credential. It authorises the server to make one
+privileged read on the bearer's behalf, for one item, until one timestamp.*
 
 The token is a signed statement, not a credential. It says "the bearer may view this one item, in
 this locale, until this timestamp". It carries no keys. It authorises the *server* to do the

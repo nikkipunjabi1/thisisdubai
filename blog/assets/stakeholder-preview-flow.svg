@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1240 680" width="1240" height="680" font-family="Hanken Grotesk, Inter, Segoe UI, Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#8a7a55"/>
+    </marker>
+    <marker id="ag" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#1f7a4d"/>
+    </marker>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#b03636"/>
+    </marker>
+  </defs>
+
+  <rect width="1240" height="680" fill="#ffffff"/>
+
+  <text x="40" y="46" font-size="25" font-weight="700" fill="#141210">How a stakeholder preview link works</text>
+  <text x="40" y="74" font-size="15" fill="#6b6355">The token is a signed permission slip, not a credential. The key that reads drafts never leaves the server.</text>
+
+  <!-- lanes -->
+  <g stroke="#e5e0d6" stroke-width="1">
+    <line x1="40" y1="100" x2="1200" y2="100"/>
+    <line x1="40" y1="272" x2="1200" y2="272"/>
+    <line x1="40" y1="452" x2="1200" y2="452"/>
+    <line x1="40" y1="632" x2="1200" y2="632"/>
+  </g>
+  <g font-size="13" font-weight="700" fill="#8a7a55" letter-spacing="0.08em">
+    <text x="52" y="126">AUTHOR (LOGGED INTO THE CMS)</text>
+    <text x="52" y="298">YOUR APPLICATION (SERVER)</text>
+    <text x="52" y="478">REVIEWER (NO ACCOUNT)</text>
+  </g>
+
+  <!-- Author box -->
+  <rect x="52" y="140" width="330" height="106" rx="10" fill="#faf8f4" stroke="#ded7ca"/>
+  <text x="72" y="168" font-size="15" font-weight="700" fill="#141210">1. Clicks "Share with a stakeholder"</text>
+  <text x="72" y="192" font-size="13.5" fill="#4a453c">inside the CMS preview pane, on the page</text>
+  <text x="72" y="212" font-size="13.5" fill="#4a453c">they are already editing. Their CMS login</text>
+  <text x="72" y="232" font-size="13.5" fill="#4a453c">is the authentication. No second password.</text>
+
+  <!-- Author -> server -->
+  <path d="M382 193 L470 193" stroke="#8a7a55" stroke-width="2" fill="none" marker-end="url(#a)"/>
+  <text x="392" y="184" font-size="12.5" fill="#6b6355">editor token</text>
+
+  <!-- Mint box -->
+  <rect x="490" y="140" width="330" height="106" rx="10" fill="#faf8f4" stroke="#ded7ca"/>
+  <text x="510" y="168" font-size="15" font-weight="700" fill="#141210">2. Server mints a signed token</text>
+  <text x="510" y="192" font-size="13.5" fill="#4a453c">base64url(claims) . HMAC-SHA256(claims)</text>
+  <text x="510" y="212" font-size="13.5" fill="#4a453c">claims: item, locale, version, path,</text>
+  <text x="510" y="232" font-size="13.5" fill="#4a453c">access mode, expiry. Nothing is stored.</text>
+
+  <!-- Mint -> link -->
+  <path d="M820 193 L908 193" stroke="#8a7a55" stroke-width="2" fill="none" marker-end="url(#a)"/>
+
+  <rect x="928" y="152" width="256" height="82" rx="10" fill="#f4efe3" stroke="#d8cdb4"/>
+  <text x="948" y="180" font-size="14" font-weight="700" fill="#141210">3. A link the author sends</text>
+  <text x="948" y="203" font-size="12.5" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" fill="#4a453c">/share?token=…</text>
+  <text x="948" y="222" font-size="12.5" fill="#6b6355">Carries no keys. Read-only.</text>
+
+  <!-- link down to reviewer -->
+  <path d="M1056 234 L1056 500 L1000 500" stroke="#8a7a55" stroke-width="2" fill="none" stroke-dasharray="6 5" marker-end="url(#a)"/>
+  <text x="1068" y="380" font-size="12.5" fill="#6b6355">email, chat,</text>
+  <text x="1068" y="398" font-size="12.5" fill="#6b6355">any device</text>
+
+  <!-- Reviewer box -->
+  <rect x="672" y="480" width="316" height="72" rx="10" fill="#faf8f4" stroke="#ded7ca"/>
+  <text x="692" y="508" font-size="15" font-weight="700" fill="#141210">4. Reviewer opens the link</text>
+  <text x="692" y="532" font-size="13.5" fill="#4a453c">No login, no CMS account, no training.</text>
+
+  <!-- reviewer up to gate -->
+  <path d="M830 480 L830 400" stroke="#8a7a55" stroke-width="2" fill="none" marker-end="url(#a)"/>
+
+  <!-- Gate box -->
+  <rect x="600" y="300" width="380" height="100" rx="10" fill="#fdf7f2" stroke="#e3cdbb"/>
+  <text x="620" y="328" font-size="15" font-weight="700" fill="#141210">5. The edge checks, before any draft is read</text>
+  <text x="620" y="350" font-size="13.5" fill="#4a453c">Access mode + network allow-list (Internal by default)</text>
+  <text x="620" y="370" font-size="13.5" fill="#4a453c">HMAC signature, so claims cannot be forged or edited</text>
+  <text x="620" y="390" font-size="13.5" fill="#4a453c">Expiry, and the token's item must match this page</text>
+
+  <!-- refuse -->
+  <path d="M600 350 L512 350" stroke="#b03636" stroke-width="2" fill="none" marker-end="url(#ar)"/>
+  <rect x="292" y="322" width="216" height="56" rx="10" fill="#fdf1f1" stroke="#e6c4c4"/>
+  <text x="312" y="346" font-size="13.5" font-weight="700" fill="#b03636">Any check fails</text>
+  <text x="312" y="366" font-size="13" fill="#7a4a4a">Refused. Falls back to the live page.</text>
+
+  <!-- pass -->
+  <path d="M790 300 L790 250" stroke="#1f7a4d" stroke-width="2" fill="none" marker-end="url(#ag)"/>
+  <text x="800" y="278" font-size="12.5" font-weight="700" fill="#1f7a4d">passes</text>
+
+  <!-- server read -->
+  <rect x="52" y="480" width="560" height="120" rx="10" fill="#f3f8f4" stroke="#c9ddd0"/>
+  <text x="72" y="508" font-size="15" font-weight="700" fill="#141210">6. The SERVER does the privileged read</text>
+  <text x="72" y="532" font-size="13.5" fill="#4a453c">App key + secret, held server-side only, scoped to that one item.</text>
+  <text x="72" y="554" font-size="13.5" fill="#4a453c">Bypasses the shared cache completely, or the first reviewer would</text>
+  <text x="72" y="574" font-size="13.5" fill="#4a453c">publish the draft into a cache the anonymous public then reads.</text>
+  <text x="72" y="594" font-size="13.5" font-weight="700" fill="#1f7a4d">Rendered with a visible banner and forced noindex.</text>
+
+  <path d="M672 516 L616 516" stroke="#1f7a4d" stroke-width="2" fill="none" marker-end="url(#ag)"/>
+
+  <!-- footnote -->
+  <text x="40" y="660" font-size="13" fill="#8a7a55">Stateless by design: no database, no rows to expire. Every request re-verifies the signature, the expiry and the item scope.</text>
+</svg>
