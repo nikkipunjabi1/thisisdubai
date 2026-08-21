@@ -1,8 +1,10 @@
 import io,re,html,sys
 
 GOLD='#eeae56'; NAVY='#2b4b72'
-# Hex, not rgba: WordPress's wp_kses inline-CSS filter is unreliable with rgba() for
-# users without unfiltered_html, and it only bites on save, so the editor looks fine.
+# Hex rather than rgba, for the widest compatibility with CMS editors that sanitise
+# inline CSS. NOTE: pasting this HTML into the WordPress block editor converts tables
+# into a core Table block, which DISCARDS inline styles and renders from the theme.
+# Paste tables into a Custom HTML block to keep this styling.
 HEADBG='#eaeef3'; RULE='#dfe4ea'
 
 def inline(t):
@@ -76,13 +78,13 @@ def convert(md):
             cells=[[c.strip() for c in r.strip().strip('|').split('|')] for r in rows]
             cells=[c for c in cells if not all(re.fullmatch(r':?-{2,}:?', x or '-') for x in c)]
             head=cells[0]; body=cells[1:]
-            t=[f'<table style="width:100% !important;border-collapse:collapse !important;margin:26px 0;font-size:0.95em;">']
+            t=[f'<table style="width:100%;border-collapse:collapse;margin:26px 0;font-size:0.95em;">']
             t.append('<thead><tr>'+''.join(
-                f'<th style="text-align:left !important;padding:10px 12px !important;background-color:{HEADBG} !important;border-bottom:2px solid {NAVY} !important;">{inline(h)}</th>' for h in head)+'</tr></thead><tbody>')
+                f'<th style="text-align:left;padding:10px 12px;background-color:{HEADBG};border-bottom:2px solid {NAVY};">{inline(h)}</th>' for h in head)+'</tr></thead><tbody>')
             for r in body:
                 r = r + ['']*(len(head)-len(r))
                 t.append('<tr>'+''.join(
-                    f'<td style="padding:10px 12px !important;border-bottom:1px solid {RULE} !important;vertical-align:top;">{inline(c)}</td>' for c in r)+'</tr>')
+                    f'<td style="padding:10px 12px;border-bottom:1px solid {RULE};vertical-align:top;">{inline(c)}</td>' for c in r)+'</tr>')
             t.append('</tbody></table>')
             out.append('\n'.join(t)); continue
 
