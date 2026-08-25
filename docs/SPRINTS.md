@@ -179,9 +179,19 @@ downstream (semantic search tuning, AI retrieval, the MCP server) needs a realis
     Hero videos + poster imagery on all 5 pages, HighlightCards placed on the landing in VB, an AR
     pass of the new block strings, browser-verify + RTL, and a campaign blog ("configurable
     campaign pages in Visual Builder" — candidate for BLOG-PLAN).
-- [ ] **SC4 — Content quality pass** 🟡
-  Tag/facet coverage across the full corpus, `relatedPlaces` cross-links, and a re-verification
-  of semantic search + the relevance floor at ~250 items rather than 16.
+- [x] **SC4 — Content quality pass** ✅ _(the search half moved to [S3.10])_
+  Audited against live Graph (2026-08-25). Tag and cross-link coverage is complete:
+  PointOfInterest 100/100 tagged, Event 20/20 tagged, ArticlePost 10/10 tagged with
+  `relatedPlaces`, and every item across those types plus Area has a summary. Facets are therefore
+  meaningful at full corpus size.
+  The third part of this sprint, re-verifying semantic search and the relevance floor on the real
+  corpus, is **not** done and is now tracked as **[S3.10] Semantic search relevance tuning** rather
+  than duplicated here. It grew into its own sprint once a live query surfaced unrelated types.
+  _(The original wording said "~250 items"; the corpus settled at 187 per locale, which is ample
+  for judging relevance against the 16 items that prompted the concern.)_
+  **Open question, not blocking:** `Area` has no `tags` field, while PointOfInterest, Event and
+  ArticlePost do, so neighbourhoods cannot take part in tag-based faceting or tag-filtered curated
+  rails. Decide whether that is deliberate; adding it later is a non-breaking model change.
 - [x] **SC5 — Imagery** ✅
   The CMP folders per `docs/ASSET-MANIFEST.md` were created, sourced and attached via
   `npm run attach-assets -- --apply`. **Verified against live Graph (2026-08-25): 149/149 published
@@ -301,6 +311,10 @@ downstream (semantic search tuning, AI retrieval, the MCP server) needs a realis
   server) all sit on top of the same retrieval layer. Feeding a weak result set into Claude just
   produces confident answers built on irrelevant content, so retrieval quality is a prerequisite,
   not a follow-up.
+
+  **Also absorbs the search half of [SC4]** (Phase 2.5): re-verifying semantic search and the
+  relevance floor on the full corpus rather than on 16 items. Tag and cross-link coverage, the other
+  half of SC4, is already verified complete, so facets can be trusted while tuning.
 
   **The symptom.** A natural-language query returns results with no relevance at all. Reference case:
   > `where can I see the world's tallest hotel in Dubai?`
