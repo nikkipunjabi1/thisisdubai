@@ -15,31 +15,24 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · 🚦 = phase gate (I as
 
 > **▶ Resume order — start here next:**
 >
-> _Done & merged:_ S3.1a preview access hardening (PR #68/#69), TTD-2 authored the
-> Things-to-Do pages (PR #70), S3.6 CMS-editable navigation (PR #74), S3.7 Site Settings
-> tabs + Cookie/Announcement skeletons (merged), fix: hide Nav data components from the
-> picker (PR #76).
+> **Phases 0, 1, 2 and 3 are complete.** DEV and UAT are live on Vercel with the model promoted by
+> CI, content migrated and verified (187 published items per locale), and four blog posts published.
 >
-> _In review:_ **S3.8 content-block library** (branch `feat/content-block-library`) — five new
-> author-first blocks (Two Column Text, Text and Image, Text and Video, Quote, Callout) + the
-> COMPONENT-NAMING.md best-practices doc, for the "Component Naming Conventions" blog. **Needs
-> `opti-push`** (push before the app serves pages — see S3.8 rollout note). After push, capture the
-> two CMS screenshots for the blog (picker list + a block editor field set).
+> **Next, in order (ask before starting each):**
+> 1. **S3.10 — Semantic search relevance.** Agreed to come before any AI work, because AI Search,
+>    the Trip Planner and the MCP server all read from the same retrieval layer.
+> 2. **TTD-3 — Imagery + AR + campaign blog.** Finish the Things-to-Do campaign: hero videos and
+>    posters on all 5 pages, HighlightCards on the landing page, then verify. The AR strings may
+>    already be covered by the L6 bulk translation, so check before scoping.
+> 3. **Announcement Bar + Cookie Consent Banner front-end.** The CMS fields exist from S3.7 as a
+>    skeleton. The consent banner is also a prerequisite for S3.17 personalization.
 >
-> **Waiting on user CMS content, then verify (do not lose these):**
-> - **`/ar` (RTL) navigation** — user populates the Arabic header/footer nav + language
->   labels; then verify dropdown direction, footer columns, and the "English" switcher in RTL.
-> - **Footer columns** — user adds links (currently headings only, so the footer falls back
->   to the built-in default column until links exist).
+> **Backlog, sequence not yet fixed:** S3.11 starter kit · S3.12 commerce and theme ·
+> S3.13 CMS-manageable copy · S3.14 Optimizely Forms · S3.15 Entra ID via Opti ID ·
+> S3.16 redirects module · S3.17 personalization and experimentation.
 >
-> **Next, in order:**
-> 1. **Announcement Bar + Cookie Consent Banner front-end** — the CMS fields exist (S3.7,
->    skeleton); build the front-end components that render them. Ask before starting.
-> 2. **Publish the stakeholder-preview blog** — copy final; a SINGLE combined post
->    (`blog/shareable-stakeholder-previews-optimizely-saas.md`); pending the CMS-editor
->    screenshots before posting.
-> 3. **TTD-3 — Imagery + AR + blog** — finish the campaign (hero videos/posters on all 5 pages,
->    HighlightCards onto the landing, AR content for RTL, browser-verify, campaign blog).
+> **Blog drafts ready to publish:** the environment-promotion post (needs screenshots) and the
+> SDK setup and gotchas post (no screenshots needed).
 >
 > "Ask before starting" per the standing rule.
 
