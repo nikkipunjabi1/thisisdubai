@@ -429,6 +429,23 @@ downstream (semantic search tuning, AI retrieval, the MCP server) needs a realis
   installing the kit gets an empty instance first, so what they see in that state *is* their first
   impression of the product.
 
+- [ ] **S3.14 — Optimizely Forms on a headless build** 🟡 _(scope to be agreed)_
+  The site has no forms yet, and any real project needs them (contact, enquiry, newsletter,
+  campaign sign-up). Optimizely Forms supports headless use: a Forms Service API exposes the form
+  structure, accepts submissions, and lists submitted data, with submissions viewable in the CMS and
+  exportable to XLSX / CSV / JSON / XML.
+
+  **The work is mostly on our side.** The CMS defines the form; the front end has to render it,
+  validate it, submit it, and handle the response. Open questions before we start:
+  - Render forms dynamically from the form definition, or hand-build components per form?
+  - Where do submissions go: Forms storage only, or also a webhook / CRM / email?
+  - Spam handling, and whether that conflicts with the no-CAPTCHA-for-accessibility position.
+  - Multi-step forms, and whether we need them for this site.
+  - EN + AR: labels, validation messages, and RTL layout for inputs.
+  - Server-side validation and rate limiting on the submit path.
+
+  **Exit check:** a working, accessible, bilingual form on the site, submissions visible in the CMS.
+
 ## 🚦 Phase 4 — AI features (Claude)  _(ask before starting)_
 - [ ] **S4.1 — AI Search** (Graph retrieval → Claude → cards) 🔴 — AI-SEARCH.md
 - [ ] **S4.2 — AI Trip Planner** (→ `Itinerary`) 🔴
