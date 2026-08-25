@@ -1,88 +1,99 @@
 ---
-title: "Optimizely SaaS CMS + Visual Builder on Vercel with Next.js — setup & the gotchas that cost me hours"
-status: draft
-audience: Optimizely community / dev.to / LinkedIn (long-form)
+title: "Setting up Optimizely SaaS CMS with Next.js and Visual Builder: the gotchas that cost me hours"
+status: ready
+audience: Optimizely community / dev.to / LinkedIn
 author: Nikki Punjabi
 tags: [optimizely, saas-cms, visual-builder, optimizely-graph, nextjs, vercel, cms-sdk, setup]
 ---
 
-> **Draft for your review.** Edit the voice/details freely before publishing. A LinkedIn variant
-> can be spun off from the intro + the gotcha list.
+Standing up a headless site on Optimizely SaaS CMS is well documented right up until the moment
+something breaks. Then you meet a handful of behaviours that are perfectly logical in hindsight and
+completely opaque at the time.
 
-> ⚠️ _Independent, unofficial learning project — not affiliated with any tourism authority or brand.
-> Original wordmark and royalty-free assets only._
+This is the setup that got me to "a page renders from the CMS", and the five things that cost me an
+afternoon each so they do not cost you one.
 
-## What I set out to do
+## The stack
 
-Stand up a real, headless website on **Optimizely SaaS CMS** — content delivered through
-**Optimizely Graph**, pages composed in **Visual Builder**, rendered by a **Next.js (App Router)**
-app on **Vercel** — using the first-party **`@optimizely/cms-sdk`**. Code-first, everything in
-git, no bespoke glue where the SDK already has an answer.
+- **`@optimizely/cms-sdk` and `@optimizely/cms-cli`.** First-party, and what the CMS Agent Skills
+  target. Content types are defined in TypeScript and pushed to the CMS with `config push`. Node 22
+  or later.
+- **Optimizely Graph** for delivery. A public single key for published content, safe in a browser,
+  and a server-only app key and secret for drafts.
+- **Next.js App Router**, server components by default.
+- **Vercel** for hosting.
 
-This post is the setup that got me to "a page renders from the CMS," plus the handful of gotchas
-that aren't (yet) obvious from the docs, so they don't cost you the afternoon they cost me.
-
-## The stack, and why
-
-- **`@optimizely/cms-sdk` + `@optimizely/cms-cli`** — first-party, code-first, and what the CMS
-  Agent Skills target. Content types are defined in TypeScript (`contentType()` / `contract()`) and
-  pushed to the CMS with `config push`. **Node 22+.**
-- **Optimizely Graph** for delivery — GraphQL, with a public **single key** (published content,
-  browser-safe) and a server-only **app key + secret** (drafts/preview, HMAC).
-- **Next.js App Router**, server components by default — the CMS content is fetched and rendered
-  on the server; `"use client"` only where there's real interactivity.
-- **Vercel** free tier for hosting.
+A note on vocabulary, because it causes arguments. This is often called "code-first", and on SaaS
+that is the wrong word. There is no C# class that becomes a content type, the way there was on
+CMS 12. SaaS modelling is **schema-first**, through the UI or the API. What we are doing is keeping
+those schema definitions **in source control** and applying them from the pipeline, which is what
+Optimizely recommends. Same discipline, different mechanism.
 
 ## The setup, start to finish
 
-1. **Model content types in code.** A `contentType()` per type, a `contract()` (`SeoMetadata`) for
-   shared field sets. Keep the CLI's `components` glob scoped to *your* types so pushes are clean.
-2. **One place for client config.** Call `config({ apiKey, graphUrl })` once (root layout) and import
-   `getClient()` wherever you query — including standalone routes like `robots.ts`.
-3. **Mirror the model in the React registry.** `initContentTypeRegistry([...])` +
-   `initReactComponentRegistry({ resolver: { <typeKey>: <Component> } })` +
-   `initDisplayTemplateRegistry([...])`. The resolver key **is** the content-type key.
-4. **Render.** Pages: `getClient().getContentByPath(path)` → `<OptimizelyComponent content={…} />`.
-   Experiences: `<OptimizelyComposition nodes={…} />`.
-5. **Push + deploy.** `optimizely-cms-cli login` → `config push` → deploy to Vercel with the Graph
-   env vars set.
+1. **Model the content types in code.** One `contentType()` per type, and a `contract()` for shared
+   field sets like SEO metadata. Keep the CLI's components glob scoped to your own types so pushes
+   stay clean.
+2. **Configure the client once.** Call `config()` in the root layout and import `getClient()`
+   wherever you query, including standalone routes like `robots.ts`.
+3. **Mirror the model in the React registry.** The resolver key **is** the content-type key.
+4. **Render.** Pages use `getContentByPath()`, experiences use `OptimizelyComposition`.
+5. **Push, then deploy.** Log in, `config push`, then deploy with the Graph environment variables
+   set. That order matters, and it keeps mattering later.
 
-## The gotchas (the actually-useful part)
+## The five gotchas
 
-> 🧩 **The registry MUST mirror the CMS model — or preview/delivery breaks.** A type registered
-> locally but **absent from Graph** makes the generated query fail with
-> `GraphContentResponseError: HTTP 400: N errors in the GraphQL query` (one error per stale type). A
-> type **in Graph but not registered** throws `GraphMissingContentTypeError` when it's resolved.
-> After deleting the scaffold's demo types from the CMS, prune them from
-> `initContentTypeRegistry`/`initReactComponentRegistry` **immediately** — don't defer it. (Keep the
-> SDK system types `BlankExperience` / `BlankSection`.)
+**The registry must mirror the CMS model exactly, in both directions.**
 
-> 🧩 **`create-app` doesn't emit a `.env`** even though the README implies one. Add your own
-> `.env.example` documenting the keys (`OPTIMIZELY_GRAPH_SINGLE_KEY`, `OPTIMIZELY_GRAPH_GATEWAY`,
-> the CMS client id/secret) and gitignore `.env`.
+This is the one that will bite you first and hardest. A type registered locally but missing from
+Graph makes the generated query fail with one GraphQL error per stale type. A type in Graph but not
+registered throws when something tries to resolve it.
 
-> 🧩 **Never construct the Graph client with an empty/dummy key.** The SDK throws on an empty key at
-> `config()`/`getClient()` — at *module load* for a route like `robots.ts`, which crashes the CI
-> build (no secrets present) before any `try/catch` runs. **Lazy-init:** read the key, only call
-> `config()` when it's present, and fail closed otherwise. A placeholder key "works" but then real
-> requests 401 silently — a smell, not a fix.
+So when you delete the scaffold's demo types from the CMS, prune them from the registry in the same
+change. Not later. The failure arrives at query time, well away from the edit that caused it. Keep
+the SDK's own system types.
 
-> 🧩 **Query field names drop the `_` for custom types** (`PointOfInterest`, not `_PointOfInterest`);
-> system types keep it (`_Page`, `_Content`). And **schema changes take minutes to propagate** — a
-> just-pushed type isn't queryable in Graph immediately; poll `__type` rather than assuming.
+**The scaffold does not create a `.env`,** even though the documentation reads as though it does.
+Write your own `.env.example` documenting every key, and gitignore the real one. Do this on day one,
+because the person who joins in month three will assume the file that exists is the file that is
+needed.
 
-> 🧩 **Toolchain pins.** `next lint` was removed in Next 16 (run `eslint` directly with a flat
-> config); TypeScript 7 / ESLint 10 aren't supported by the Next 16 toolchain yet (pin TS 5.x /
-> ESLint 9.x); Tailwind v4 flattens `@theme` vars, so use `@theme inline` for tokens that flip in
-> dark mode. The scaffold's `opti-push` script also hardcoded `pnpm` — fix it for your package manager.
+**Never build the Graph client with an empty or placeholder key.**
 
-## Result
+The SDK throws on an empty key at configuration time, which for a route like `robots.ts` means at
+module load. That crashes the CI build before any error handling runs, because CI has no secrets.
 
-A Next.js app on Vercel rendering content from Optimizely SaaS via Graph, with content types
-defined in code and pushed with the CLI — and a build that **fails closed** without secrets rather
-than crashing. Everything after this (SEO, listings, search) builds on exactly this foundation.
+Read the key, configure only when it is present, and fail closed otherwise. A placeholder key looks
+like a fix and is not: the build passes and real requests fail silently later, which is strictly
+worse than failing loudly now.
 
-## Links
-- Repo: _this-is-dubai_ — see `docs/OPTIMIZELY-BEST-PRACTICES.md` (the full playbook) and
-  `docs/ARCHITECTURE.md`.
-- Next: **live Visual Builder preview** (Application + preview tokens + local HTTPS) — post #2b.
+**Query field names drop the underscore for your own types.** Custom types are `PointOfInterest`,
+system types keep the prefix, as in `_Page` and `_Content`. Easy to get wrong, and the error does
+not point at the naming.
+
+**Schema changes take minutes to propagate.** A type you just pushed is not queryable straight away.
+Poll for it rather than assuming, and put the wait into any pipeline that pushes the model before
+deploying the app.
+
+## Toolchain pins worth knowing
+
+Small things, but each is an hour if you meet it cold:
+
+- `next lint` was removed in Next 16. Run ESLint directly with a flat config.
+- TypeScript 7 and ESLint 10 are not supported by the Next 16 toolchain yet. Pin TypeScript 5.x and
+  ESLint 9.x.
+- Tailwind v4 flattens `@theme` variables. Use `@theme inline` for tokens that change in dark mode.
+- The scaffold's push script hardcodes one package manager. Change it to yours.
+
+## What you end up with
+
+A Next.js app on Vercel rendering content from Optimizely SaaS through Graph, with content types
+defined in code, applied by the CLI, and a build that fails closed without secrets rather than
+crashing.
+
+None of that is remarkable, and that is the point. Everything after it, SEO, listing pages, search,
+localization, sits on this foundation, and each of these five gotchas gets more expensive the later
+you meet it.
+
+If you are starting one of these, I would genuinely like to know which of these you hit, and which
+ones I have not run into yet.

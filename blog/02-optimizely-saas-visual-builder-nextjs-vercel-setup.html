@@ -1,0 +1,52 @@
+<p style="font-size:1.12em;line-height:1.65;color:#3d4a5c;">Standing up a headless site on Optimizely SaaS CMS is well documented right up until the moment something breaks. Then you meet a handful of behaviours that are perfectly logical in hindsight and completely opaque at the time.</p>
+
+<p>This is the setup that got me to "a page renders from the CMS", and the five things that cost me an afternoon each so they do not cost you one.</p>
+
+<hr>
+<h2 style="margin-top:38px;">The stack</h2>
+
+<ul style="padding-left:22px;line-height:1.7;"><li style="margin-bottom:9px;"><strong><code style="background:rgba(43,75,114,0.07);padding:2px 5px;border-radius:3px;font-size:0.92em;">@optimizely/cms-sdk</code> and <code style="background:rgba(43,75,114,0.07);padding:2px 5px;border-radius:3px;font-size:0.92em;">@optimizely/cms-cli</code>.</strong> First-party, and what the CMS Agent Skills target. Content types are defined in TypeScript and pushed to the CMS with <code style="background:rgba(43,75,114,0.07);padding:2px 5px;border-radius:3px;font-size:0.92em;">config push</code>. Node 22 or later.</li><li style="margin-bottom:9px;"><strong>Optimizely Graph</strong> for delivery. A public single key for published content, safe in a browser, and a server-only app key and secret for drafts.</li><li style="margin-bottom:9px;"><strong>Next.js App Router</strong>, server components by default.</li><li style="margin-bottom:9px;"><strong>Vercel</strong> for hosting.</li></ul>
+
+<p>A note on vocabulary, because it causes arguments. This is often called "code-first", and on SaaS that is the wrong word. There is no C# class that becomes a content type, the way there was on CMS 12. SaaS modelling is <strong>schema-first</strong>, through the UI or the API. What we are doing is keeping those schema definitions <strong>in source control</strong> and applying them from the pipeline, which is what Optimizely recommends. Same discipline, different mechanism.</p>
+
+<hr>
+<h2 style="margin-top:38px;">The setup, start to finish</h2>
+
+<ol style="padding-left:22px;line-height:1.7;"><li style="margin-bottom:9px;"><strong>Model the content types in code.</strong> One <code style="background:rgba(43,75,114,0.07);padding:2px 5px;border-radius:3px;font-size:0.92em;">contentType()</code> per type, and a <code style="background:rgba(43,75,114,0.07);padding:2px 5px;border-radius:3px;font-size:0.92em;">contract()</code> for shared field sets like SEO metadata. Keep the CLI's components glob scoped to your own types so pushes stay clean.</li><li style="margin-bottom:9px;"><strong>Configure the client once.</strong> Call <code style="background:rgba(43,75,114,0.07);padding:2px 5px;border-radius:3px;font-size:0.92em;">config()</code> in the root layout and import <code style="background:rgba(43,75,114,0.07);padding:2px 5px;border-radius:3px;font-size:0.92em;">getClient()</code> wherever you query, including standalone routes like <code style="background:rgba(43,75,114,0.07);padding:2px 5px;border-radius:3px;font-size:0.92em;">robots.ts</code>.</li><li style="margin-bottom:9px;"><strong>Mirror the model in the React registry.</strong> The resolver key <strong>is</strong> the content-type key.</li><li style="margin-bottom:9px;"><strong>Render.</strong> Pages use <code style="background:rgba(43,75,114,0.07);padding:2px 5px;border-radius:3px;font-size:0.92em;">getContentByPath()</code>, experiences use <code style="background:rgba(43,75,114,0.07);padding:2px 5px;border-radius:3px;font-size:0.92em;">OptimizelyComposition</code>.</li><li style="margin-bottom:9px;"><strong>Push, then deploy.</strong> Log in, <code style="background:rgba(43,75,114,0.07);padding:2px 5px;border-radius:3px;font-size:0.92em;">config push</code>, then deploy with the Graph environment variables set. That order matters, and it keeps mattering later.</li></ol>
+
+<hr>
+<h2 style="margin-top:38px;">The five gotchas</h2>
+
+<p><strong>The registry must mirror the CMS model exactly, in both directions.</strong></p>
+
+<p>This is the one that will bite you first and hardest. A type registered locally but missing from Graph makes the generated query fail with one GraphQL error per stale type. A type in Graph but not registered throws when something tries to resolve it.</p>
+
+<p>So when you delete the scaffold's demo types from the CMS, prune them from the registry in the same change. Not later. The failure arrives at query time, well away from the edit that caused it. Keep the SDK's own system types.</p>
+
+<p><strong>The scaffold does not create a <code style="background:rgba(43,75,114,0.07);padding:2px 5px;border-radius:3px;font-size:0.92em;">.env</code>,</strong> even though the documentation reads as though it does. Write your own <code style="background:rgba(43,75,114,0.07);padding:2px 5px;border-radius:3px;font-size:0.92em;">.env.example</code> documenting every key, and gitignore the real one. Do this on day one, because the person who joins in month three will assume the file that exists is the file that is needed.</p>
+
+<p><strong>Never build the Graph client with an empty or placeholder key.</strong></p>
+
+<p>The SDK throws on an empty key at configuration time, which for a route like <code style="background:rgba(43,75,114,0.07);padding:2px 5px;border-radius:3px;font-size:0.92em;">robots.ts</code> means at module load. That crashes the CI build before any error handling runs, because CI has no secrets.</p>
+
+<p>Read the key, configure only when it is present, and fail closed otherwise. A placeholder key looks like a fix and is not: the build passes and real requests fail silently later, which is strictly worse than failing loudly now.</p>
+
+<p><strong>Query field names drop the underscore for your own types.</strong> Custom types are <code style="background:rgba(43,75,114,0.07);padding:2px 5px;border-radius:3px;font-size:0.92em;">PointOfInterest</code>, system types keep the prefix, as in <code style="background:rgba(43,75,114,0.07);padding:2px 5px;border-radius:3px;font-size:0.92em;">_Page</code> and <code style="background:rgba(43,75,114,0.07);padding:2px 5px;border-radius:3px;font-size:0.92em;">_Content</code>. Easy to get wrong, and the error does not point at the naming.</p>
+
+<p><strong>Schema changes take minutes to propagate.</strong> A type you just pushed is not queryable straight away. Poll for it rather than assuming, and put the wait into any pipeline that pushes the model before deploying the app.</p>
+
+<hr>
+<h2 style="margin-top:38px;">Toolchain pins worth knowing</h2>
+
+<p>Small things, but each is an hour if you meet it cold:</p>
+
+<ul style="padding-left:22px;line-height:1.7;"><li style="margin-bottom:9px;"><code style="background:rgba(43,75,114,0.07);padding:2px 5px;border-radius:3px;font-size:0.92em;">next lint</code> was removed in Next 16. Run ESLint directly with a flat config.</li><li style="margin-bottom:9px;">TypeScript 7 and ESLint 10 are not supported by the Next 16 toolchain yet. Pin TypeScript 5.x and ESLint 9.x.</li><li style="margin-bottom:9px;">Tailwind v4 flattens <code style="background:rgba(43,75,114,0.07);padding:2px 5px;border-radius:3px;font-size:0.92em;">@theme</code> variables. Use <code style="background:rgba(43,75,114,0.07);padding:2px 5px;border-radius:3px;font-size:0.92em;">@theme inline</code> for tokens that change in dark mode.</li><li style="margin-bottom:9px;">The scaffold's push script hardcodes one package manager. Change it to yours.</li></ul>
+
+<hr>
+<h2 style="margin-top:38px;">What you end up with</h2>
+
+<p>A Next.js app on Vercel rendering content from Optimizely SaaS through Graph, with content types defined in code, applied by the CLI, and a build that fails closed without secrets rather than crashing.</p>
+
+<p>None of that is remarkable, and that is the point. Everything after it, SEO, listing pages, search, localization, sits on this foundation, and each of these five gotchas gets more expensive the later you meet it.</p>
+
+<p>If you are starting one of these, I would genuinely like to know which of these you hit, and which ones I have not run into yet.</p>
