@@ -446,6 +446,31 @@ downstream (semantic search tuning, AI retrieval, the MCP server) needs a realis
 
   **Exit check:** a working, accessible, bilingual form on the site, submissions visible in the CMS.
 
+- [ ] **S3.15 — Corporate directory sign-in (Entra ID / AD) via Opti ID** 🟡 _(config + Optimizely Support, not a dev sprint)_
+  Let CMS users sign in with their corporate identity instead of separate Optimizely accounts, and
+  let group membership drive access. Handled through **Opti ID**, Optimizely's identity layer, so
+  this is expected to be configuration and a support request rather than development. ("AD" here
+  means **Microsoft Entra ID**, formerly Azure AD, which is what most organisations now mean by it.)
+
+  **Raise with Optimizely Support to confirm before planning:** which identity providers and
+  protocols are supported on our plan, whether group or role mapping is included or manual, what
+  Optimizely configures versus what we do, and the lead time.
+
+  **What we need ready on our side:** an identity admin who can register the application and consent
+  to it, the tenant details, and an agreed mapping from directory groups to CMS roles. Decide the
+  mapping before the call; it is the part that actually takes discussion.
+
+  ⚠️ **Per instance, not promoted.** Identity is **instance configuration**, the same category as
+  enabled languages and the application hostname (see [ENVIRONMENTS.md](ENVIRONMENTS.md)), so it has
+  to be set up separately on DEV, UAT and PROD. Nothing carries it across, and non-production
+  environments are the ones people forget until someone cannot log in.
+
+  Also agree the break-glass path: at least one local administrator account that still works if the
+  identity provider is unreachable.
+
+  **Exit check:** a directory user signs in to the CMS with their corporate credentials and lands
+  with the right permissions, on each configured environment.
+
 ## 🚦 Phase 4 — AI features (Claude)  _(ask before starting)_
 - [ ] **S4.1 — AI Search** (Graph retrieval → Claude → cards) 🔴 — AI-SEARCH.md
 - [ ] **S4.2 — AI Trip Planner** (→ `Itinerary`) 🔴
