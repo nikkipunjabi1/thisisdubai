@@ -80,10 +80,17 @@ with Visual Builder + live preview confirmed working — **before** we add This 
   pointed at the deployed DEV URL, so "publish in CMS revalidates the live page" is proven locally
   but not on Vercel. `/api/revalidate` is built; it needs the CMS webhook target + `REVALIDATE_SECRET`
   set per environment. Tracked as part of the UAT/environment work.
-- [ ] **S1.5 — Blog #2 outline** (official-SDK setup & gotchas). 🟢
+- [x] **S1.5 — Blog #2: official-SDK setup & gotchas** ✅
+  The outline was superseded by a full draft, now brought to publish standard:
+  `blog/02-optimizely-saas-visual-builder-nextjs-vercel-setup.md` plus the WordPress HTML.
+  Covers the five gotchas (registry must mirror the model both ways, no `.env` from the scaffold,
+  never configure Graph with a placeholder key, underscore-prefix rules in query field names,
+  schema propagation delay) and the toolchain pins. Reworded to **schema-first with definitions in
+  source control** rather than "code-first", which is the wrong term on SaaS. Zero em-dashes.
+  **Phase 1 is now complete.**
 - 🏁 Phase-1 baseline **verified end-to-end locally** (SDK scaffold + CMS/Graph + live VB preview);
   ARCHITECTURE.md updated with the real scaffold + SDK APIs. Vercel deploy (S1.4) landed later,
-  with the environment pipeline; **S1.5 (Blog #2 outline) is the one remaining Phase-1 item.**
+  with the environment pipeline. **Phase 1 is complete.**
 
 ## 🚦 Phase 2 — Content model + multi-page site  _(ask before starting)_
 Goal: This is Dubai content types, the luxury design system, and all page templates — a real
