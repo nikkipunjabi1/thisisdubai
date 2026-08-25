@@ -471,6 +471,35 @@ downstream (semantic search tuning, AI retrieval, the MCP server) needs a realis
   **Exit check:** a directory user signs in to the CMS with their corporate credentials and lands
   with the right permissions, on each configured environment.
 
+- [ ] **S3.16 — Redirects module for a headless SaaS migration** 🔵 _(later stage; design first)_
+  Nothing to do for this demo, but essential on any real migration project, and a strong candidate
+  for a reusable module alongside [S3.11] / [S3.14].
+
+  **The constraint that shapes it:** on a headless build the CMS never sees the request. A visitor
+  hitting `/old-page` reaches Vercel and Next.js, not Optimizely. Redirects are therefore ours to
+  own at the edge. The familiar PaaS add-ons (Geta NotFoundHandler, RedirectManager) are .NET
+  modules that plug into the ASP.NET pipeline, so they cannot be used on SaaS at all. Assume nothing
+  out of the box for legacy-URL redirects.
+
+  **Proposed shape:**
+  - A `Redirect` content type pushed with `opti-push` (from, to, 301/302, enabled, notes) so
+    marketing can manage the list in the CMS after go-live.
+  - Edge middleware checking an in-memory map, refreshed on publish through the existing
+    revalidation webhook. Must be O(1) and must not add latency to normal requests. Do not query
+    Graph per request, and do not put a large list in `next.config` (build times suffer).
+  - A bulk CSV import script, idempotent. Nobody hand-types four thousand redirects.
+  - A 404 fallback resolver for the tail we did not anticipate.
+
+  **Migration realities to plan for:** source the list from the old CMS, a crawl, Search Console and
+  analytics (analytics tells you which 200 URLs of 4,000 actually matter); flatten chains and kill
+  loops before launch; decide how legacy URLs map onto our `/en` and `/ar` prefixes; normalise
+  trailing slashes, case and query strings; do not bulk-redirect the tail to the homepage (Google
+  treats it as a soft 404); keep redirects at least a year.
+
+  **Exit check:** an automated test that walks the old-URL list and asserts each returns a 301 to a
+  URL returning 200, with no chains. Run in CI before cutover and on a schedule afterwards. Same
+  principle as `verify:content`: prove it with a command, not an opinion.
+
 ## 🚦 Phase 4 — AI features (Claude)  _(ask before starting)_
 - [ ] **S4.1 — AI Search** (Graph retrieval → Claude → cards) 🔴 — AI-SEARCH.md
 - [ ] **S4.2 — AI Trip Planner** (→ `Itinerary`) 🔴
