@@ -15,44 +15,38 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · 🚦 = phase gate (I as
 
 > **▶ Resume order — start here next:**
 >
-> _Done & merged:_ S3.1a preview access hardening (PR #68/#69), TTD-2 authored the
-> Things-to-Do pages (PR #70), S3.6 CMS-editable navigation (PR #74), S3.7 Site Settings
-> tabs + Cookie/Announcement skeletons (merged), fix: hide Nav data components from the
-> picker (PR #76).
+> **Phases 0, 1, 2 and 3 are complete.** DEV and UAT are live on Vercel with the model promoted by
+> CI, content migrated and verified (187 published items per locale), and four blog posts published.
 >
-> _In review:_ **S3.8 content-block library** (branch `feat/content-block-library`) — five new
-> author-first blocks (Two Column Text, Text and Image, Text and Video, Quote, Callout) + the
-> COMPONENT-NAMING.md best-practices doc, for the "Component Naming Conventions" blog. **Needs
-> `opti-push`** (push before the app serves pages — see S3.8 rollout note). After push, capture the
-> two CMS screenshots for the blog (picker list + a block editor field set).
+> **Next, in order (ask before starting each):**
+> 1. **S3.10 — Semantic search relevance.** Agreed to come before any AI work, because AI Search,
+>    the Trip Planner and the MCP server all read from the same retrieval layer.
+> 2. **TTD-3 — Imagery + AR + campaign blog.** Finish the Things-to-Do campaign: hero videos and
+>    posters on all 5 pages, HighlightCards on the landing page, then verify. The AR strings may
+>    already be covered by the L6 bulk translation, so check before scoping.
+> 3. **Announcement Bar + Cookie Consent Banner front-end.** The CMS fields exist from S3.7 as a
+>    skeleton. The consent banner is also a prerequisite for S3.17 personalization.
 >
-> **Waiting on user CMS content, then verify (do not lose these):**
-> - **`/ar` (RTL) navigation** — user populates the Arabic header/footer nav + language
->   labels; then verify dropdown direction, footer columns, and the "English" switcher in RTL.
-> - **Footer columns** — user adds links (currently headings only, so the footer falls back
->   to the built-in default column until links exist).
+> **Backlog, sequence not yet fixed:** S3.11 starter kit · S3.12 commerce and theme ·
+> S3.13 CMS-manageable copy · S3.14 Optimizely Forms · S3.15 Entra ID via Opti ID ·
+> S3.16 redirects module · S3.17 personalization and experimentation.
 >
-> **Next, in order:**
-> 1. **Announcement Bar + Cookie Consent Banner front-end** — the CMS fields exist (S3.7,
->    skeleton); build the front-end components that render them. Ask before starting.
-> 2. **Publish the stakeholder-preview blog** — copy final; a SINGLE combined post
->    (`blog/shareable-stakeholder-previews-optimizely-saas.md`); pending the CMS-editor
->    screenshots before posting.
-> 3. **TTD-3 — Imagery + AR + blog** — finish the campaign (hero videos/posters on all 5 pages,
->    HighlightCards onto the landing, AR content for RTL, browser-verify, campaign blog).
+> **Blog drafts ready to publish:** the environment-promotion post (needs screenshots) and the
+> SDK setup and gotchas post (no screenshots needed).
 >
 > "Ask before starting" per the standing rule.
 
 ---
 
-## Phase 0 — Foundations 🟢 (planning)
+## ✅ Phase 0 — Foundations  _(complete)_
 - [x] Kickoff decisions, research, and the full planning doc set.
 - [x] SDK decision: **official `@optimizely/cms-sdk`** (demo = reference); skills via marketplace.
 - [x] **S0.1** Draft blog post #1 ("building in the open") → `blog/01-building-this-is-dubai-in-the-open.md`. 🟢
 - [x] **S0.2** Add the **Optimizely CMS Skills** — installed to `~/.claude/skills/` (all 4:
   setup/model/model-react/preview). 🟢
+- 🏁 **Phase 0 complete.** Planning docs, the official-SDK decision and the CMS skills are all in place.
 
-## 🚦 Phase 1 — Scaffold & baseline running  _(ask before starting)_
+## ✅ Phase 1 — Scaffold & baseline running  _(complete)_
 Goal: a fresh official-SDK Next.js app runs locally against your dev CMS and deploys to Vercel,
 with Visual Builder + live preview confirmed working — **before** we add This is Dubai specifics.
 
@@ -92,7 +86,7 @@ with Visual Builder + live preview confirmed working — **before** we add This 
   ARCHITECTURE.md updated with the real scaffold + SDK APIs. Vercel deploy (S1.4) landed later,
   with the environment pipeline. **Phase 1 is complete.**
 
-## 🚦 Phase 2 — Content model + multi-page site  _(ask before starting)_
+## ✅ Phase 2 — Content model + multi-page site  _(complete)_
 Goal: This is Dubai content types, the luxury design system, and all page templates — a real
 multi-page site. 🔴 → split into these sprints:
 
@@ -111,19 +105,33 @@ multi-page site. 🔴 → split into these sprints:
   from `displaySettings`; pushed (13 types + 1 template); build/type-check green. Blocks under
   `src/components/blocks/`; glob + layout.tsx registrations updated. `POICardGrid` moved to S2.5
   (data-driven cards; build with real seed content). **Verify-in-VB** needs S1.3 live preview + S2.4.
-- [~] **S2.4 — Home page experience** 🟡 _(code done; CMS authoring is the user's step)_
+- [x] **S2.4 — Home page experience** ✅
   ✅ `HomePage` `_experience` type (extends SEO) + React component (`OptimizelyComposition`),
   pushed; `/` renders the published Home via `getContentByPath('/')` with a graceful fallback.
-  ⏭ **User (CMS UI):** create the "This is Dubai" application (host `localhost:3000`, HTTPS, preview
-  tokens) + a Home experience as its start page (our API key can't create content/apps —
-  Forbidden). Then compose it in VB → completes S1.3 (live preview) + verifies the display settings.
-- [ ] **S2.5 — Listing pages + faceting** (Places/Events/Articles/Tours/Hotels) + **`POICardGrid`**
-      VB block (data-driven cards, image/URL binding solved with real content) 🟡
-- [ ] **S2.6 — Detail pages** per type 🟡
-- [ ] **S2.7 — SEO helpers** (`buildMetadata`, `buildJsonLd`, sitemap, OG images) per SEO.md 🟡
-- [ ] **S2.8 — Seed content + royalty-free imagery + `ASSETS.md`** 🟡
-- [ ] **S2.9 — Blog #3 + #4 outlines** (content modeling; SEO/JSON-LD) 🟢
-- 🏁 Phase-2 done = full site renders from CMS, styled, SEO on every page.
+  ✅ **Done:** the application was created in the CMS (and again per environment for DEV/UAT, since
+  the application and its hostname are instance configuration and do not promote), the Home
+  experience is its start page, and it is composed in Visual Builder. 1 published `HomePage` in each
+  of EN and AR.
+- [x] **S2.5 — Listing pages + faceting** ✅
+  Delivered as the reusable **listing engine**: section pages are Visual Builder experiences with a
+  droppable `SectionListing` block (server-side pagination, sort, faceted filters), plus
+  `POICardGrid` for data-driven cards. Search carries type facets via `?in=`.
+- [x] **S2.6 — Detail pages per type** ✅
+  Routed through the `[locale]/[...slug]` catch-all rather than one route per type, with a dedicated
+  route for dated article URLs. Renderers exist for PointOfInterest, Area, Event and ArticlePost.
+- [x] **S2.7 — SEO helpers** ✅
+  `src/lib/seo.ts` provides `getSiteSettings`, `buildPageTitle`, `buildContentMetadata`,
+  `localeAlternates` and `getSitemapPaths`, plus `src/app/sitemap.ts` and `robots.ts`. JSON-LD ships
+  as a `<JsonLd>` component used by the detail types and breadcrumbs. _(The names differ from the
+  `buildMetadata` / `buildJsonLd` sketched here originally; the capability is the same.)_
+  Verified live: JSON-LD and `og:image` present, 159-URL bilingual sitemap.
+- [x] **S2.8 — Seed content + royalty-free imagery + `ASSETS.md`** ✅
+  `ASSETS.md` and `docs/ASSET-MANIFEST.md` in place; the CMP/DAM pipeline (source → upload → attach)
+  is scripted. 187 published items per locale.
+- [x] **S2.9 — Blog #3 + #4 outlines** ✅
+  `blog/03-content-modeling-pages-experiences-components.md` and
+  `blog/04-server-rendered-seo-jsonld.md`.
+- 🏁 **Phase 2 complete.** The full site renders from the CMS, styled, with SEO on every page.
 
 ## 🚦 Phase 2.5 — Content at scale  _(in progress)_
 _Rationale: search relevance, facets and pagination can't be judged on 16 items. Everything
