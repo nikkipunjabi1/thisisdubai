@@ -182,8 +182,14 @@ downstream (semantic search tuning, AI retrieval, the MCP server) needs a realis
 - [ ] **SC4 — Content quality pass** 🟡
   Tag/facet coverage across the full corpus, `relatedPlaces` cross-links, and a re-verification
   of semantic search + the relevance floor at ~250 items rather than 16.
-- [ ] **SC5 — Imagery** 🟡 _(runs in parallel; blocked on uploads)_
-  144 CMP folders per `docs/ASSET-MANIFEST.md` → `npm run attach-assets -- --apply`.
+- [x] **SC5 — Imagery** ✅
+  The CMP folders per `docs/ASSET-MANIFEST.md` were created, sourced and attached via
+  `npm run attach-assets -- --apply`. **Verified against live Graph (2026-08-25): 149/149 published
+  items that have an image field have one** — PointOfInterest 100/100, Area 19/19, Event 20/20,
+  ArticlePost 10/10. The remaining published items (TagTerm, SiteConfiguration, the section and
+  campaign experiences) have no item-level image field, so this is full coverage.
+  _Note for anyone querying across types: the field name is not consistent. `PointOfInterest` and
+  `Event` use `images` (an array); `Area` and `ArticlePost` use `heroImage` (a single reference)._
 - 🏁 Phase-2.5 done = ~250 published items, every image field filled, facets meaningful.
 
 ## 🚦 Phase 3 — Optimizely superpowers  _(ask before starting)_
