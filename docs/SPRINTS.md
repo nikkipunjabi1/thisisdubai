@@ -500,6 +500,39 @@ downstream (semantic search tuning, AI retrieval, the MCP server) needs a realis
   URL returning 200, with no chains. Run in CI before cutover and on a schedule afterwards. Same
   principle as `verify:content`: prove it with a command, not an opinion.
 
+- [ ] **S3.17 — Personalization and Experimentation** 🟡 _(design decisions first)_
+  Integrate the site with Optimizely's personalization and experimentation capability so we can
+  target content and run tests. Anticipated from the start: `.env.example` already reserves
+  `OPTIMIZELY_FX_SDK_KEY` and `OPTIMIZELY_FX_ACCESS_TOKEN`.
+
+  **Decide which product, and where it runs.** These are not interchangeable on a headless build:
+  - **Feature Experimentation (SDK)** can be evaluated **server-side** in RSC, so the visitor is
+    bucketed before the HTML is produced. No flash, no layout shift.
+  - **Web Experimentation (client-side snippet)** mutates the page after it loads. On an SSR site
+    that means flicker (flash of original content) and a Core Web Vitals hit, which would undo the
+    performance work already shipped. If it is needed, it needs a deliberate anti-flicker strategy.
+  - **CMS-side audiences** are a third option worth checking: the SaaS import summary lists
+    audiences as a first-class object, so Visual Builder may support audience-targeted variations
+    without any SDK. Confirm what is actually supported before designing around it.
+
+  **The hard part is caching, not targeting.** Every page is currently cached and largely static.
+  A personalized page cannot be served from a shared cache keyed only on URL, or visitor A gets
+  visitor B's variant. Options to weigh: cache per variant (cache key includes the bucket), keep
+  personalization to islands that render client-side inside an otherwise cached page, or move the
+  decision to the edge. Pick this before building anything; it shapes everything else.
+
+  ⚠️ **Depends on cookie consent, which is currently a skeleton.** [S3.7] added the cookie-consent
+  fields to `SiteConfiguration` but the front-end banner was never built. Behavioural targeting
+  should not ship without working consent, so that banner becomes a prerequisite rather than a
+  nice-to-have.
+
+  **Also settle:** what the first real experiment is (a feature with no hypothesis is just extra
+  complexity), how variants are authored (CMS content vs code), how results are read, and whether
+  personalization applies per locale (an EN experiment may be meaningless for AR visitors).
+
+  **Exit check:** one server-side experiment live on DEV with variants correctly bucketed, no
+  flicker, no measurable CWV regression, and caching still behaving.
+
 ## 🚦 Phase 4 — AI features (Claude)  _(ask before starting)_
 - [ ] **S4.1 — AI Search** (Graph retrieval → Claude → cards) 🔴 — AI-SEARCH.md
 - [ ] **S4.2 — AI Trip Planner** (→ `Itinerary`) 🔴
