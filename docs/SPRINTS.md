@@ -591,6 +591,33 @@ downstream (semantic search tuning, AI retrieval, the MCP server) needs a realis
   that answers the differentiation question better than any amount of speculation, and it tells us
   what a CMS UI Extension can actually do.
 
+  ### Reference: how CMS UI Extensions work
+
+  Primary doc, to read properly before building:
+  **https://docs.developers.optimizely.com/optimizely-connect-platform/docs/cms-ui-extensions-ocp2**
+
+  Summary of what it says today, so we can plan without re-reading it:
+
+  - **Beta.** Expect the contract to move; do not build anything load-bearing for a client on it yet.
+  - **One surface so far: the content editor side panel**, declared as the `sidebar` injection point.
+    Additional panel types and custom field editors are described as planned. That single surface
+    happens to be exactly where a share-link panel belongs.
+  - **Declared in `app.yml`** under `ui_extensions:`, each entry giving `name`, `entry_point` and
+    `display_name`.
+  - **React components rendered in an iframe.** The frontend imports `register()` from
+    `@optimizely/cms-extensibility-sdk` and calls it at the top level.
+  - **Context available to the extension:** an Extension namespace (`setReady()`,
+    `getDefinition()`, `invokeFunction()` for calling backend functions) and a Content namespace
+    (`get()` and `subscribe()`), where content state carries `key`, `version` and `locale`.
+    `locale` matters for us: a bilingual site needs the panel to know which language it is acting on.
+  - **Runtime and packages:** the `node22-cms-ext` runtime, plus
+    `@optimizely/cms-extensibility-sdk` (frontend) and `@optimizely/ocp-cms-ui-extensions-sdk`
+    (build). Backend functions must declare `accepts: cms_ui_extension`. Yarn 2+ needs
+    `nodeLinker: node-modules`.
+  - ⚠️ **Never put API keys, OAuth secrets or any sensitive value in the UI bundle.** The panel is a
+    browser context. Privileged work belongs in a backend function invoked via `invokeFunction()`,
+    which is the same server-side-read principle the published preview-link post argues for.
+
 ## 🚦 Phase 4 — AI features (Claude)  _(ask before starting)_
 - [ ] **S4.1 — AI Search** (Graph retrieval → Claude → cards) 🔴 — AI-SEARCH.md
 - [ ] **S4.2 — AI Trip Planner** (→ `Itinerary`) 🔴

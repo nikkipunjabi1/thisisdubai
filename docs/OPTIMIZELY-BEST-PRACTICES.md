@@ -286,3 +286,11 @@ evidence that settles it.
 **Practical consequence:** before building a CMS-side tool as bespoke project code, check the App
 Directory. Something may already exist, and if it does not, OCP is a real distribution route rather
 than a private module.
+
+**Reference:** [CMS UI Extensions (OCP)](https://docs.developers.optimizely.com/optimizely-connect-platform/docs/cms-ui-extensions-ocp2).
+Currently **beta**. One surface today, the content editor side panel, declared as a `sidebar`
+injection point in `app.yml`; more panel types and custom field editors are planned. Extensions are
+React components rendered in an iframe, registered with `register()` from
+`@optimizely/cms-extensibility-sdk`, and receive the active content's `key`, `version` and `locale`.
+Privileged work goes in a backend function called through `invokeFunction()` — never put keys or
+secrets in the UI bundle, because the panel runs in a browser.
