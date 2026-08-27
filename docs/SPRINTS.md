@@ -554,6 +554,43 @@ downstream (semantic search tuning, AI retrieval, the MCP server) needs a realis
   **Exit check:** one server-side experiment live on DEV with variants correctly bucketed, no
   flicker, no measurable CWV regression, and caching still behaving.
 
+- [ ] **S3.18 — "Shareable Preview Link" as an OCP app** 🔵 _(later stage; decide differentiation first)_
+  Package the stakeholder preview-link feature as an **Optimizely Connect Platform (OCP)** app so it
+  installs from the App Directory instead of being rebuilt per project.
+
+  **OCP does support CMS UI extensions.** The App Directory carries a **CMS UI Extensions** feature
+  category, and installed apps render panels in the CMS editor sidebar (Stott Security, Netcel Page
+  Performance, Netcel Unsplash Viewer). This corrects an earlier assumption in this file, made from
+  the app-type list alone, that OCP was data-integration only and could not reach the authoring UI.
+  It can. That makes it a legitimate distribution route for this feature and, more importantly, for
+  the other modules on this list.
+
+  ⚠️ **Someone has already built it.** **Netcel Shareable Preview** is live in the App Directory
+  (verified badge, Content Management category, currently beta): "Time-limited, login-free preview
+  links for external stakeholders, generated from the CMS editor sidebar." Its settings expose a
+  signing secret (HMAC-SHA256), a preview handler URL, Graph endpoint plus app key and secret, a
+  live-site base URL, internal network ranges, and a default link expiry. Its author panel offers
+  Internal vs Shareable, a 1/3/7 day expiry, and states plainly that individual links cannot be
+  revoked early and that nothing is stored.
+
+  That is the same architecture we arrived at independently, down to the stateless trade-off and the
+  network-gated Internal default. Reassuring for the design, and it means a second identical app
+  adds little.
+
+  **So the decision is not "how do we build it" but "should we, and how would ours differ".**
+  Options, to weigh later:
+  - **Do not build it.** Point people at the Netcel app, keep our npm module for headless Next.js
+    projects that want it in their own codebase, and spend the effort on a module nobody has built.
+  - **Differentiate.** Per-link revocation (their explicit gap), attribution and audit of who created
+    which link, multilingual awareness, or per-link PIN.
+  - **Redirect the OCP effort.** The unlock here is not this one app: it is that CMS UI Extensions
+    exist at all. That reopens [S3.14] `llms.txt`, [S3.16] redirects and [S3.11] the starter kit as
+    installable apps rather than code-only packages.
+
+  **Do this first:** install the Netcel app on a sandbox instance and use it properly. An hour of
+  that answers the differentiation question better than any amount of speculation, and it tells us
+  what a CMS UI Extension can actually do.
+
 ## 🚦 Phase 4 — AI features (Claude)  _(ask before starting)_
 - [ ] **S4.1 — AI Search** (Graph retrieval → Claude → cards) 🔴 — AI-SEARCH.md
 - [ ] **S4.2 — AI Trip Planner** (→ `Itinerary`) 🔴

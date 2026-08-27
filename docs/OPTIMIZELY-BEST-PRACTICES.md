@@ -271,3 +271,18 @@ a forced pipeline would have deleted that data silently on every environment, an
 learned the model had drifted.
 
 **Rule: anything you would change in Settings → Content Types belongs in a pull request.**
+
+### OCP apps CAN extend the CMS authoring UI
+
+Optimizely SaaS has no in-CMS extensibility of its own, which is why an in-editor panel has to be
+rendered by your own application inside the preview iframe. That remains true for the CMS itself.
+
+It is **not** true of the Optimizely Connect Platform. OCP's App Directory has a **CMS UI
+Extensions** feature category, and installed apps render panels in the CMS editor sidebar. Reading
+OCP's four app types (Generic App, Data Sync Source, Data Sync Destination, Opal Tool) suggests a
+data-integration platform and leads to the wrong conclusion; the App Directory itself is the
+evidence that settles it.
+
+**Practical consequence:** before building a CMS-side tool as bespoke project code, check the App
+Directory. Something may already exist, and if it does not, OCP is a real distribution route rather
+than a private module.
