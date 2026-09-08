@@ -549,6 +549,12 @@ downstream (semantic search tuning, AI retrieval, the MCP server) needs a realis
   should not ship without working consent, so that banner becomes a prerequisite rather than a
   nice-to-have.
 
+  **Do this first (1 hour).** Optimizely Academy, *Introduction to Optimizely Data Platform (ODP)*:
+  https://academy.optimizely.com/student/page/2563794-introduction-to-optimizely-data-platform-odp
+  Whoever picks up this sprint takes the course before designing anything. It is an hour, it is
+  free, and it means the audience design starts from how ODP actually models profiles, identity and
+  segments rather than from assumptions.
+
   **Where ODP fits.** Optimizely Data Platform is the natural source of audiences: unified profiles,
   identity resolution and real-time segments, with Optimizely Connect Platform providing the
   integrations around it. Deciding an audience once in ODP and applying it consistently is the
