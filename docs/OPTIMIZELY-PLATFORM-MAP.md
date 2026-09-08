@@ -184,7 +184,7 @@ Ordered by what unlocks the most commercial ground.
 3. **[S3.20] Feature Experimentation** — a short build, and a credible answer to engineering stakeholders.
 4. **Warehouse-Native Analytics** — the strongest differentiator we have not yet touched.
 5. **[S3.18] Connect Platform** — connector catalogue and CMS UI Extensions; changes how we scope integration work.
-6. **CMP end to end** — we use the DAM; we have not used the planning and approval side that a CMO actually buys.
+6. **[S3.21] CMP end to end** — we use the DAM; we have not used the planning and approval side that a CMO actually buys. One full campaign, brief to live page.
 
 ---
 
