@@ -29,7 +29,9 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · 🚦 = phase gate (I as
 >
 > **Backlog, sequence not yet fixed:** S3.11 starter kit · S3.12 commerce and theme ·
 > S3.13 CMS-manageable copy · S3.14 Optimizely Forms · S3.15 Entra ID via Opti ID ·
-> S3.16 redirects module · S3.17 personalization and experimentation.
+> S3.16 redirects module · S3.17 personalization and experimentation (with ODP audiences) ·
+> S3.18 OCP app and CMS UI Extensions · S3.19 Experience API (server-driven delivery contract) ·
+> S3.20 Feature Experimentation · S3.21 CMP campaign lifecycle end to end.
 >
 > **Blog drafts ready to publish:** the environment-promotion post (needs screenshots) and the
 > SDK setup and gotchas post (no screenshots needed).
@@ -561,12 +563,180 @@ downstream (semantic search tuning, AI retrieval, the MCP server) needs a realis
   should not ship without working consent, so that banner becomes a prerequisite rather than a
   nice-to-have.
 
+  **Do this first (1 hour).** Optimizely Academy, *Introduction to Optimizely Data Platform (ODP)*:
+  https://academy.optimizely.com/student/page/2563794-introduction-to-optimizely-data-platform-odp
+  Whoever picks up this sprint takes the course before designing anything. It is an hour, it is
+  free, and it means the audience design starts from how ODP actually models profiles, identity and
+  segments rather than from assumptions.
+
+  **Where ODP fits.** Optimizely Data Platform is the natural source of audiences: unified profiles,
+  identity resolution and real-time segments, with Optimizely Connect Platform providing the
+  integrations around it. Deciding an audience once in ODP and applying it consistently is the
+  pattern worth proving, because it is what a multi-channel build needs.
+  Be realistic about what this demo can show: the site is anonymous, with no accounts, bookings or
+  conversions, so identity resolution has little to work with. A useful proof here is a behavioural
+  or contextual audience (locale, referrer, pages viewed) rather than a profile-based one. Worth
+  scoping deliberately so the demo demonstrates the mechanism honestly.
+
   **Also settle:** what the first real experiment is (a feature with no hypothesis is just extra
   complexity), how variants are authored (CMS content vs code), how results are read, and whether
   personalization applies per locale (an EN experiment may be meaningless for AR visitors).
 
   **Exit check:** one server-side experiment live on DEV with variants correctly bucketed, no
   flicker, no measurable CWV regression, and caching still behaving.
+
+- [ ] **S3.18 — "Shareable Preview Link" as an OCP app** 🔵 _(later stage; decide differentiation first)_
+  Package the stakeholder preview-link feature as an **Optimizely Connect Platform (OCP)** app so it
+  installs from the App Directory instead of being rebuilt per project.
+
+  **OCP does support CMS UI extensions.** The App Directory carries a **CMS UI Extensions** feature
+  category, and installed apps render panels in the CMS editor sidebar (Stott Security, Netcel Page
+  Performance, Netcel Unsplash Viewer). This corrects an earlier assumption in this file, made from
+  the app-type list alone, that OCP was data-integration only and could not reach the authoring UI.
+  It can. That makes it a legitimate distribution route for this feature and, more importantly, for
+  the other modules on this list.
+
+  ⚠️ **Someone has already built it.** **Netcel Shareable Preview** is live in the App Directory
+  (verified badge, Content Management category, currently beta): "Time-limited, login-free preview
+  links for external stakeholders, generated from the CMS editor sidebar." Its settings expose a
+  signing secret (HMAC-SHA256), a preview handler URL, Graph endpoint plus app key and secret, a
+  live-site base URL, internal network ranges, and a default link expiry. Its author panel offers
+  Internal vs Shareable, a 1/3/7 day expiry, and states plainly that individual links cannot be
+  revoked early and that nothing is stored.
+
+  That is the same architecture we arrived at independently, down to the stateless trade-off and the
+  network-gated Internal default. Reassuring for the design, and it means a second identical app
+  adds little.
+
+  **So the decision is not "how do we build it" but "should we, and how would ours differ".**
+  Options, to weigh later:
+  - **Do not build it.** Point people at the Netcel app, keep our npm module for headless Next.js
+    projects that want it in their own codebase, and spend the effort on a module nobody has built.
+  - **Differentiate.** Per-link revocation (their explicit gap), attribution and audit of who created
+    which link, multilingual awareness, or per-link PIN.
+  - **Redirect the OCP effort.** The unlock here is not this one app: it is that CMS UI Extensions
+    exist at all. That reopens [S3.14] `llms.txt`, [S3.16] redirects and [S3.11] the starter kit as
+    installable apps rather than code-only packages.
+
+  **Do this first:** install the Netcel app on a sandbox instance and use it properly. An hour of
+  that answers the differentiation question better than any amount of speculation, and it tells us
+  what a CMS UI Extension can actually do.
+
+  **Wider OCP exploration, same sprint.** Beyond this one app, two things are worth understanding
+  properly because they recur on every engagement:
+  - **The connector catalogue.** Which integrations already exist in the App Directory, so
+    integration work can be scoped as configuration rather than custom build.
+  - **Opal Tools.** Exposing project capability as tools the Opal assistant can call is a distinct
+    app type and a natural fit for anything we already expose as an API.
+
+  ### Reference: how CMS UI Extensions work
+
+  Primary doc, to read properly before building:
+  **https://docs.developers.optimizely.com/optimizely-connect-platform/docs/cms-ui-extensions-ocp2**
+
+  Summary of what it says today, so we can plan without re-reading it:
+
+  - **Beta.** Expect the contract to move; do not build anything load-bearing for a client on it yet.
+  - **One surface so far: the content editor side panel**, declared as the `sidebar` injection point.
+    Additional panel types and custom field editors are described as planned. That single surface
+    happens to be exactly where a share-link panel belongs.
+  - **Declared in `app.yml`** under `ui_extensions:`, each entry giving `name`, `entry_point` and
+    `display_name`.
+  - **React components rendered in an iframe.** The frontend imports `register()` from
+    `@optimizely/cms-extensibility-sdk` and calls it at the top level.
+  - **Context available to the extension:** an Extension namespace (`setReady()`,
+    `getDefinition()`, `invokeFunction()` for calling backend functions) and a Content namespace
+    (`get()` and `subscribe()`), where content state carries `key`, `version` and `locale`.
+    `locale` matters for us: a bilingual site needs the panel to know which language it is acting on.
+  - **Runtime and packages:** the `node22-cms-ext` runtime, plus
+    `@optimizely/cms-extensibility-sdk` (frontend) and `@optimizely/ocp-cms-ui-extensions-sdk`
+    (build). Backend functions must declare `accepts: cms_ui_extension`. Yarn 2+ needs
+    `nodeLinker: node-modules`.
+  - ⚠️ **Never put API keys, OAuth secrets or any sensitive value in the UI bundle.** The panel is a
+    browser context. Privileged work belongs in a backend function invoked via `invokeFunction()`,
+    which is the same server-side-read principle the published preview-link post argues for.
+
+- [ ] **S3.19 — Experience API: prove the server-driven delivery contract** 🟡 _(high value; small)_
+  Add a versioned, client-neutral delivery endpoint alongside the existing site, so the
+  "compose once, deliver to any channel" argument is demonstrable rather than described.
+
+  Today the composition tree is resolved inside React Server Components and rendered straight to
+  HTML. That resolution logic already exists (`src/lib/curated.ts` and friends); this sprint gives it
+  a second, channel-neutral output.
+
+  **Shape:** `/api/experience/v1/{path}` returns the page as resolved nodes — component type, order,
+  settings and fully resolved content — with no queries, credentials or CMS concepts left for the
+  caller. Same content, same authoring, a second delivery surface.
+
+  **Three rules to build in from the start**, because they are the whole point:
+  1. Everything resolved server-side; the caller never touches Graph.
+  2. Unknown component types are omitted rather than raising an error, so an older client keeps working.
+  3. A `schemaVersion` on every response, with capability negotiation from day one.
+
+  **Why it is worth doing here:** it is a few days of work on a codebase where the hard parts
+  (authoring, composition, resolution, localisation, caching) are already solved and proven, and it
+  turns a diagram into something we can show running. It also gives the mobile and kiosk questions a
+  concrete answer, and it is the foundation any second channel would consume.
+
+  **Exit check:** a bilingual campaign page returned as a resolved node tree, verified against the
+  rendered HTML, with an unknown component type omitted cleanly rather than failing.
+
+- [ ] **S3.20 — Feature Experimentation (server-side flags and rollout)** 🟡
+  Distinct from [S3.17], which covers content personalization and A/B testing. Feature
+  Experimentation governs **code**: feature flags, staged rollout, kill switches and server-side
+  experiments, evaluated in RSC before the HTML exists.
+
+  **Where it earns its place here:** Phase 4 introduces AI features. Shipping an AI search or trip
+  planner behind a flag, rolling it to a fraction of traffic, and switching it off without a deploy
+  is exactly the situation flags exist for. `.env.example` already reserves
+  `OPTIMIZELY_FX_SDK_KEY` and `OPTIMIZELY_FX_ACCESS_TOKEN`.
+
+  **To settle:** where flags are evaluated (server-side by default, to avoid flicker and protect the
+  Core Web Vitals work already shipped), how flag state interacts with the Graph read cache, and how
+  flags are named and retired so they do not accumulate.
+
+  **Exit check:** one real feature behind a flag on DEV, toggled without a deploy, with no
+  measurable performance regression.
+
+- [ ] **S3.21 — CMP end to end: run a real campaign from brief to live page** 🟡
+  We use Optimizely CMP for its DAM, and not at all for the part a CMO actually buys: planning,
+  briefing, assignment, review, approval and scheduling. That is the largest gap in our ability to
+  speak to marketing operations, and it is the half of CMP that decides a full-suite deal.
+
+  **The goal is one complete lap**, not a feature tour. Take a new seasonal campaign on This is
+  Dubai and run it through CMP from a blank brief to published pages, with the trail intact.
+
+  **The lap:**
+  1. Raise the campaign brief in CMP, with objective, audience, markets and dates.
+  2. Place it on the marketing calendar alongside everything else in flight.
+  3. Break it into tasks and assign them, so there is a real workload view.
+  4. Produce and review the creative, using the approval cycle rather than skipping it.
+  5. Land the approved assets in the DAM, organised as they should be.
+  6. Author the campaign content, in EN and AR.
+  7. Schedule and publish to the site.
+  8. Close the loop: what shipped, when, and who approved it.
+
+  **The unknowns to establish honestly** (these are the questions clients ask, and we should answer
+  from experience rather than from a datasheet):
+  - How does content and creative actually move from CMP into the SaaS CMS? Native integration,
+    API, or a manual handoff, and how much friction is in it?
+  - Does approval state travel with the asset, or does the CMS treat it as a fresh upload?
+  - Can a CMS publish be scheduled and governed from CMP, or is scheduling owned by the CMS?
+  - How do multi-market and multi-language campaigns behave in the planning layer?
+  - What does the calendar view genuinely give a marketing manager that a spreadsheet does not?
+
+  **Why it is worth the time:** everything we can currently demonstrate speaks to developers and
+  content authors. This is the demonstration that speaks to a CMO, and it is the difference between
+  pitching a CMS and pitching a marketing platform. Whatever friction we find is also worth knowing
+  before we describe the integration in a bid.
+
+  **Exit check:** a campaign that began as a brief in CMP is live on the site in both languages, and
+  we can walk someone through the trail from brief to published page. The friction points are written
+  up in [OPTIMIZELY-PLATFORM-MAP.md](OPTIMIZELY-PLATFORM-MAP.md).
+
+  **Blog trigger:** yes. "Running a marketing campaign end to end on Optimizely, from brief to live
+  page" is a genuinely under-written topic, and it reaches a different audience from the technical
+  posts.
 
 ## 🚦 Phase 4 — AI features (Claude)  _(ask before starting)_
 - [ ] **S4.1 — AI Search** (Graph retrieval → Claude → cards) 🔴 — AI-SEARCH.md
