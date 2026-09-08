@@ -29,7 +29,9 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · 🚦 = phase gate (I as
 >
 > **Backlog, sequence not yet fixed:** S3.11 starter kit · S3.12 commerce and theme ·
 > S3.13 CMS-manageable copy · S3.14 Optimizely Forms · S3.15 Entra ID via Opti ID ·
-> S3.16 redirects module · S3.17 personalization and experimentation.
+> S3.16 redirects module · S3.17 personalization and experimentation (with ODP audiences) ·
+> S3.18 OCP app and CMS UI Extensions · S3.19 Experience API (server-driven delivery contract) ·
+> S3.20 Feature Experimentation.
 >
 > **Blog drafts ready to publish:** the environment-promotion post (needs screenshots) and the
 > SDK setup and gotchas post (no screenshots needed).
@@ -547,6 +549,15 @@ downstream (semantic search tuning, AI retrieval, the MCP server) needs a realis
   should not ship without working consent, so that banner becomes a prerequisite rather than a
   nice-to-have.
 
+  **Where ODP fits.** Optimizely Data Platform is the natural source of audiences: unified profiles,
+  identity resolution and real-time segments, with Optimizely Connect Platform providing the
+  integrations around it. Deciding an audience once in ODP and applying it consistently is the
+  pattern worth proving, because it is what a multi-channel build needs.
+  Be realistic about what this demo can show: the site is anonymous, with no accounts, bookings or
+  conversions, so identity resolution has little to work with. A useful proof here is a behavioural
+  or contextual audience (locale, referrer, pages viewed) rather than a profile-based one. Worth
+  scoping deliberately so the demo demonstrates the mechanism honestly.
+
   **Also settle:** what the first real experiment is (a feature with no hypothesis is just extra
   complexity), how variants are authored (CMS content vs code), how results are read, and whether
   personalization applies per locale (an EN experiment may be meaningless for AR visitors).
@@ -591,6 +602,13 @@ downstream (semantic search tuning, AI retrieval, the MCP server) needs a realis
   that answers the differentiation question better than any amount of speculation, and it tells us
   what a CMS UI Extension can actually do.
 
+  **Wider OCP exploration, same sprint.** Beyond this one app, two things are worth understanding
+  properly because they recur on every engagement:
+  - **The connector catalogue.** Which integrations already exist in the App Directory, so
+    integration work can be scoped as configuration rather than custom build.
+  - **Opal Tools.** Exposing project capability as tools the Opal assistant can call is a distinct
+    app type and a natural fit for anything we already expose as an API.
+
   ### Reference: how CMS UI Extensions work
 
   Primary doc, to read properly before building:
@@ -617,6 +635,48 @@ downstream (semantic search tuning, AI retrieval, the MCP server) needs a realis
   - ⚠️ **Never put API keys, OAuth secrets or any sensitive value in the UI bundle.** The panel is a
     browser context. Privileged work belongs in a backend function invoked via `invokeFunction()`,
     which is the same server-side-read principle the published preview-link post argues for.
+
+- [ ] **S3.19 — Experience API: prove the server-driven delivery contract** 🟡 _(high value; small)_
+  Add a versioned, client-neutral delivery endpoint alongside the existing site, so the
+  "compose once, deliver to any channel" argument is demonstrable rather than described.
+
+  Today the composition tree is resolved inside React Server Components and rendered straight to
+  HTML. That resolution logic already exists (`src/lib/curated.ts` and friends); this sprint gives it
+  a second, channel-neutral output.
+
+  **Shape:** `/api/experience/v1/{path}` returns the page as resolved nodes — component type, order,
+  settings and fully resolved content — with no queries, credentials or CMS concepts left for the
+  caller. Same content, same authoring, a second delivery surface.
+
+  **Three rules to build in from the start**, because they are the whole point:
+  1. Everything resolved server-side; the caller never touches Graph.
+  2. Unknown component types are omitted rather than raising an error, so an older client keeps working.
+  3. A `schemaVersion` on every response, with capability negotiation from day one.
+
+  **Why it is worth doing here:** it is a few days of work on a codebase where the hard parts
+  (authoring, composition, resolution, localisation, caching) are already solved and proven, and it
+  turns a diagram into something we can show running. It also gives the mobile and kiosk questions a
+  concrete answer, and it is the foundation any second channel would consume.
+
+  **Exit check:** a bilingual campaign page returned as a resolved node tree, verified against the
+  rendered HTML, with an unknown component type omitted cleanly rather than failing.
+
+- [ ] **S3.20 — Feature Experimentation (server-side flags and rollout)** 🟡
+  Distinct from [S3.17], which covers content personalization and A/B testing. Feature
+  Experimentation governs **code**: feature flags, staged rollout, kill switches and server-side
+  experiments, evaluated in RSC before the HTML exists.
+
+  **Where it earns its place here:** Phase 4 introduces AI features. Shipping an AI search or trip
+  planner behind a flag, rolling it to a fraction of traffic, and switching it off without a deploy
+  is exactly the situation flags exist for. `.env.example` already reserves
+  `OPTIMIZELY_FX_SDK_KEY` and `OPTIMIZELY_FX_ACCESS_TOKEN`.
+
+  **To settle:** where flags are evaluated (server-side by default, to avoid flicker and protect the
+  Core Web Vitals work already shipped), how flag state interacts with the Graph read cache, and how
+  flags are named and retired so they do not accumulate.
+
+  **Exit check:** one real feature behind a flag on DEV, toggled without a deploy, with no
+  measurable performance regression.
 
 ## 🚦 Phase 4 — AI features (Claude)  _(ask before starting)_
 - [ ] **S4.1 — AI Search** (Graph retrieval → Claude → cards) 🔴 — AI-SEARCH.md
