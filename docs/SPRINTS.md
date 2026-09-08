@@ -31,7 +31,7 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · 🚦 = phase gate (I as
 > S3.13 CMS-manageable copy · S3.14 Optimizely Forms · S3.15 Entra ID via Opti ID ·
 > S3.16 redirects module · S3.17 personalization and experimentation (with ODP audiences) ·
 > S3.18 OCP app and CMS UI Extensions · S3.19 Experience API (server-driven delivery contract) ·
-> S3.20 Feature Experimentation.
+> S3.20 Feature Experimentation · S3.21 CMP campaign lifecycle end to end.
 >
 > **Blog drafts ready to publish:** the environment-promotion post (needs screenshots) and the
 > SDK setup and gotchas post (no screenshots needed).
@@ -683,6 +683,46 @@ downstream (semantic search tuning, AI retrieval, the MCP server) needs a realis
 
   **Exit check:** one real feature behind a flag on DEV, toggled without a deploy, with no
   measurable performance regression.
+
+- [ ] **S3.21 — CMP end to end: run a real campaign from brief to live page** 🟡
+  We use Optimizely CMP for its DAM, and not at all for the part a CMO actually buys: planning,
+  briefing, assignment, review, approval and scheduling. That is the largest gap in our ability to
+  speak to marketing operations, and it is the half of CMP that decides a full-suite deal.
+
+  **The goal is one complete lap**, not a feature tour. Take a new seasonal campaign on This is
+  Dubai and run it through CMP from a blank brief to published pages, with the trail intact.
+
+  **The lap:**
+  1. Raise the campaign brief in CMP, with objective, audience, markets and dates.
+  2. Place it on the marketing calendar alongside everything else in flight.
+  3. Break it into tasks and assign them, so there is a real workload view.
+  4. Produce and review the creative, using the approval cycle rather than skipping it.
+  5. Land the approved assets in the DAM, organised as they should be.
+  6. Author the campaign content, in EN and AR.
+  7. Schedule and publish to the site.
+  8. Close the loop: what shipped, when, and who approved it.
+
+  **The unknowns to establish honestly** (these are the questions clients ask, and we should answer
+  from experience rather than from a datasheet):
+  - How does content and creative actually move from CMP into the SaaS CMS? Native integration,
+    API, or a manual handoff, and how much friction is in it?
+  - Does approval state travel with the asset, or does the CMS treat it as a fresh upload?
+  - Can a CMS publish be scheduled and governed from CMP, or is scheduling owned by the CMS?
+  - How do multi-market and multi-language campaigns behave in the planning layer?
+  - What does the calendar view genuinely give a marketing manager that a spreadsheet does not?
+
+  **Why it is worth the time:** everything we can currently demonstrate speaks to developers and
+  content authors. This is the demonstration that speaks to a CMO, and it is the difference between
+  pitching a CMS and pitching a marketing platform. Whatever friction we find is also worth knowing
+  before we describe the integration in a bid.
+
+  **Exit check:** a campaign that began as a brief in CMP is live on the site in both languages, and
+  we can walk someone through the trail from brief to published page. The friction points are written
+  up in [OPTIMIZELY-PLATFORM-MAP.md](OPTIMIZELY-PLATFORM-MAP.md).
+
+  **Blog trigger:** yes. "Running a marketing campaign end to end on Optimizely, from brief to live
+  page" is a genuinely under-written topic, and it reaches a different audience from the technical
+  posts.
 
 ## 🚦 Phase 4 — AI features (Claude)  _(ask before starting)_
 - [ ] **S4.1 — AI Search** (Graph retrieval → Claude → cards) 🔴 — AI-SEARCH.md
