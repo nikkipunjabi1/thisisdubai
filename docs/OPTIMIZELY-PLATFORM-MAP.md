@@ -188,6 +188,17 @@ Ordered by what unlocks the most commercial ground.
 
 ---
 
+## 8. Learning resources
+
+Optimizely Academy is free and the courses are short. Where one exists for a product we are about to
+build with, taking it first is cheaper than learning the model by trial and error.
+
+| Product | Course | Length | Take it before |
+|---|---|---|---|
+| **ODP** | [Introduction to Optimizely Data Platform (ODP)](https://academy.optimizely.com/student/page/2563794-introduction-to-optimizely-data-platform-odp) | ~1 hour | [S3.17] personalization and audiences |
+
+Add to this table as we find the courses that are actually worth the time.
+
 ## Related
 - [`docs/OPTIMIZELY-BEST-PRACTICES.md`](OPTIMIZELY-BEST-PRACTICES.md) — the technical playbook
 - [`docs/ENVIRONMENTS.md`](ENVIRONMENTS.md) — how work promotes between instances
