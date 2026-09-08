@@ -52,6 +52,7 @@ Repo: https://github.com/nikkipunjabi1/thisisdubai · **Live: [DEV](https://this
 | [docs/MCP-SERVER.md](docs/MCP-SERVER.md) | "This is Dubai Concierge" MCP server (Graph-backed tools) |
 | [docs/OPTIMIZELY-RESEARCH.md](docs/OPTIMIZELY-RESEARCH.md) | Findings from official docs + reference repos |
 | [docs/OPTIMIZELY-BEST-PRACTICES.md](docs/OPTIMIZELY-BEST-PRACTICES.md) | Playbook: modeling, VB, Graph, SEO, perf, security, gotchas |
+| [docs/OPTIMIZELY-PLATFORM-MAP.md](docs/OPTIMIZELY-PLATFORM-MAP.md) | The whole Optimizely suite: what each product does, why clients buy it, what we have proven, and the gaps |
 | [docs/QUALITY.md](docs/QUALITY.md) | Testing/CI strategy + quality gates |
 | [docs/BLOG-PLAN.md](docs/BLOG-PLAN.md) | Community blogging cadence toward MVP |
 | [docs/ENVIRONMENTS.md](docs/ENVIRONMENTS.md) | Dev → UAT → Prod promotion: what moves with code, what doesn't, and environment teardown |
