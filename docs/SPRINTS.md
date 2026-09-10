@@ -31,7 +31,8 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · 🚦 = phase gate (I as
 > S3.13 CMS-manageable copy · S3.14 Optimizely Forms · S3.15 Entra ID via Opti ID ·
 > S3.16 redirects module · S3.17 personalization and experimentation (with ODP audiences) ·
 > S3.18 OCP app and CMS UI Extensions · S3.19 Experience API (server-driven delivery contract) ·
-> S3.20 Feature Experimentation · S3.21 CMP campaign lifecycle end to end.
+> S3.20 Feature Experimentation · S3.21 CMP campaign lifecycle end to end ·
+> S3.22 content-type migration utility.
 >
 > **Blog drafts ready to publish:** the environment-promotion post (needs screenshots) and the
 > SDK setup and gotchas post (no screenshots needed).
@@ -737,6 +738,43 @@ downstream (semantic search tuning, AI retrieval, the MCP server) needs a realis
   **Blog trigger:** yes. "Running a marketing campaign end to end on Optimizely, from brief to live
   page" is a genuinely under-written topic, and it reaches a different audience from the technical
   posts.
+
+- [ ] **S3.22 — Utility: change an item's content type from A to B** 🔵 _(someday; strong module candidate)_
+  A tool that migrates existing content items from one content type to another: field mapping,
+  reference repointing, all locales, with a dry run first and verification after.
+
+  **Why this keeps coming up.** Content models change. A type gets split, replaced, renamed, or
+  re-based from a page to a shared block. We have already done exactly this twice by hand on this
+  project: Site Settings moved from a page to a shared block under a new key (`SiteConfiguration`),
+  and articles were re-modelled from pages to blocks (`flatten-articles`,
+  `retire-legacy-articles`). Both were one-off scripts. On a client migration this happens
+  repeatedly and mid-flight, and every time it is written from scratch under time pressure.
+
+  **What makes it non-trivial.** An item's content type is fixed at creation, so this is not an
+  edit. It is: create the item as type B, carry the mapped fields across, repoint everything that
+  referenced A, publish, retire A. The interesting problems are all in the middle:
+  - **References are the hard part.** Anything pointing at the old item has to move with it:
+    `contentReference` fields, hand-picked lists, navigation links, and composition nodes inside
+    Visual Builder experiences. Missing one leaves a silently broken page.
+  - **Field mapping** needs to handle renames, type changes and fields that exist on one side only,
+    with a clear decision on what is dropped.
+  - **Every locale moves together**, or the language switch breaks.
+  - **Keys change**, so URLs can change, which means a redirect map falls out of this naturally.
+    Shared boundary with [S3.16].
+  - **Version history does not transfer.** Decide and state that up front rather than discovering it.
+  - **Inline components inside a composition** behave differently from shared blocks and pages, and
+    probably need separate handling.
+
+  **House pattern applies:** dry run by default, an explicit `--apply`, a printed plan of exactly
+  what will change, and a verification pass afterwards that proves reference integrity rather than
+  assuming it.
+
+  **Why it is a good module candidate.** Alongside [S3.16] redirects, this is one of the few tools
+  every Optimizely SaaS project eventually needs and nobody has published. It is also a natural fit
+  for the App Directory now that CMS UI Extensions exist ([S3.18]).
+
+  **Exit check:** migrate a real type on a sandbox instance in both languages, with every reference
+  intact and the old items retired, proven by a verification command rather than inspection.
 
 ## 🚦 Phase 4 — AI features (Claude)  _(ask before starting)_
 - [ ] **S4.1 — AI Search** (Graph retrieval → Claude → cards) 🔴 — AI-SEARCH.md
